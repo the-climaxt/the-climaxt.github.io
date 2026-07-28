@@ -158,23 +158,45 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .lv-extreme .zd{background:var(--pr-danger-text)}
 .lv-int .zd{background:var(--pr-blue-text)}
 .lv-beginner .zd{background:var(--pr-ok-text)}
-/* Snow tab: zone header + run rows become the launchers */
-.zvm{font-size:11.5px;font-weight:600;color:var(--pr-link);white-space:nowrap;cursor:pointer;flex:0 0 auto}
-.zvm:active{opacity:.6}
+.zrr .zsb{font-size:11px;font-weight:400;color:var(--pr-text-2);margin-top:2px;line-height:1.45}
+.kind{font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 8px;flex:0 0 auto}
+.kind.cruiser{background:var(--pr-lime-tint);color:var(--pr-lime-text)}
+.kind.stop{background:var(--pr-orange-tint);color:var(--pr-orange-text)}
+.kind.view{background:var(--pr-teal-tint);color:var(--pr-teal-text)}
+.k-cruiser .zd{background:var(--pr-lime-text)}
+.k-stop .zd{background:var(--pr-orange-text)}
+.k-view .zd{background:var(--pr-teal-text)}
 .zrun{cursor:pointer}
 .zrun:active{opacity:.6}
-.zrun .zmi{color:var(--pr-link)}
-/* Snow tab: "Cruisers only" filter card (replaces the All/Mellow button pair) */
+.zrun .zmi{color:var(--pr-link);display:flex;flex:0 0 auto}
+/* ---- Snow tab terrain panel: lime job-card block, white cards on top ---- */
+.terr{margin-top:6px;background:var(--pr-card-terrain-bg);border:1px solid rgba(0,0,0,.07);
+ border-radius:11px;padding:12px}
+.terr .t2{color:var(--pr-text-2)}
+.terr .tov{font-size:13px;line-height:1.5}
+.terr .ttm{font-size:11.5px;color:var(--pr-text-2);margin-top:8px;line-height:1.5;display:flex;gap:6px}
+.terr .tflag{margin-top:8px;background:var(--pr-danger-bg);border:var(--pr-card-alert-border);
+ border-radius:11px;padding:9px 11px;font-size:11.5px;line-height:1.5;color:var(--pr-danger-text);
+ display:flex;gap:7px;align-items:flex-start}
+.terr .tsec{margin-top:12px;border-top:1px solid rgba(0,0,0,.08);padding-top:9px}
+.terr .tsl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-text-2)}
 .filt{display:flex;align-items:center;gap:10px;padding:10px 11px;margin-bottom:10px;
- background:var(--pr-card-terrain-bg);border:1px solid rgba(0,0,0,.07);border-radius:11px}
+ background:var(--pr-card);border:1px solid var(--pr-border);border-radius:11px}
 .filt label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;
  color:var(--pr-text-2);flex:1}
 .filt input{width:18px;height:18px;accent-color:var(--pr-btn-primary-bg);cursor:pointer;margin:0;flex:0 0 auto}
 .filt .hint{font-size:11.5px;color:var(--pr-text-2);margin-top:3px;font-weight:400}
-.filt .ct{font-size:11.5px;font-weight:600;background:var(--pr-card);color:var(--pr-lime-text);
+.filt .ct{font-size:11.5px;font-weight:600;background:var(--pr-lime-tint);color:var(--pr-lime-text);
  border-radius:999px;padding:2px 9px;flex:0 0 auto}
-.zblk.zoff{opacity:.55}
-.zempty{font-size:11.5px;color:var(--pr-text-2);margin-top:5px;display:flex;gap:7px;align-items:flex-start}
+.zblk{margin-top:14px}
+.zblk.zoff .zhead .zn,.zblk.zoff .za{opacity:.55}
+.zhead{display:flex;align-items:center;gap:8px;cursor:pointer}
+.zhead .zn{font-size:14px;font-weight:700;flex:1}
+.zhead .zg{font-size:11.5px;font-weight:700;background:var(--pr-danger-bg);color:var(--pr-danger-text);
+ padding:2px 8px;border-radius:999px;white-space:nowrap}
+.zhead .zv{font-size:11.5px;font-weight:600;color:var(--pr-link);white-space:nowrap}
+.za{font-size:11.5px;color:var(--pr-text-2);margin:3px 0 8px;display:flex;gap:6px;align-items:flex-start}
+.zempty{font-size:11.5px;color:var(--pr-text-2);margin:2px 0 6px;display:flex;gap:7px;align-items:flex-start}
 #zchips button.dim{opacity:.5}
 @media(min-width:900px){
  #zov{--zdh:46%}
@@ -464,7 +486,7 @@ function addSharedDoc(inp){ var f=inp.files[0]; if(!f)return;
 function openSharedDoc(id,name,type,iv){ fetch(D.docsUrl+'?doc='+encodeURIComponent(id)).then(function(x){return x.json();}).then(async function(dd){ var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(iv)},GATEKEY,b64d(dd.data)); var url=URL.createObjectURL(new Blob([pt],{type:type||'application/octet-stream'})); window.open(url,'_blank'); }).catch(function(){ toast('Couldn\u2019t open — offline?'); }); }
 function $(id){return document.getElementById(id);}
 /* ---- Powder Run icon set (design-system glyphs, currentColor) ---- */
-var IC={mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',calendar:'<path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/>',snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',checklist:'<path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/>',cheers:'<g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g>',more:'<circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/>',warning:'<path fill-rule="evenodd" d="M12 2.4a1.6 1.6 0 0 1 1.4.8l8.8 15.2a1.6 1.6 0 0 1-1.4 2.4H3.2a1.6 1.6 0 0 1-1.4-2.4L10.6 3.2A1.6 1.6 0 0 1 12 2.4Zm-1.1 6.2h2.2l-.4 5.6h-1.4l-.4-5.6ZM12 15.6a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',alert:'<path fill-rule="evenodd" d="M8.1 2.5h7.8l5.6 5.6v7.8l-5.6 5.6H8.1l-5.6-5.6V8.1l5.6-5.6ZM10.9 7h2.2l-.4 6h-1.4l-.4-6ZM12 15.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',closed:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.6a7.2 7.2 0 0 0-5.6 11.8L16.6 6.4A7.15 7.15 0 0 0 12 4.8Zm5.6 3L7.4 17.9A7.2 7.2 0 0 0 17.6 7.8Z"/>',check:'<path d="M9.55 15.15 19.1 5.6l1.9 1.9L9.55 19 3 12.45l1.9-1.9 4.65 4.6Z"/>',tip:'<path d="M12 6.2a4.8 4.8 0 0 1 2.7 8.8c-.4.3-.6.7-.7 1.2l-.1.6H10l-.1-.6c-.1-.5-.3-.9-.7-1.2A4.8 4.8 0 0 1 12 6.2Z"/><path d="M10 18.4h4v1a1.5 1.5 0 0 1-1.5 1.4h-1a1.5 1.5 0 0 1-1.5-1.4v-1Z"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 1.4v2.3M4.9 4.1l1.6 1.6M19.1 4.1l-1.6 1.6M2.4 10.8h2.3M19.3 10.8h2.3"/></g>',pin:'<path fill-rule="evenodd" d="M12 2.2a7.2 7.2 0 0 1 7.2 7.2c0 4.8-5.4 10.8-6.7 12.2a.7.7 0 0 1-1 0C10.2 20.2 4.8 14.2 4.8 9.4A7.2 7.2 0 0 1 12 2.2Zm0 4.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/>',map:'<path fill-rule="evenodd" d="M8.6 3 3.6 4.9a1 1 0 0 0-.6.9v14.4a.6.6 0 0 0 .8.6l4.8-1.9 6.8 2.1 5-1.9a1 1 0 0 0 .6-.9V3.8a.6.6 0 0 0-.8-.6l-4.8 1.9L8.6 3Zm.7 2.3 5.4 1.7v12.6L9.3 17.9V5.3Z"/>',ticket:'<path fill-rule="evenodd" d="M3 5.8h18a1 1 0 0 1 1 1v10.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.8a1 1 0 0 1 1-1ZM2 10.2a1.9 1.9 0 0 1 0 3.6v-3.6Zm20 0v3.6a1.9 1.9 0 0 1 0-3.6ZM7.9 10.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm3.5-3.4h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Z"/>',phone:'<path d="M6.6 3c.5 0 2.9 2.4 2.9 3s-1.5 1.9-1.5 2.6 1.2 2.3 2.7 3.8 3.1 2.7 3.8 2.7 2-1.5 2.6-1.5S21 16 21 16.5 19.6 21 17.5 21C12 21 3 12 3 6.5 3 4.4 6.1 3 6.6 3Z"/>',bed:'<path d="M2.4 5.4h2v8.2h7.2V7.9h6.2a3.8 3.8 0 0 1 3.8 3.8v6.9h-2v-2.2H4.4v2.2h-2V5.4Z"/><circle cx="7.5" cy="10.4" r="2"/>',compass:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.4A7.4 7.4 0 1 0 19.4 12 7.4 7.4 0 0 0 12 4.6Z"/><path d="M12 5.6 14.2 12 12 18.4 9.8 12 12 5.6Z"/>',trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',skier:'<circle cx="14.4" cy="3" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 5.2 10.7 9.4l2.2 3.3-.6 3.2M13 6.6l3.7 2.6"/></g><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M16.9 9.4l2.7 6.4"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.8 16.2h13.6c1.1 0 1.9-.4 2.5-1.3M4.6 18.8h13.6c1.1 0 1.9-.4 2.5-1.3"/></g>',snowboarder:'<circle cx="14.9" cy="3.4" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 5.8 11.8 9.9l-2.5 5.2M11.8 9.9l2.1 5.3M14.1 6.3l3.3 2.3"/></g><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.6 15.2c.5 1.3 1.4 2 2.8 2h11.2c1.4 0 2.3-.7 2.8-2"/>',gondola:'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 3.4h20"/><rect x="11.2" y="3.4" width="1.6" height="4.4"/><path fill-rule="evenodd" d="M6.8 7.4h10.4a2 2 0 0 1 2 2.2l-.8 8.4a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-.8-8.4a2 2 0 0 1 2-2.2Zm.6 3 .3 3.4h8.6l.3-3.4H7.4Z"/>',food:'<path d="M5.4 2.6h1.4v4.6h.8V2.6H9v4.6h.8V2.6h1.4v6a2.6 2.6 0 0 1-2 2.5v10.3H7.4V11.1a2.6 2.6 0 0 1-2-2.5v-6Z"/><path d="M15.4 2.6c2.4 1.6 3.4 5.4 3.4 8 0 1.6-1 2.6-2 3v7.8h-1.4V2.6Z"/>',meeting:'<path fill-rule="evenodd" d="M9.4 6.6A1.6 1.6 0 0 1 11 5h2a1.6 1.6 0 0 1 1.6 1.6v.8h3.8A1.6 1.6 0 0 1 20 9v9.6a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.6V9a1.6 1.6 0 0 1 1.6-1.6h3.8v-.8Zm1.7.2v.6h1.8v-.6h-1.8Zm-.5 5.6h2.8v2h-2.8v-2Z"/><circle cx="17.8" cy="3.6" r="1.2"/><circle cx="20.2" cy="1.9" r=".9"/><circle cx="15.9" cy="1.7" r=".7"/>'};
+var IC={mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',calendar:'<path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/>',snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',checklist:'<path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/>',cheers:'<g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g>',more:'<circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/>',warning:'<path fill-rule="evenodd" d="M12 2.4a1.6 1.6 0 0 1 1.4.8l8.8 15.2a1.6 1.6 0 0 1-1.4 2.4H3.2a1.6 1.6 0 0 1-1.4-2.4L10.6 3.2A1.6 1.6 0 0 1 12 2.4Zm-1.1 6.2h2.2l-.4 5.6h-1.4l-.4-5.6ZM12 15.6a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',alert:'<path fill-rule="evenodd" d="M8.1 2.5h7.8l5.6 5.6v7.8l-5.6 5.6H8.1l-5.6-5.6V8.1l5.6-5.6ZM10.9 7h2.2l-.4 6h-1.4l-.4-6ZM12 15.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',closed:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.6a7.2 7.2 0 0 0-5.6 11.8L16.6 6.4A7.15 7.15 0 0 0 12 4.8Zm5.6 3L7.4 17.9A7.2 7.2 0 0 0 17.6 7.8Z"/>',check:'<path d="M9.55 15.15 19.1 5.6l1.9 1.9L9.55 19 3 12.45l1.9-1.9 4.65 4.6Z"/>',tip:'<path d="M12 6.2a4.8 4.8 0 0 1 2.7 8.8c-.4.3-.6.7-.7 1.2l-.1.6H10l-.1-.6c-.1-.5-.3-.9-.7-1.2A4.8 4.8 0 0 1 12 6.2Z"/><path d="M10 18.4h4v1a1.5 1.5 0 0 1-1.5 1.4h-1a1.5 1.5 0 0 1-1.5-1.4v-1Z"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 1.4v2.3M4.9 4.1l1.6 1.6M19.1 4.1l-1.6 1.6M2.4 10.8h2.3M19.3 10.8h2.3"/></g>',pin:'<path fill-rule="evenodd" d="M12 2.2a7.2 7.2 0 0 1 7.2 7.2c0 4.8-5.4 10.8-6.7 12.2a.7.7 0 0 1-1 0C10.2 20.2 4.8 14.2 4.8 9.4A7.2 7.2 0 0 1 12 2.2Zm0 4.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/>',map:'<path fill-rule="evenodd" d="M8.6 3 3.6 4.9a1 1 0 0 0-.6.9v14.4a.6.6 0 0 0 .8.6l4.8-1.9 6.8 2.1 5-1.9a1 1 0 0 0 .6-.9V3.8a.6.6 0 0 0-.8-.6l-4.8 1.9L8.6 3Zm.7 2.3 5.4 1.7v12.6L9.3 17.9V5.3Z"/>',ticket:'<path fill-rule="evenodd" d="M3 5.8h18a1 1 0 0 1 1 1v10.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.8a1 1 0 0 1 1-1ZM2 10.2a1.9 1.9 0 0 1 0 3.6v-3.6Zm20 0v3.6a1.9 1.9 0 0 1 0-3.6ZM7.9 10.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm3.5-3.4h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Z"/>',phone:'<path d="M6.6 3c.5 0 2.9 2.4 2.9 3s-1.5 1.9-1.5 2.6 1.2 2.3 2.7 3.8 3.1 2.7 3.8 2.7 2-1.5 2.6-1.5S21 16 21 16.5 19.6 21 17.5 21C12 21 3 12 3 6.5 3 4.4 6.1 3 6.6 3Z"/>',bed:'<path d="M2.4 5.4h2v8.2h7.2V7.9h6.2a3.8 3.8 0 0 1 3.8 3.8v6.9h-2v-2.2H4.4v2.2h-2V5.4Z"/><circle cx="7.5" cy="10.4" r="2"/>',compass:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.4A7.4 7.4 0 1 0 19.4 12 7.4 7.4 0 0 0 12 4.6Z"/><path d="M12 5.6 14.2 12 12 18.4 9.8 12 12 5.6Z"/>',trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',skier:'<circle cx="14.4" cy="3" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 5.2 10.7 9.4l2.2 3.3-.6 3.2M13 6.6l3.7 2.6"/></g><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M16.9 9.4l2.7 6.4"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.8 16.2h13.6c1.1 0 1.9-.4 2.5-1.3M4.6 18.8h13.6c1.1 0 1.9-.4 2.5-1.3"/></g>',snowboarder:'<circle cx="14.9" cy="3.4" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 5.8 11.8 9.9l-2.5 5.2M11.8 9.9l2.1 5.3M14.1 6.3l3.3 2.3"/></g><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.6 15.2c.5 1.3 1.4 2 2.8 2h11.2c1.4 0 2.3-.7 2.8-2"/>',gondola:'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 3.4h20"/><rect x="11.2" y="3.4" width="1.6" height="4.4"/><path fill-rule="evenodd" d="M6.8 7.4h10.4a2 2 0 0 1 2 2.2l-.8 8.4a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-.8-8.4a2 2 0 0 1 2-2.2Zm.6 3 .3 3.4h8.6l.3-3.4H7.4Z"/>',food:'<path d="M5.4 2.6h1.4v4.6h.8V2.6H9v4.6h.8V2.6h1.4v6a2.6 2.6 0 0 1-2 2.5v10.3H7.4V11.1a2.6 2.6 0 0 1-2-2.5v-6Z"/><path d="M15.4 2.6c2.4 1.6 3.4 5.4 3.4 8 0 1.6-1 2.6-2 3v7.8h-1.4V2.6Z"/>',meeting:'<path fill-rule="evenodd" d="M9.4 6.6A1.6 1.6 0 0 1 11 5h2a1.6 1.6 0 0 1 1.6 1.6v.8h3.8A1.6 1.6 0 0 1 20 9v9.6a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.6V9a1.6 1.6 0 0 1 1.6-1.6h3.8v-.8Zm1.7.2v.6h1.8v-.6h-1.8Zm-.5 5.6h2.8v2h-2.8v-2Z"/><circle cx="17.8" cy="3.6" r="1.2"/><circle cx="20.2" cy="1.9" r=".9"/><circle cx="15.9" cy="1.7" r=".7"/>',laundry:'<path fill-rule="evenodd" d="M5 2.5h14A1.5 1.5 0 0 1 20.5 4v16a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 20V4A1.5 1.5 0 0 1 5 2.5Zm1.2 2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Zm3.4 0a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2ZM12 8.2a5.6 5.6 0 1 0 0 11.2 5.6 5.6 0 0 0 0-11.2Zm0 2a3.6 3.6 0 0 1 3.43 2.5c-1.2.9-2.3.2-3.43-.35-1.05-.5-2.15-.9-3.4.1A3.6 3.6 0 0 1 12 10.2Z"/>',coffee:'<path fill-rule="evenodd" d="M4 7h13v2h2.2a2.3 2.3 0 0 1 0 4.6H17.6A6.5 6.5 0 0 1 4.4 13L4 7Zm13.4 4.6h1.6a.8.8 0 0 0 0-1.6h-1.5l-.1 1.6ZM5 19h13v2H5v-2Z"/>',pool:'<path fill-rule="evenodd" d="M2.5 17.2c1.6 0 1.6 1 3.2 1s1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1v2.2c-1.6 0-1.6 1-3.2 1s-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1v-2.2Zm6-12A2.7 2.7 0 0 1 11.2 8v6.1c-.6.2-1 .5-1.6.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Zm7 0A2.7 2.7 0 0 1 18.2 8v6.6c-.7-.1-1-.4-1.6-.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Z"/>',parking:'<path fill-rule="evenodd" d="M4.5 3h15v18h-15V3ZM9 6.5v11h2.4v-3.4h1.8a3.8 3.8 0 1 0 0-7.6H9Zm2.4 2.2h1.7a1.6 1.6 0 0 1 0 3.2h-1.7V8.7Z"/>',kitchen:'<path fill-rule="evenodd" d="M5.5 2.5h2v7.1a2.6 2.6 0 0 1-1 2v9.9h-2v-9.9a2.6 2.6 0 0 1-1-2V2.5h2Zm12 0c1.9.6 3 2.7 3 5.2 0 2.2-.9 4-2.3 4.8v9h-2v-9c-1.4-.8-2.3-2.6-2.3-4.8 0-2.5 1.1-4.6 3-5.2h.6Zm-6.9 0h1.8l.5 7.3a2.3 2.3 0 0 1-1.4 2.3v9.4h-2v-9.4a2.3 2.3 0 0 1-1.4-2.3l.5-7.3h2Z"/>'};
 function ic(n,s){s=s||14;var g=IC[n];if(!g)return '';return '<svg class="pri" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="currentColor" aria-hidden="true">'+g+'</svg>';}
 function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1900);}
@@ -480,18 +502,31 @@ function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clear
 var ZR=null, ZI=0, ZRUN=-1, ZSHUT=false, ZBYLIFT=false, ZPULSE=null, ZOPEN=false, ZPUSHED=false;
 
 /* "Cruisers only" is ONE state per resort (TMODE[rid]), shared by the Snow-tab
-   checkbox and the drawer checkbox — tick either and both follow. Level is the
-   only trustworthy signal here: r.type is free text with 130+ distinct values. */
-function isMellowRun(r){ return r.level==='int'||r.level==='beginner'; }
+   checkbox and the drawer checkbox — tick either and both follow. For runs,
+   level is the only trustworthy signal: r.type is free text with 130+ distinct
+   values. POIs carry an explicit kind and are mellow by definition. */
+function isMellowRun(r){ return r.kind==='cruiser'||r.kind==='stop'||r.kind==='view'
+  ||r.level==='int'||r.level==='beginner'; }
 function cruisersOn(k){ return TMODE[k]==='mellow'; }
 function zKeep(r){ return !cruisersOn(ZR)||isMellowRun(r); }
+
+/* Map POIs (lodges, viewpoints, the curated cruisers that aren't zone runs) stay
+   in their own arrays — cabins/woods/cruisers — and get pinned by adding
+   zone + x + y + kind + lift to the entry. No content is duplicated. A zone's
+   item list is its runs followed by its POIs; that index is what zOpen() takes. */
+function zPois(t,zname){ var out=[];
+  ['cruisers','cabins','woods'].forEach(function(src){ ((t||{})[src]||[]).forEach(function(p){
+    if(p.zone===zname&&p.x!=null&&p.y!=null)out.push(p); }); });
+  return out; }
+function zItems(t,z){ return (z.runs||[]).concat(zPois(t,z.name)); }
+function zList(){ var z=zZone(); return z?zItems((D.terrain||{})[ZR],z):[]; }
 function setCruisers(k,on){
   if(!k)return; TMODE[k]=on?'mellow':'all';
   var el=$('terr-'+k); if(el&&el.style.display!=='none')el.innerHTML=terrainHtml((D.terrain||{})[k],TMODE[k],k);
   if(ZOPEN&&ZR===k){
     var cb=$('zcruise'); if(cb)cb.checked=on;
-    var z=zZone();
-    if(ZRUN>=0&&z&&z.runs&&z.runs[ZRUN]&&!zKeep(z.runs[ZRUN])){ ZRUN=-1; zClearPulse(); }
+    var it=zList()[ZRUN];
+    if(ZRUN>=0&&it&&!zKeep(it)){ ZRUN=-1; zClearPulse(); }
     zChips(); zRenderRuns();
   }
 }
@@ -527,7 +562,7 @@ function zChips(){
     var b=document.createElement('button');
     b.innerHTML=(z.zmap.gated?ic('warning',12):'')+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''));
     if(i===ZI)b.className='on';
-    else if(cruisersOn(ZR)&&!(z.runs||[]).some(isMellowRun))b.className='dim';
+    else if(cruisersOn(ZR)&&!zItems((D.terrain||{})[ZR],z).some(isMellowRun))b.className='dim';
     b.onclick=function(){ zSetZone(i); ZRUN=-1; zClearPulse(); zRenderRuns(); };
     box.appendChild(b);
   });
@@ -551,15 +586,17 @@ function zSetZone(i){
   $('zopen').innerHTML=href?('<a class="btn" href="'+href+'" download>'+ic('map',14)+' Open the full '+esc(lab||'trail')+' map</a>'):'';
   var box=$('zchips'), kids=box.children, zs=zMapZones(ZR);
   for(var j=0;j<kids.length;j++)kids[j].className=(j===i?'on':
-    ((cruisersOn(ZR)&&!(zs[j].runs||[]).some(isMellowRun))?'dim':''));
+    ((cruisersOn(ZR)&&!zItems((D.terrain||{})[ZR],zs[j]).some(isMellowRun))?'dim':''));
   /* keep the active chip visible — zones 4 and 5 sit off the right edge */
   if(kids[i])box.scrollLeft=Math.max(0,kids[i].offsetLeft-(box.clientWidth-kids[i].offsetWidth)/2);
   zRenderRuns();
 }
 function zRunRow(z,zi,r,ri,showZone){
   var d=document.createElement('div');
-  d.className='zrr lv-'+(r.level||'info')+((zi===ZI&&ri===ZRUN)?' on':'');
-  d.innerHTML='<span class="zd"></span><span class="znm">'+esc(r.name)+'</span>'+
+  d.className='zrr '+(r.kind?('k-'+r.kind):('lv-'+(r.level||'info')))+((zi===ZI&&ri===ZRUN)?' on':'');
+  d.innerHTML='<span class="zd"></span><span class="znm">'+esc(r.name)+
+    (r.where?'<div class="zsb">'+esc(r.where)+'</div>':'')+'</span>'+
+    (r.kind?'<span class="kind '+r.kind+'">'+r.kind+'</span>':'')+
     (r.approx?'<span class="pill muted" style="font-size:9px;padding:1px 6px">approx</span>':'')+
     (showZone?'<span class="zzt">'+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+'</span>':'');
   d.onclick=function(){ if(zi!==ZI)zSetZone(zi); zFlash(ri); };
@@ -572,12 +609,12 @@ function zRenderRuns(){
     var l=document.createElement('div'); l.className='zlab';
     l.innerHTML=ic('skier',14)+(cruisersOn(ZR)?'Cruisers in this zone':'Runs in this zone'); box.appendChild(l);
     var n=0;
-    (z.runs||[]).forEach(function(r,ri){ if(r.x!=null&&zKeep(r)){ n++; box.appendChild(zRunRow(z,ZI,r,ri,false)); } });
+    zItems((D.terrain||{})[ZR],z).forEach(function(r,ri){ if(r.x!=null&&zKeep(r)){ n++; box.appendChild(zRunRow(z,ZI,r,ri,false)); } });
     if(!n)box.insertAdjacentHTML('beforeend','<div class="zempty">'+ic('closed',13)+
       '<span>Nothing mellow in '+esc(z.name)+'. Try another zone — the dimmed chips have none either.</span></div>');
   } else {
     var groups={}, order=[];
-    zs.forEach(function(z,zi){ (z.runs||[]).forEach(function(r,ri){
+    zs.forEach(function(z,zi){ zItems((D.terrain||{})[ZR],z).forEach(function(r,ri){
       if(r.x==null||!zKeep(r))return; var lf=r.lift||'Other';
       if(!groups[lf]){groups[lf]=[];order.push(lf);}
       groups[lf].push([z,zi,r,ri]);
@@ -613,12 +650,12 @@ function zFlashAt(x,y){
   return p;
 }
 function zFlash(ri){
-  var z=zZone(); if(!z)return; var r=(z.runs||[])[ri]; if(!r||r.x==null)return;
+  var r=zList()[ri]; if(!r||r.x==null)return;
   ZRUN=ri; zFlashAt(r.x,r.y); zRenderRuns(); zUpdateReflash();
 }
 function zReflash(){ if(ZRUN>=0)zFlash(ZRUN); }
 function zPlace(){
-  if(ZRUN<0||!ZPULSE)return; var z=zZone(); if(!z)return; var r=(z.runs||[])[ZRUN]; if(!r)return;
+  if(ZRUN<0||!ZPULSE)return; var r=zList()[ZRUN]; if(!r)return;
   var xy=zPinXY(r.x,r.y); ZPULSE.style.left=xy[0]; ZPULSE.style.top=xy[1];
 }
 function zSizeDrawer(){
@@ -633,9 +670,9 @@ function zSizeDrawer(){
 }
 function zToggleDrawer(){ ZSHUT=!ZSHUT; zSizeDrawer(); }
 function zUpdateReflash(){
-  var z=zZone(), show=ZSHUT&&ZRUN>=0&&z&&z.runs&&z.runs[ZRUN];
+  var it=zList()[ZRUN], show=ZSHUT&&ZRUN>=0&&!!it;
   $('zreflash').className=show?'on':'';
-  if(show)$('zreflashname').textContent='Show '+z.runs[ZRUN].name;
+  if(show)$('zreflashname').textContent='Show '+it.name;
 }
 window.addEventListener('resize',zSizeDrawer);
 
@@ -867,6 +904,15 @@ function lodgeBox(s){
   h+='<div class="xs muted" style="margin-top:2px">'+fmtShort(s.in)+'–'+fmtShort(s.out)+' · Conf '+esc(s.conf)+'</div>';
   if(s.cancel)h+='<div class="xs" style="margin-top:5px;color:var(--pr-warn-text);font-weight:600">'+ic('warning',13)+' Free cancel by '+fmtDT(s.cancel)+'</div>';
   h+='<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><a class="btn" href="'+mapsUrl(s.hotel+' '+s.addr)+'" target="_blank">'+ic('pin',14)+' Map</a><a class="btn" href="tel:'+esc(s.phone)+'">'+ic('phone',14)+' Call</a></div>';
+  if(s.amen&&s.amen.length){
+    var AMIC={laundry:'laundry',breakfast:'coffee',soak:'pool',parking:'parking',kitchen:'kitchen'};
+    var ch='';
+    s.amen.forEach(function(a){
+      var st = a.s===1?'background:var(--pr-ok-bg);color:var(--pr-ok-text)': a.s===2?'background:var(--pr-yellow-tint);color:var(--pr-yellow-text)':'background:var(--pr-orange-tint);color:var(--pr-orange-text)';
+      ch+='<span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:999px;margin:3px 4px 0 0;'+st+'">'+ic(AMIC[a.k]||'tip',12)+' '+esc(a.t)+'</span>';
+    });
+    h+='<div style="margin-top:8px;border-top:1px solid var(--pr-hairline);padding-top:7px">'+ch+'</div>';
+  }
   var g=guideFor(s.id); if(g&&g.tonight)h+='<div class="sm" style="margin-top:9px;border-top:1px solid var(--pr-hairline);padding-top:8px">'+ic('cheers',13)+' '+esc(g.tonight)+'</div>'; if(g)h+='<div class="btn" style="margin-top:8px;width:100%;justify-content:center" onclick="openGuide(\''+s.id+'\')">'+ic('cheers',14)+' '+esc(s.name)+' nightlife &amp; eats</div>';
   if(s.note)h+='<div class="xs muted" style="margin-top:7px">'+esc(s.note)+'</div>';
   return h+'</div>';
@@ -911,33 +957,47 @@ function resortSkiDate(rid){ for(var i=0;i<D.days.length;i++){ if(D.days[i].rid=
 function saveMapsOffline(){ var u=[]; Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k]; if(r.map)u.push(r.map); if(r.map2)u.push(r.map2); if(r.map3)u.push(r.map3); if(r.basemap)u.push(r.basemap); }); Object.keys(D.terrain||{}).forEach(function(k){ ((D.terrain[k]||{}).zones||[]).forEach(function(z){ if(z.zmap&&z.zmap.img){u.push(z.zmap.img); if(z.zmap.key)u.push(z.zmap.key);} }); }); if(!u.length)return; toast('Saving '+u.length+' maps for offline…'); var done=0; Promise.all(u.map(function(x){ return fetch(x,{cache:'reload'}).then(function(){done++;}).catch(function(){}); })).then(function(){ toast(done+'/'+u.length+' maps saved — available offline'); }); }
 function climoHtml(k){ var n=(D.normals||{})[k]; if(!n) return '<span class="muted">No climatology yet.</span>'; return '<div><b>~'+n.snowIn+'″</b> snow over Feb 5–21 <span class="muted">(ranged '+n.minIn+'–'+n.maxIn+'″ · '+n.yrs+'-yr avg)</span><br><span class="muted">typical hi '+cF(n.hiC)+'° / lo '+cF(n.loC)+'°F</span></div>'; }
 function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
-  var h='<div style="margin-top:6px">';
-  var nMel=0; (t.zones||[]).forEach(function(z){ (z.runs||[]).forEach(function(r){ if(isMellowRun(r))nMel++; }); });
-  h+='<div class="filt"><label><input type="checkbox"'+(mode==='mellow'?' checked':'')+' onchange="setCruisers(\''+k+'\',this.checked)"><span>Cruisers only<div class="hint">Blues, greens &amp; mellow lines \u2014 skip the gnar</div></span></label><span class="ct">'+nMel+' mellow</span></div>';
-  if(t.overview)h+='<div class="sm">'+esc(t.overview)+'</div>';
-  if(t.snowTiming)h+='<div class="xs muted" style="margin-top:6px">'+ic('snowflake',12)+' '+esc(t.snowTiming)+'</div>';
-  if((t.cruisers||[]).length){ h+='<div style="margin-top:9px;background:var(--pr-card-terrain-bg);border:1px solid rgba(0,0,0,.07);border-radius:8px;padding:8px 10px"><div style="font-weight:700;font-size:12px;color:var(--pr-card-terrain-fg)">'+ic('snowboarder',13)+' Carve &amp; cruise — wide, mellow &amp; scenic</div>'; t.cruisers.forEach(function(c){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(c.name)+'</b>'+(c.level?' <span class="muted">('+esc(c.level)+')</span>':'')+(c.where?' <span class="muted">· '+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
-  (t.flags||[]).forEach(function(f){ h+='<div class="xs" style="margin-top:6px;background:var(--pr-warn-bg);border:1px solid #EFD9A0;color:var(--pr-warn-text);border-radius:8px;padding:6px 8px">'+ic('warning',12)+' '+esc(f)+'</div>'; });
+  var cru=(mode==='mellow'), h='<div class="terr">', nMel=0;
+  (t.zones||[]).forEach(function(z){ zItems(t,z).forEach(function(r){ if(isMellowRun(r))nMel++; }); });
+  h+='<div class="filt"><label><input type="checkbox"'+(cru?' checked':'')+' onchange="setCruisers(\''+k+'\',this.checked)"><span>Cruisers only<div class="hint">Groomers, greens &amp; stops — skip the gnar</div></span></label><span class="ct">'+nMel+' runs</span></div>';
+  if(t.overview)h+='<div class="tov">'+esc(t.overview)+'</div>';
+  if(t.snowTiming)h+='<div class="ttm">'+ic('snowflake',13)+'<span>'+esc(t.snowTiming)+'</span></div>';
+  (t.flags||[]).forEach(function(f){ h+='<div class="tflag">'+ic('alert',13)+'<span>'+esc(f)+'</span></div>'; });
   (t.zones||[]).forEach(function(z){
-    var zmi=zHasMap(z)?zMapZones(k).indexOf(z):-1;
-    var shown=(z.runs||[]).map(function(r,ri){return [r,ri];}).filter(function(p){ return mode!=='mellow'||isMellowRun(p[0]); });
+    var zmi=zHasMap(z)?zMapZones(k).indexOf(z):-1, items=zItems(t,z);
+    var shown=items.map(function(r,ii){return [r,ii];}).filter(function(q){ return !cru||isMellowRun(q[0]); });
     var gated=/\(gated\)/i.test(z.name)||!!(z.zmap&&z.zmap.gated);
-    h+='<div class="zblk'+(shown.length?'':' zoff')+'" style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="display:flex;align-items:center;gap:8px"><div style="font-weight:700;font-size:13px;flex:1">'+esc(z.name)+'</div>'+(zmi>=0?'<span class="zvm" onclick="zOpen(\''+k+'\','+zmi+',-1)">View map ↗</span>':'')+'</div>';
-    var meta=[]; if(z.access)meta.push(ic('gondola',12)+' '+esc(z.access)); if(z.aspect)meta.push(ic('compass',12)+' '+esc(z.aspect)); if(z.timing)meta.push('⏱ '+esc(z.timing));
-    if(meta.length)h+='<div class="xs muted" style="margin-top:2px">'+meta.join(' · ')+'</div>';
-    if(z.closure)h+='<div class="xs" style="margin-top:3px;color:var(--pr-warn-text);font-weight:700">'+ic('closed',12)+' '+esc(z.closure)+'</div>';
-    if(!shown.length)h+='<div class="zempty">'+ic('closed',12)+'<span>Nothing mellow here'+(gated?' — gated expert terrain only.':' — steeps and chutes only.')+'</span></div>';
-    shown.forEach(function(p){ var r=p[0], ri=p[1], pin=(zmi>=0&&r.x!=null);
-      var tag=r.level?(' <span class="muted">('+esc(r.level)+(r.type?' '+esc(r.type):'')+')</span>'):'';
-      h+='<div class="xs'+(pin?' zrun':'')+'" style="margin-top:4px"'+(pin?' onclick="zOpen(\''+k+'\','+zmi+','+ri+')"':'')+'><b>'+esc(r.name)+'</b>'+tag+(r.note?' — '+esc(r.note):'')+((r.conf&&r.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(r.conf)+'</span>':'')+(pin?' <span class="zmi">'+ic('map',12)+'</span>':'')+'</div>';
-    });
+    var jump=(zmi>=0?' onclick="zOpen(\''+k+'\','+zmi+',-1)"':'');
+    h+='<div class="zblk'+(shown.length?'':' zoff')+'"><div class="zhead"'+jump+'><span class="zn">'+esc(z.name)+'</span>'+(gated?'<span class="zg">'+ic('warning',12)+' Gated</span>':'')+(zmi>=0?'<span class="zv">View map ↗</span>':'')+'</div>';
+    var meta=[]; if(z.access)meta.push(esc(z.access)); if(z.aspect)meta.push(esc(z.aspect)); if(z.timing)meta.push(esc(z.timing));
+    if(meta.length)h+='<div class="za">'+ic('gondola',13)+'<span>'+meta.join(' · ')+'</span></div>';
+    if(z.closure)h+='<div class="za" style="color:var(--pr-warn-text);font-weight:700">'+ic('closed',13)+'<span>'+esc(z.closure)+'</span></div>';
+    if(!shown.length)h+='<div class="zempty">'+ic('closed',13)+'<span>Nothing mellow here'+(gated?' — gated expert terrain only.':' — steeps and chutes only.')+'</span></div>';
+    shown.forEach(function(q){ h+=terrRow(k,zmi,q[0],q[1]); });
     h+='</div>';
   });
-  if((t.cabins||[]).length){ h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-text-muted)">'+ic('food',12)+' On-mountain food &amp; huts</div>'; t.cabins.forEach(function(c){ h+='<div class="xs" style="margin-top:4px"><b>'+esc(c.name)+'</b>'+(c.where?' <span class="muted">'+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
-  if((t.woods||[]).length){ h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-card-terrain-fg)">'+ic('trees',12)+' In the trees — hidden spots</div>'; t.woods.forEach(function(w){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(w.name)+'</b>'+(w.type?' <span class="muted">('+esc(w.type)+')</span>':'')+((w.conf&&w.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(w.conf)+'</span>':'')+(w.find?'<div class="muted" style="margin-top:1px">'+ic('pin',11)+' '+esc(w.find)+'</div>':'')+(w.note?'<div style="margin-top:2px">'+esc(w.note)+'</div>':'')+'</div>'; }); h+='<div class="muted" style="font-size:10px;margin-top:7px;font-style:italic">Word-of-mouth &amp; unofficial. Open booze outside licensed areas can cost your pass; unsanctioned structures get torn down; tree wells are lethal — ride glades with a partner and pack out everything.</div></div>'; }
-  if(t.mellow)h+='<div class="xs" style="margin-top:9px;background:var(--pr-ok-bg);border-radius:8px;padding:6px 8px"><b>Mellow:</b> '+esc(t.mellow)+'</div>';
+  if(!cru){
+    if((t.cruisers||[]).length){ h+='<div class="tsec"><div class="tsl" style="color:var(--pr-card-terrain-fg)">'+ic('snowboarder',12)+' Carve &amp; cruise — wide, mellow &amp; scenic</div>'; t.cruisers.forEach(function(c){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(c.name)+'</b>'+(c.level?' <span class="t2">('+esc(c.level)+')</span>':'')+(c.where?' <span class="t2">· '+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
+    if((t.cabins||[]).length){ h+='<div class="tsec"><div class="tsl">'+ic('food',12)+' On-mountain food &amp; huts</div>'; t.cabins.forEach(function(c){ h+='<div class="xs" style="margin-top:4px"><b>'+esc(c.name)+'</b>'+(c.where?' <span class="t2">'+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
+    if((t.woods||[]).length){ h+='<div class="tsec"><div class="tsl" style="color:var(--pr-card-terrain-fg)">'+ic('trees',12)+' In the trees — hidden spots</div>'; t.woods.forEach(function(w){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(w.name)+'</b>'+(w.type?' <span class="t2">('+esc(w.type)+')</span>':'')+((w.conf&&w.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(w.conf)+'</span>':'')+(w.find?'<div class="t2" style="margin-top:1px">'+ic('pin',11)+' '+esc(w.find)+'</div>':'')+(w.note?'<div style="margin-top:2px">'+esc(w.note)+'</div>':'')+'</div>'; }); h+='<div class="t2" style="font-size:10px;margin-top:7px;font-style:italic">Word-of-mouth &amp; unofficial. Open booze outside licensed areas can cost your pass; unsanctioned structures get torn down; tree wells are lethal — ride glades with a partner and pack out everything.</div></div>'; }
+    if(t.mellow)h+='<div class="xs" style="margin-top:11px;background:var(--pr-ok-bg);border-radius:9px;padding:7px 9px"><b>Mellow:</b> '+esc(t.mellow)+'</div>';
+  }
   return h+'</div>';
 }
+/* One row, shared shape with the drawer: level/kind dot, name (+ a muted detail
+   line), kind pill, then the map glyph when the item has a pin. */
+function terrRow(k,zmi,r,ii){
+  var pin=(zmi>=0&&r.x!=null);
+  var d1=r.kind?(r.where||''):((r.level||'')+(r.type?' '+r.type:''));
+  var sub=(d1?esc(d1):'')+((d1&&r.note)?' — ':'')+(r.note?esc(r.note):'');
+  return '<div class="zrr'+(pin?' zrun':'')+' '+(r.kind?('k-'+r.kind):('lv-'+(r.level||'info')))+'"'
+    +(pin?' onclick="zOpen(\''+k+'\','+zmi+','+ii+')"':'')+'>'
+    +'<span class="zd"></span><span class="znm">'+esc(r.name)+(sub?'<div class="zsb">'+sub+'</div>':'')+'</span>'
+    +(r.kind?'<span class="kind '+r.kind+'">'+r.kind+'</span>':'')
+    +((r.conf&&r.conf!=='verified')?'<span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(r.conf)+'</span>':'')
+    +(pin?'<span class="zmi">'+ic('map',14)+'</span>':'')+'</div>';
+}
+
 function toggleLinks(k){ var el=$('lks-'+k), c=$('lkcar-'+k); if(!el)return; if(el.style.display==='none'){ el.style.display='flex'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
 function setTerrainMode(k,m){ TMODE[k]=m; var el=$('terr-'+k); if(el)el.innerHTML=terrainHtml((D.terrain||{})[k],m,k); }
 function toggleTerrain(k){ var el=$('terr-'+k), c=$('terrcar-'+k); if(!el)return; if(!el.style.display||el.style.display==='none'){ el.innerHTML=terrainHtml((D.terrain||{})[k],TMODE[k]||'all',k); el.style.display='block'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
