@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>BC Powder Run 2027</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FAF3D7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Powder Run">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<style>
+@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/space-grotesk-latin-400-normal.woff2) format("woff2")}@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/space-grotesk-latin-500-normal.woff2) format("woff2")}@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/space-grotesk-latin-600-normal.woff2) format("woff2")}@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/space-grotesk-latin-700-normal.woff2) format("woff2")}@font-face{font-family:"Righteous";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/righteous-latin-400-normal.woff2) format("woff2")}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+--pr-paper:#FAF3D7;--pr-cream:#FBF6EC;--pr-card:#FFFCF2;--pr-ink:#241E2C;--pr-text-2:#5C5462;--pr-text-muted:#736A7B;
+--pr-border:#EDE0B4;--pr-hairline:#F3EDD6;
+--pr-pink:#FF4D9D;--pr-teal:#1FC9B7;--pr-purple:#8A4DEB;--pr-yellow:#FFC53D;--pr-orange:#FF8A3C;--pr-blue:#35B5E8;--pr-lime:#B8E332;
+--pr-pink-text:#C4116B;--pr-teal-text:#0B6E66;--pr-purple-text:#5E2CA5;--pr-yellow-text:#7A5200;--pr-orange-text:#9C4A00;--pr-blue-text:#0E6285;--pr-lime-text:#4E6B00;
+--pr-pink-tint:#FCEEF4;--pr-teal-tint:#E9F5F1;--pr-purple-tint:#F2EDFA;--pr-yellow-tint:#FBF3DA;--pr-orange-tint:#FCEFE4;--pr-blue-tint:#EAF4FB;--pr-lime-tint:#F2F7E2;
+--pr-info-bg:#E9F5F1;--pr-info-text:#0B6E66;--pr-ok-bg:#E5F3E7;--pr-ok-text:#17693A;
+--pr-warn-bg:#FFF3D2;--pr-warn-text:#7A5200;--pr-danger-bg:#FBE9E9;--pr-danger-text:#B01E28;
+--pr-card-snow-bg:var(--pr-blue-tint);--pr-card-snow-fg:var(--pr-blue-text);
+--pr-card-todo-bg:var(--pr-pink-tint);--pr-card-todo-fg:var(--pr-pink-text);
+--pr-card-money-bg:var(--pr-teal-tint);--pr-card-money-fg:var(--pr-teal-text);
+--pr-card-stash-bg:var(--pr-purple-tint);--pr-card-stash-fg:var(--pr-purple-text);
+--pr-card-meeting-bg:var(--pr-orange-tint);--pr-card-meeting-fg:var(--pr-orange-text);
+--pr-card-terrain-bg:var(--pr-lime-tint);--pr-card-terrain-fg:var(--pr-lime-text);
+--pr-card-warn-border:1.5px solid #C89B3C;
+--pr-card-alert-border:1.5px solid #B01E28;
+--pr-link:var(--pr-pink-text);--pr-btn-primary-bg:var(--pr-pink-text);
+--pr-nav-selected:var(--pr-pink-text);--pr-nav-idle:#A29AA8;
+--pr-hero-bg:var(--pr-ink);--pr-hero-text:var(--pr-cream);
+--pr-font-app:"Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+--pr-font-app-display:"Righteous","Arial Rounded MT Bold",system-ui,sans-serif;
+}
+body{font-family:var(--pr-font-app);background:var(--pr-paper);color:var(--pr-ink);overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom)}
+::-webkit-scrollbar{display:none}
+a{color:var(--pr-link);text-decoration:none}
+svg.pri{vertical-align:-0.18em;flex:0 0 auto}
+.view{display:none;padding:0 16px 96px}.view.active{display:block}
+.hh{padding:22px 4px 12px}
+.hh h1{font-family:var(--pr-font-app-display);font-size:23px;font-weight:400;letter-spacing:.5px}
+.hh h1::after{content:"";display:block;width:54px;height:5px;border-radius:3px;background:var(--pr-teal);margin-top:7px}
+.hh .sub{font-size:13px;color:var(--pr-text-muted);margin-top:6px}
+.card{background:var(--pr-card);border:1px solid var(--pr-border);border-radius:14px;padding:15px;margin-bottom:12px}
+.card h2{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin-bottom:10px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--pr-pink-tint);color:var(--pr-pink-text)}
+.pill.warn{background:var(--pr-warn-bg);color:var(--pr-warn-text)}.pill.ok{background:var(--pr-ok-bg);color:var(--pr-ok-text)}.pill.muted{background:#F1EBE0;color:var(--pr-text-2)}
+.big{font-family:var(--pr-font-app-display);font-size:46px;font-weight:400;letter-spacing:1px;line-height:1;text-shadow:3px 3px 0 var(--pr-pink)}
+.muted{color:var(--pr-text-muted)}.sm{font-size:13px}.xs{font-size:11.5px}
+.btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:9px 13px;border-radius:10px;border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-ink);cursor:pointer}
+.btn.pri{background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)}
+.lk{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border:1px solid var(--pr-border);border-radius:11px;margin-bottom:8px;background:var(--pr-card);font-size:14px;font-weight:600}
+.lk small{display:block;font-weight:400;color:var(--pr-text-muted);font-size:11.5px;margin-top:1px}
+.day{border-left:3px solid #E3D9C8;padding:2px 0 2px 12px;margin-bottom:14px}
+.day.today{border-color:var(--pr-pink)}
+.day .dt{font-size:11px;font-weight:700;color:var(--pr-text-muted);text-transform:uppercase;letter-spacing:.5px}
+.day.today .dt{color:var(--pr-pink-text)}
+.day .ti{font-size:15px;font-weight:700;margin-top:1px}
+.tl{font-size:13px;color:var(--pr-text-2);margin-top:3px}
+.inp{width:100%;border:1px solid var(--pr-border);border-radius:10px;padding:11px;font-size:15px;font-family:inherit;background:var(--pr-card);color:var(--pr-ink)}
+.banner{background:var(--pr-hero-bg);color:var(--pr-hero-text);border-radius:14px;padding:14px 15px;margin-bottom:12px}
+.hero-ti{font-family:var(--pr-font-app-display);font-size:22px;font-weight:400;letter-spacing:.5px;text-shadow:2px 2px 0 var(--pr-pink)}
+.card.snow{background:var(--pr-card-snow-bg)}.card.snow h2{color:var(--pr-card-snow-fg)}
+.card.todo{background:var(--pr-card-todo-bg)}.card.todo h2{color:var(--pr-card-todo-fg)}
+.card.money{background:var(--pr-card-money-bg)}.card.money h2{color:var(--pr-card-money-fg)}
+.card.stash{background:var(--pr-card-stash-bg)}.card.stash h2{color:var(--pr-card-stash-fg)}
+.card.meeting{background:var(--pr-card-meeting-bg)}.card.meeting h2{color:var(--pr-card-meeting-fg)}
+.card.terrain{background:var(--pr-card-terrain-bg)}.card.terrain h2{color:var(--pr-card-terrain-fg)}
+.card.snow,.card.todo,.card.money,.card.stash,.card.meeting,.card.terrain{border-color:rgba(0,0,0,.07)}
+.card.snow .muted,.card.todo .muted,.card.money .muted,.card.stash .muted,.card.meeting .muted,.card.terrain .muted{color:var(--pr-text-2)}
+.card.alertcard{background:var(--pr-danger-bg);border:var(--pr-card-alert-border)}
+.stripe{height:5px;border-radius:3px;margin-top:12px;background:linear-gradient(90deg,var(--pr-pink) 0 25%,var(--pr-yellow) 25% 50%,var(--pr-teal) 50% 75%,var(--pr-purple) 75% 100%)}
+.tbann{background:var(--pr-warn-bg);border:1px solid #EFD9A0;color:var(--pr-warn-text);border-radius:12px;padding:9px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.soon{text-align:center;color:var(--pr-text-muted);padding:38px 16px}
+.soon .ic{font-size:30px}.soon .t{font-weight:700;color:var(--pr-text-2);margin-top:8px}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--pr-card);border-top:1px solid var(--pr-border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 7px;border:none;background:none;cursor:pointer;color:var(--pr-nav-idle)}
+.nb .ic{height:19px;line-height:1;display:flex;align-items:center}.nb span{font-size:9.5px;margin-top:3px;font-weight:600}
+.nb.on{color:var(--pr-nav-selected)}.nb.on span{font-weight:700}
+.toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:var(--pr-ink);color:#fff;font-size:13px;padding:9px 15px;border-radius:10px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* --- desktop scaffolding: inert on phones (see the min-width:900px block) --- */
+.hero,.heroin,.wrap{display:block}
+.hstripe{display:none}
+.bnav .brand,.bnav .tw{display:none}
+/* the one deliberate phone change: Memphis stripes behind the countdown card */
+.heroin>.banner{position:relative;overflow:hidden}
+.heroin>.banner::before{content:"";position:absolute;inset:0;opacity:.17;pointer-events:none;
+background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15px 45px,var(--pr-yellow) 45px 60px,transparent 60px 90px,var(--pr-teal) 90px 105px,transparent 105px 135px)}
+.heroin>.banner>*{position:relative;z-index:1}
+
+/* ===================== DESKTOP (>=900px) =====================
+   Nothing in here touches phones. The bottom tab bar stands up into a top bar,
+   the page header becomes a full-bleed striped hero, and the cards flow into
+   columns inside a 1200px measure. */
+@media(min-width:900px){
+ body{padding-bottom:0}
+ .bnav{position:sticky;top:0;bottom:auto;left:auto;right:auto;height:64px;padding:0 24px;
+  align-items:center;justify-content:flex-start;gap:2px;
+  border-top:none;border-bottom:1px solid var(--pr-border)}
+ .bnav .brand{display:flex;align-items:center;gap:10px;margin-right:16px;flex:0 0 auto}
+ .bnav .brand .bmk{width:34px;height:34px;border-radius:10px;background:var(--pr-ink);color:var(--pr-cream);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+ .bnav .brand .bwm{font-family:var(--pr-font-app-display);font-size:15px;letter-spacing:.5px;
+  text-shadow:1.5px 1.5px 0 var(--pr-pink)}
+ .bnav .tw{display:block;margin-left:auto;text-align:right;flex:0 0 auto;line-height:1.35}
+ .nb{flex:0 0 auto;flex-direction:row;gap:7px;padding:8px 13px;border-radius:9px}
+ .nb .ic{height:auto}
+ .nb span{font-size:13.5px;margin-top:0;font-weight:600}
+ .nb:hover{background:var(--pr-paper);color:var(--pr-ink)}
+ .nb.on,.nb.on:hover{background:var(--pr-pink-tint);color:var(--pr-nav-selected)}
+ .view{padding:0}
+ .tbann{max-width:1200px;margin:14px auto 0}
+ .hero{background:var(--pr-hero-bg);color:var(--pr-hero-text);position:relative;overflow:hidden}
+ .hero::before{content:"";position:absolute;inset:0;opacity:.15;
+  background:repeating-linear-gradient(115deg,var(--pr-pink) 0 26px,transparent 26px 78px,var(--pr-yellow) 78px 104px,transparent 104px 156px,var(--pr-teal) 156px 182px,transparent 182px 234px)}
+ .heroin{position:relative;max-width:1200px;margin:0 auto;padding:52px 28px 46px;
+  display:grid;grid-template-columns:1fr auto;gap:44px;align-items:end}
+ .heroin .hh{padding:0}
+ .heroin .hh h1{font-size:46px;line-height:1.06;text-shadow:4px 4px 0 var(--pr-pink)}
+ .heroin .hh h1::after{display:none}
+ .heroin .hh .sub{font-size:15.5px;color:var(--pr-hero-text);opacity:.85;margin-top:12px}
+ .heroin>.banner{background:none;border-radius:0;padding:0;margin:0;text-align:right;overflow:visible}
+ .heroin>.banner::before{display:none}
+ .heroin>.banner .big{font-size:74px;text-shadow:5px 5px 0 var(--pr-teal);margin:0 0 8px}
+ .heroin>.banner .hero-ti{font-size:34px}
+ .heroin>.banner .stripe{display:none}
+ .hstripe{display:block;height:7px;
+  background:linear-gradient(90deg,var(--pr-pink) 0 25%,var(--pr-yellow) 25% 50%,var(--pr-teal) 50% 75%,var(--pr-purple) 75% 100%)}
+ .wrap{max-width:1200px;margin:0 auto;padding:32px 28px 72px;columns:3;column-gap:16px}
+ #v-home .wrap{columns:2;max-width:1020px}
+ .wrap>*{break-inside:avoid;width:100%}
+ .wrap>.card,.wrap>.banner{display:inline-block;margin-bottom:16px}
+ .wrap>.btn,.wrap>.btn.pri{column-span:all;margin-top:6px}
+ #v-days .wrap{columns:2;column-gap:40px}
+ #v-days .wrap>div:first-child{column-span:all}
+ #v-snow .wrap,#v-runs .wrap{columns:2;column-gap:16px}
+ /* the town picker is a horizontal scroller on a phone; on desktop let it
+    span the columns and wrap so no town gets clipped */
+ #v-scene .wrap>div:first-child{column-span:all;overflow:visible;flex-wrap:wrap;padding-bottom:2px;margin-bottom:14px}
+ .soon{padding:70px 16px}
+}
+
+/* section headers + the desktop-only Home cards: invisible on phones */
+.sechd,.deskonly,.hstats{display:none}
+.sect{display:block}
+
+/* --- Home sections + desktop-only cards (>=900px) --- */
+@media(min-width:900px){
+ .deskonly{display:block}
+ .sechd{display:flex;align-items:baseline;gap:14px;margin:0 0 15px}
+ .sechd h2{font-family:var(--pr-font-app-display);font-size:24px;font-weight:400;letter-spacing:.4px;
+  color:var(--pr-ink);text-transform:none}
+ .sechd .rule{flex:1;height:1px;background:var(--pr-border)}
+ .sechd .cnt{font-size:11.5px;font-weight:700;color:var(--pr-text-muted);text-transform:uppercase;letter-spacing:.5px}
+ /* one grid per section; auto-fit lets a lone card stretch instead of
+    leaving a dead column beside it */
+ .sect{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
+  gap:16px;align-items:start;margin-bottom:30px}
+ .sect>*{margin-bottom:0}
+ #v-home .wrap{columns:auto;max-width:1160px}
+ /* stats strip under the countdown */
+ .hstats{display:flex;gap:34px;grid-column:1/-1;margin-top:30px;
+  border-top:1px solid rgba(251,246,236,.22);padding-top:18px}
+ .hstats .v{font-family:var(--pr-font-app-display);font-size:23px;line-height:1}
+ .hstats .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;opacity:.65;margin-top:6px}
+ .drow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--pr-hairline)}
+ .drow:last-child{border-bottom:none;padding-bottom:0}
+ .drail{border-left:3px solid #E3D9C8;padding-left:11px}
+ .dpick{padding:7px 0;border-bottom:1px solid var(--pr-hairline)}
+ .dpick:last-of-type{border-bottom:none}
+ .dpick .n{font-size:13.5px;font-weight:700}
+ /* the phone's big "Full itinerary" button is redundant on desktop — the tab
+    is right there in the top bar, and the route card has its own link */
+ #v-home .sect>.btn.pri{display:none}
+}
+</style>
+</head>
+<body>
+<nav class="bnav">
+  <div class="brand"><span class="bmk"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.7 3.6 2 13.2l1.5 1.7 1.2-1.1V21h14.6v-7.2l1.2 1.1 1.5-1.7L12 4.2z"/></svg></span><span class="bwm">POWDER RUN</span></div>
+  <button class="nb on" data-t="home" onclick="sw('home')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/></svg></span><span>Home</span></button>
+  <button class="nb" data-t="days" onclick="sw('days')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/></svg></span><span>Itinerary</span></button>
+  <button class="nb" data-t="snow" onclick="sw('snow')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g></svg></span><span>Snow</span></button>
+  <button class="nb" data-t="drive" onclick="sw('drive')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g></svg></span><span>Drive</span></button>
+    <button class="nb" data-t="scene" onclick="sw('scene')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g></svg></span><span>Scene</span></button>
+  <button class="nb" data-t="more" onclick="sw('more')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/></svg></span><span>More</span></button>
+  <div class="tw"><div class="xs muted">Trip window</div><div class="xs" style="font-weight:700" id="twdates">Feb 5 – 21, 2027</div></div>
+</nav>
+<div id="v-home" class="view active"></div>
+<div id="v-days" class="view"></div>
+<div id="v-snow" class="view"></div>
+<div id="v-drive" class="view"></div>
+<div id="v-runs" class="view"></div>
+<div id="v-scene" class="view"></div>
+<div id="v-more" class="view"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var D=null, EMB=null, GATEKEY=null, CUR='home', SCENE_TOWN=null, TMODE={}, PAST_OPEN={};
+function b64d(x){var b=atob(x),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+function b64e(buf){ var a=new Uint8Array(buf),x=''; for(var i=0;i<a.length;i++)x+=String.fromCharCode(a[i]); return btoa(x); }
+function normName(x){return (x||'').toLowerCase().split(/\s+/).filter(Boolean).join(' ');}
+async function gateTry(name,pw){ if(!(window.crypto&&crypto.subtle))throw new Error('no-sc'); var g=EMB.gate;
+  var km=await crypto.subtle.importKey('raw',new TextEncoder().encode(normName(name)+'|'+pw),'PBKDF2',false,['deriveKey']);
+  var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(g.salt),iterations:150000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt','encrypt']);
+  var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(g.iv)},key,b64d(g.ct));
+  D=JSON.parse(new TextDecoder().decode(pt)); GATEKEY=key; return true; }
+function showGate(err){ var nav=document.querySelector('.bnav'); if(nav)nav.style.display='none';
+  var o=(EMB&&EMB.open)||{}, h='<div class="hh" style="margin-top:26px"><h1>'+esc(o.title||'Trip')+' '+esc(o.year||'')+'</h1><div class="sub">Crew only — the trip name &amp; password came from the group chat</div></div>';
+  h+='<div class="card"><h2>Sign in once on this phone</h2>';
+  h+='<div class="xs muted" style="margin:4px 0 2px">Trip name</div><input class="inp" id="gname" autocomplete="off" placeholder="the trip name">';
+  h+='<div class="xs muted" style="margin:10px 0 2px">Trip password</div><input class="inp" id="gpw" type="password" placeholder="password">';
+  h+=(err?'<div class="xs" style="margin-top:8px;color:var(--pr-danger-text);font-weight:700">'+esc(err)+'</div>':'');
+  h+='<button class="btn pri" style="width:100%;justify-content:center;margin-top:12px" onclick="gateSubmit()">Unlock the app</button>';
+  h+='<div class="xs muted" style="margin-top:9px">One time only — the app then works offline, no re-entry.</div></div>';
+  h+='<div class="card alertcard"><div class="between"><h2 style="margin:0;color:var(--pr-danger-text)">'+ic('alert',13)+' Emergency</h2><a class="btn" href="tel:911" style="border-color:var(--pr-danger-text);color:var(--pr-danger-text);font-weight:700">911</a></div><div class="xs muted" style="margin-top:6px">Crew contacts, insurance lines &amp; hospitals are inside the app once you\u2019re signed in.</div></div>';
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  $('v-home').classList.add('active'); $('v-home').innerHTML=h;
+}
+async function gateSubmit(){ var nm=($('gname')||{}).value||'', pw=($('gpw')||{}).value||'';
+  if(!nm||!pw){ showGate('Both fields, ya donkey.'); return; }
+  try{ await gateTry(nm,pw); localStorage.setItem('gname',nm); localStorage.setItem('gpw',pw); var nav=document.querySelector('.bnav'); if(nav)nav.style.display=''; toast('Welcome to the crew'); render('home'); loadEmg(); }
+  catch(e){ showGate(e.message==='no-sc'?'This browser can\u2019t unlock — use Safari/Chrome over https.':'Wrong trip name or password.'); } }
+function lockApp(){ localStorage.removeItem('gname'); localStorage.removeItem('gpw'); toast('Locked'); setTimeout(function(){ location.reload(); },400); }
+async function adminReEncrypt(){ var nm=($('adName')||{}).value||'', pw=($('adPw')||{}).value||'';
+  if(!nm||!pw){ toast('New trip name + password required'); return; }
+  var salt=new Uint8Array(16), iv=new Uint8Array(12); crypto.getRandomValues(salt); crypto.getRandomValues(iv);
+  var km=await crypto.subtle.importKey('raw',new TextEncoder().encode(normName(nm)+'|'+pw),'PBKDF2',false,['deriveKey']);
+  var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:150000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt']);
+  var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,new TextEncoder().encode(JSON.stringify(D)));
+  var wrapper={gate:{salt:b64e(salt.buffer),iv:b64e(iv.buffer),ct:b64e(ct)},open:(EMB&&EMB.open)||{title:(D.meta||{}).title||'Trip',year:(D.meta||{}).year||''}};
+  var b=new Blob([JSON.stringify(wrapper)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='trip-data.json'; a.click();
+  toast('Downloaded — drag to Netlify, then share the new phrase'); }
+var HURT_SEL=null;
+function pickHurt(nm){ HURT_SEL=(HURT_SEL===nm?null:nm); render(CUR); }
+function openEmbDoc(id){ var dd=null; (D.docs||[]).forEach(function(x){ if(x.id===id)dd=x; }); if(!dd){ toast('Doc not found'); return; }
+  var bin=atob(dd.data), a=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);
+  var url=URL.createObjectURL(new Blob([a],{type:dd.type||'application/pdf'})); window.open(url,'_blank'); }
+var CVN=0;
+function toggleCvd(id){ var el=document.getElementById(id); if(el)el.style.display=(el.style.display==='none'?'block':'none'); }
+function covRow(cv){ CVN++; var did='cvd'+CVN;
+  var cf=!!cv.callFirst;
+  var h='<div style="margin-top:7px;border:1.5px solid '+(cf?'var(--pr-danger-text)':'var(--pr-hairline)')+';border-radius:10px;padding:8px 10px'+(cf?';background:var(--pr-danger-bg,#FDECEF)':'')+'">';
+  h+='<div class="between"><div class="sm" style="font-weight:700;flex:1;padding-right:8px">'+(cf?'⚠ ':'')+esc(cv.name)+'</div>'+(cv.phone?'<a class="btn" href="tel:'+esc(cv.phone)+'" style="font-weight:700'+(cf?';border-color:var(--pr-danger-text);color:var(--pr-danger-text)':'')+'">'+ic('phone',13)+' Call</a>':'')+'</div>';
+  h+='<div class="xs" style="margin-top:2px;font-weight:700;'+(cf?'color:var(--pr-danger-text)':'color:var(--pr-text-muted)')+'">'+(cf?'CALL FIRST — before arranging any transport':'Pay out of pocket → reimburse later')+(cv.phone?' · '+esc(cv.phone):'')+'</div>';
+  if(cv.policy)h+='<div class="xs" style="margin-top:3px;font-weight:700">'+esc(cv.policy)+'</div>';
+  if(cv.note)h+='<div class="xs muted" style="margin-top:3px">'+esc(cv.note)+'</div>';
+  if(cv.docId)h+='<div style="margin-top:6px"><button class="btn" onclick="openEmbDoc(\''+esc(cv.docId)+'\')">'+ic('checklist',13)+' Open proof doc</button></div>';
+  if(cv.details)h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+did+'\')">Claims &amp; fine print ▾</div><div id="'+did+'" class="xs muted" style="display:none;margin-top:3px">'+esc(cv.details)+'</div>';
+  return h+'</div>';
+}
+function hurtHtml(){
+  var crew=D.crew||[]; if(!crew.length)return '';
+  var h='<div style="margin-top:10px;border-top:1px solid var(--pr-hairline);padding-top:9px"><div class="sm" style="font-weight:700">🚑 Someone\u2019s hurt — who?</div>';
+  h+='<div class="xs muted" style="margin:4px 0 7px">1) Life-threatening: ski patrol / 911 NOW — coverage waits. 2) Stabilized: do NOT book transport yourself — use their CALL-FIRST lines. 3) Save every receipt.</div>';
+  h+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
+  crew.forEach(function(c){ var on=(c.name===HURT_SEL); h+='<button class="btn" onclick="pickHurt(\''+esc(c.name)+'\')" style="padding:5px 11px'+(on?';background:var(--pr-danger-text);color:#fff;border-color:var(--pr-danger-text)':'')+'">'+esc(c.name)+'</button>'; });
+  h+='</div>';
+  if(HURT_SEL){ var p=null; crew.forEach(function(c){ if(c.name===HURT_SEL)p=c; }); var e=(p&&p.emergency)||{};
+    if(e.pending){ h+='<div class="xs muted" style="margin-top:8px">'+esc(HURT_SEL)+'\u2019s info isn\u2019t in yet — the 60-second form is right below. Meanwhile: patrol/911, then hospital below.</div>'; }
+    else if(e.placeholder){ CVN++; var pid='cvd'+CVN;
+      h+='<div class="xs" style="margin-top:8px">'+esc(HURT_SEL)+' never filled out the form. There is an official trip medical record on file.</div>';
+      h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+pid+'\')">Medical record \u25be \u2014 only open this if it\u2019s actually relevant. Respect their privacy for now.</div>';
+      h+='<div id="'+pid+'" class="xs" style="display:none;margin-top:4px;font-weight:700">Surgical history: '+esc((e.medical||{}).surgeries||'\u2014')+'<br>Medications: '+esc((e.medical||{}).meds||'\u2014')+'</div>';
+      h+='<div class="xs muted" style="margin-top:6px">Real coverage unknown \u2014 ski patrol/911, then the hospital below. '+esc(HURT_SEL)+': fix this in the form below.</div>'; }
+    else {
+      if(e.ice&&e.ice.name)h+='<div class="xs" style="margin-top:8px;font-weight:700">ICE: '+esc(e.ice.name)+(e.ice.phone?' · <a href="tel:'+esc(e.ice.phone)+'">'+esc(e.ice.phone)+'</a>':' · number TBD')+'</div>';
+      var covs=(e.coverages||[]).slice().sort(function(a,b){ return (b.callFirst?1:0)-(a.callFirst?1:0); });
+      covs.forEach(function(cv){ h+=covRow(cv); });
+      if(e.medical){ CVN++; var mid='cvd'+CVN;
+        h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+mid+'\')">Medical details \u25be \u2014 only open if it\u2019s actually relevant; respect their privacy.</div>';
+        h+='<div id="'+mid+'" class="xs muted" style="display:none;margin-top:3px">'+esc([e.medical.allergies?('allergies: '+e.medical.allergies):'',e.medical.meds?('meds: '+e.medical.meds):'',e.medical.blood?('blood: '+e.medical.blood):'',e.medical.surgeries?('surgeries: '+e.medical.surgeries):'',e.medical.notes||''].filter(Boolean).join(' · ')||'—')+'</div>'; }
+    }
+  }
+  return h+'</div>';
+}
+function emgUrl(){ return D.docsUrl||D.runsUrl||''; }
+async function applyEmg(arr){ var ch=false;
+  for(var i=0;i<arr.length;i++){ var sb=arr[i]; if(!sb||!sb.who||!sb.data||!sb.iv)continue;
+    try{ var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(sb.iv)},GATEKEY,b64d(sb.data)); var em=JSON.parse(new TextDecoder().decode(pt));
+      (D.crew||[]).forEach(function(c){ if(normName(c.name)===normName(sb.who)){ em.submitted=sb.ts||em.submitted; c.emergency=em; ch=true; } });
+    }catch(e){}
+  } return ch; }
+function loadEmg(){ try{ var c=JSON.parse(localStorage.getItem('emgCache')||'null'); if(c&&c.length)applyEmg(c).then(function(ch){ if(ch&&CUR==='more')render(CUR); }); }catch(e){}
+  var u=emgUrl(); if(!u)return;
+  fetch(u+'?emg=1').then(function(x){return x.json();}).then(function(a){ if(!Array.isArray(a))return; a=a.filter(function(sb){return sb&&sb.who&&sb.data&&sb.iv;}); if(!a.length)return; localStorage.setItem('emgCache',JSON.stringify(a)); applyEmg(a).then(function(ch){ if(ch&&(CUR==='more'||CUR==='home'))render(CUR); }); }).catch(function(){}); }
+async function submitEmg(){
+  var who=($('emWho')||{}).value||''; if(!who){ toast('Pick your name first'); return; }
+  function v(id){ return (($(id)||{}).value||'').trim(); }
+  var covs=[];
+  if(v('emRco')){ covs.push({name:v('emRco'),phone:v('emRph'),policy:v('emRid'),callFirst:!!(($('emRcf')||{}).checked),note:(($('emRcf')||{}).checked?'They must be called BEFORE any rescue/evac is arranged — no call = not covered.':'Pay out of pocket, keep every receipt, claim after.')}); }
+  if(v('emHco')||v('emHid')){ covs.push({name:'Health insurance — '+(v('emHco')||'plan'),phone:v('emHph'),policy:(v('emHid')?'Member ID '+v('emHid'):''),callFirst:!!(($('emHcf')||{}).checked),note:(($('emHcf')||{}).checked?'Call them before non-life-threatening treatment or any transport decisions.':'Pay out of pocket, keep every receipt, claim after.')}); }
+  var med={allergies:v('emAll'),meds:v('emMed'),blood:v('emBld'),notes:v('emNts')};
+  var em={ice:{name:v('emIn'),phone:v('emIp')},coverages:covs,submitted:Date.now()};
+  if(med.allergies||med.meds||med.blood||med.notes)em.medical=med;
+  localStorage.setItem('me',who);
+  try{ var iv=sdocIv(); var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},GATEKEY,new TextEncoder().encode(JSON.stringify(em)));
+    var sub={who:who,iv:b64e(iv.buffer),data:b64e(ct),ts:Date.now()};
+    var cache=[]; try{ cache=JSON.parse(localStorage.getItem('emgCache')||'[]')||[]; }catch(e){}
+    cache=cache.filter(function(sb){return normName(sb.who)!==normName(who);}); cache.push(sub);
+    localStorage.setItem('emgCache',JSON.stringify(cache));
+    (D.crew||[]).forEach(function(c){ if(normName(c.name)===normName(who))c.emergency=em; });
+    var u=emgUrl();
+    if(u){ fetch(u,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'putemg',who:who,iv:sub.iv,data:sub.data})}).then(function(){ toast('Saved — hits everyone’s phone on their next open'); }).catch(function(){ toast('Saved on this phone — needs wifi to reach the crew'); }); }
+    else toast('Saved on this phone — sharing pipe not switched on yet');
+    render('more');
+  }catch(e){ toast('Couldn’t encrypt — tell Tanner'); }
+}
+function emgFormCard(){
+  var crew=D.crew||[], meSel=localStorage.getItem('me')||'';
+  var opts='<option value="">Who are you?</option>'+crew.map(function(c){return '<option'+(c.name===meSel?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
+  var mine=null; crew.forEach(function(c){ if(c.name===meSel)mine=c; });
+  var done=!!(mine&&mine.emergency&&!mine.emergency.pending&&!mine.emergency.placeholder);
+  var h='<div class="card"><h2>My emergency info</h2>';
+  h+='<div class="xs muted" style="margin-bottom:8px">60 seconds. If you get wrecked, this is what the crew reads to ski patrol and your insurance line. Encrypted with the trip password before it leaves your phone — visible to everyone signed in, nobody else.'+(done?' <b>Yours is in — saving again just updates it.</b>':'')+'</div>';
+  h+='<select class="inp" id="emWho">'+opts+'</select>';
+  h+='<div class="xs muted" style="margin:10px 0 2px">Emergency contact</div><input class="inp" id="emIn" placeholder="Name" autocomplete="off"><input class="inp" id="emIp" placeholder="Phone" style="margin-top:6px" autocomplete="off">';
+  h+='<div class="xs muted" style="margin:10px 0 2px">Health insurance</div><input class="inp" id="emHco" placeholder="Company / plan" autocomplete="off"><input class="inp" id="emHid" placeholder="Member ID" style="margin-top:6px" autocomplete="off"><input class="inp" id="emHph" placeholder="Phone on the card" style="margin-top:6px" autocomplete="off">';
+  h+='<label class="xs" style="display:flex;gap:7px;align-items:flex-start;margin-top:7px;font-weight:700"><input type="checkbox" id="emHcf" style="margin-top:1px"><span>They must be CALLED FIRST before treatment/transport decisions (pre-authorization)</span></label>';
+  h+='<div class="xs muted" style="margin:10px 0 2px">Rescue / evac coverage — if any (AAC, Global Rescue, a credit card…)</div><input class="inp" id="emRco" placeholder="Who covers you" autocomplete="off"><input class="inp" id="emRid" placeholder="Member / policy #" style="margin-top:6px" autocomplete="off"><input class="inp" id="emRph" placeholder="Their emergency phone" style="margin-top:6px" autocomplete="off">';
+  h+='<label class="xs" style="display:flex;gap:7px;align-items:flex-start;margin-top:7px;font-weight:700"><input type="checkbox" id="emRcf" checked style="margin-top:1px"><span>They must be CALLED FIRST to start the rescue (almost always yes)</span></label>';
+  h+='<div class="xs muted" style="margin:10px 0 2px">Medical — optional, but patrol will ask</div><input class="inp" id="emAll" placeholder="Allergies" autocomplete="off"><input class="inp" id="emMed" placeholder="Medications" style="margin-top:6px" autocomplete="off"><input class="inp" id="emBld" placeholder="Blood type" style="margin-top:6px" autocomplete="off"><input class="inp" id="emNts" placeholder="Anything else patrol should know" style="margin-top:6px" autocomplete="off">';
+  h+='<button class="btn pri" style="width:100%;justify-content:center;margin-top:10px" onclick="submitEmg()">Save my info</button>';
+  h+='<div class="xs muted" style="margin-top:7px">Skip it and your official trip medical record stays as written. Ask Zack how that’s going.</div>';
+  return h+'</div>';
+}
+function contactRows(){ var a=D.contacts||[]; if(!a.length)return ''; var h='';
+  a.forEach(function(c){ h+='<div style="padding:7px 0;border-bottom:1px solid var(--pr-hairline)"><div class="between"><div class="sm" style="font-weight:700;flex:1;padding-right:8px">'+esc(c.name)+'</div>'+(c.v?'<a class="btn" href="tel:'+esc(c.v)+'" style="font-weight:700">'+ic('phone',13)+' Call</a>':'')+'</div>'+(c.v?'<div class="xs" style="margin-top:2px;font-weight:600">'+esc(c.v)+'</div>':'')+(c.note?'<div class="xs muted" style="margin-top:2px">'+esc(c.note)+'</div>':'')+'</div>'; });
+  return h; }
+function sdocIv(){ var a=new Uint8Array(12); crypto.getRandomValues(a); return a; }
+function listSharedDocs(){ var el=$('sdoclist'); if(!el)return;
+  if(!D.docsUrl){ el.innerHTML='<span class="muted">Not switched on yet — needs the 5-min Google-Script step (same as Runs sharing). Files are end-to-end encrypted with the trip password.</span>'; return; }
+  fetch(D.docsUrl+'?docs=1').then(function(x){return x.json();}).then(function(a){ if(!a.length){ el.innerHTML='<span class="muted">No crew files yet.</span>'; return; } var h=''; a.forEach(function(dd){ h+='<div class="between" style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm" style="font-weight:600">'+esc(dd.name)+' <span class="xs muted">· '+esc(dd.by||'')+'</span></div><button class="btn" onclick="openSharedDoc(\''+esc(dd.id)+'\',\''+esc(dd.name)+'\',\''+esc(dd.type||'')+'\',\''+esc(dd.iv)+'\')">Open</button></div>'; }); el.innerHTML=h; }).catch(function(){ el.innerHTML='<span class="muted">Couldn\u2019t reach the shared vault — offline?</span>'; }); }
+function addSharedDoc(inp){ var f=inp.files[0]; if(!f)return;
+  if(!D.docsUrl){ toast('Shared vault isn\u2019t switched on yet'); return; }
+  if(f.size>8*1024*1024){ toast('Keep shared files under ~8MB'); return; }
+  var rd=new FileReader(); rd.onload=async function(){ try{ var iv=sdocIv(); var ctb=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},GATEKEY,rd.result);
+    toast('Encrypting & uploading\u2026');
+    fetch(D.docsUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'putdoc',name:f.name,type:f.type,by:localStorage.getItem('me')||'',iv:b64e(iv.buffer),data:b64e(ctb)})}).then(function(){ setTimeout(listSharedDocs,1800); toast('Shared with the crew'); }); }catch(e){ toast('Encrypt failed'); } }; rd.readAsArrayBuffer(f); }
+function openSharedDoc(id,name,type,iv){ fetch(D.docsUrl+'?doc='+encodeURIComponent(id)).then(function(x){return x.json();}).then(async function(dd){ var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(iv)},GATEKEY,b64d(dd.data)); var url=URL.createObjectURL(new Blob([pt],{type:type||'application/octet-stream'})); window.open(url,'_blank'); }).catch(function(){ toast('Couldn\u2019t open — offline?'); }); }
+function $(id){return document.getElementById(id);}
+/* ---- Powder Run icon set (design-system glyphs, currentColor) ---- */
+var IC={mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',calendar:'<path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/>',snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',checklist:'<path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/>',cheers:'<g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g>',more:'<circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/>',warning:'<path fill-rule="evenodd" d="M12 2.4a1.6 1.6 0 0 1 1.4.8l8.8 15.2a1.6 1.6 0 0 1-1.4 2.4H3.2a1.6 1.6 0 0 1-1.4-2.4L10.6 3.2A1.6 1.6 0 0 1 12 2.4Zm-1.1 6.2h2.2l-.4 5.6h-1.4l-.4-5.6ZM12 15.6a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',alert:'<path fill-rule="evenodd" d="M8.1 2.5h7.8l5.6 5.6v7.8l-5.6 5.6H8.1l-5.6-5.6V8.1l5.6-5.6ZM10.9 7h2.2l-.4 6h-1.4l-.4-6ZM12 15.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',closed:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.6a7.2 7.2 0 0 0-5.6 11.8L16.6 6.4A7.15 7.15 0 0 0 12 4.8Zm5.6 3L7.4 17.9A7.2 7.2 0 0 0 17.6 7.8Z"/>',check:'<path d="M9.55 15.15 19.1 5.6l1.9 1.9L9.55 19 3 12.45l1.9-1.9 4.65 4.6Z"/>',tip:'<path d="M12 6.2a4.8 4.8 0 0 1 2.7 8.8c-.4.3-.6.7-.7 1.2l-.1.6H10l-.1-.6c-.1-.5-.3-.9-.7-1.2A4.8 4.8 0 0 1 12 6.2Z"/><path d="M10 18.4h4v1a1.5 1.5 0 0 1-1.5 1.4h-1a1.5 1.5 0 0 1-1.5-1.4v-1Z"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 1.4v2.3M4.9 4.1l1.6 1.6M19.1 4.1l-1.6 1.6M2.4 10.8h2.3M19.3 10.8h2.3"/></g>',pin:'<path fill-rule="evenodd" d="M12 2.2a7.2 7.2 0 0 1 7.2 7.2c0 4.8-5.4 10.8-6.7 12.2a.7.7 0 0 1-1 0C10.2 20.2 4.8 14.2 4.8 9.4A7.2 7.2 0 0 1 12 2.2Zm0 4.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/>',map:'<path fill-rule="evenodd" d="M8.6 3 3.6 4.9a1 1 0 0 0-.6.9v14.4a.6.6 0 0 0 .8.6l4.8-1.9 6.8 2.1 5-1.9a1 1 0 0 0 .6-.9V3.8a.6.6 0 0 0-.8-.6l-4.8 1.9L8.6 3Zm.7 2.3 5.4 1.7v12.6L9.3 17.9V5.3Z"/>',ticket:'<path fill-rule="evenodd" d="M3 5.8h18a1 1 0 0 1 1 1v10.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.8a1 1 0 0 1 1-1ZM2 10.2a1.9 1.9 0 0 1 0 3.6v-3.6Zm20 0v3.6a1.9 1.9 0 0 1 0-3.6ZM7.9 10.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm3.5-3.4h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Z"/>',phone:'<path d="M6.6 3c.5 0 2.9 2.4 2.9 3s-1.5 1.9-1.5 2.6 1.2 2.3 2.7 3.8 3.1 2.7 3.8 2.7 2-1.5 2.6-1.5S21 16 21 16.5 19.6 21 17.5 21C12 21 3 12 3 6.5 3 4.4 6.1 3 6.6 3Z"/>',bed:'<path d="M2.4 5.4h2v8.2h7.2V7.9h6.2a3.8 3.8 0 0 1 3.8 3.8v6.9h-2v-2.2H4.4v2.2h-2V5.4Z"/><circle cx="7.5" cy="10.4" r="2"/>',compass:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.4A7.4 7.4 0 1 0 19.4 12 7.4 7.4 0 0 0 12 4.6Z"/><path d="M12 5.6 14.2 12 12 18.4 9.8 12 12 5.6Z"/>',trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',skier:'<circle cx="14.4" cy="3" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 5.2 10.7 9.4l2.2 3.3-.6 3.2M13 6.6l3.7 2.6"/></g><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M16.9 9.4l2.7 6.4"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.8 16.2h13.6c1.1 0 1.9-.4 2.5-1.3M4.6 18.8h13.6c1.1 0 1.9-.4 2.5-1.3"/></g>',snowboarder:'<circle cx="14.9" cy="3.4" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 5.8 11.8 9.9l-2.5 5.2M11.8 9.9l2.1 5.3M14.1 6.3l3.3 2.3"/></g><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.6 15.2c.5 1.3 1.4 2 2.8 2h11.2c1.4 0 2.3-.7 2.8-2"/>',gondola:'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 3.4h20"/><rect x="11.2" y="3.4" width="1.6" height="4.4"/><path fill-rule="evenodd" d="M6.8 7.4h10.4a2 2 0 0 1 2 2.2l-.8 8.4a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-.8-8.4a2 2 0 0 1 2-2.2Zm.6 3 .3 3.4h8.6l.3-3.4H7.4Z"/>',food:'<path d="M5.4 2.6h1.4v4.6h.8V2.6H9v4.6h.8V2.6h1.4v6a2.6 2.6 0 0 1-2 2.5v10.3H7.4V11.1a2.6 2.6 0 0 1-2-2.5v-6Z"/><path d="M15.4 2.6c2.4 1.6 3.4 5.4 3.4 8 0 1.6-1 2.6-2 3v7.8h-1.4V2.6Z"/>',meeting:'<path fill-rule="evenodd" d="M9.4 6.6A1.6 1.6 0 0 1 11 5h2a1.6 1.6 0 0 1 1.6 1.6v.8h3.8A1.6 1.6 0 0 1 20 9v9.6a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.6V9a1.6 1.6 0 0 1 1.6-1.6h3.8v-.8Zm1.7.2v.6h1.8v-.6h-1.8Zm-.5 5.6h2.8v2h-2.8v-2Z"/><circle cx="17.8" cy="3.6" r="1.2"/><circle cx="20.2" cy="1.9" r=".9"/><circle cx="15.9" cy="1.7" r=".7"/>'};
+function ic(n,s){s=s||14;var g=IC[n];if(!g)return '';return '<svg class="pri" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="currentColor" aria-hidden="true">'+g+'</svg>';}
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1900);}
+
+/* ---- test mode: getNow() drives all date logic ---- */
+function getNow(){var t=localStorage.getItem('testNow'); return t? new Date(t): new Date();}
+function inTest(){return !!localStorage.getItem('testNow');}
+function testBanner(){ if(!inTest())return ''; return '<div class="tbann"><span>🧪 Test mode — pretending it’s '+getNow().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span><button class="btn" style="padding:5px 9px" onclick="clearTest()">Reset</button></div>'; }
+function setTest(){var v=$('testInput').value; if(!v){return;} localStorage.setItem('testNow', new Date(v).toISOString()); toast('Test time set'); render(CUR);}
+function clearTest(){localStorage.removeItem('testNow'); toast('Back to real time'); render(CUR);}
+
+/* ---- date helpers (all via getNow) ---- */
+function dObj(s){return new Date(s+(s.length<=10?'T12:00:00':''));}
+function fmtShort(s){return dObj(s).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function nowMid(){var n=getNow();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),12);}
+function daysUntilStart(){return Math.ceil((dObj(D.meta.start)-nowMid())/864e5);}
+function tripDayIdx(){var d=Math.floor((nowMid()-dObj(D.meta.start))/864e5); if(d<0)return -1; if(d>=D.days.length)return -2; return d;}
+var GROUPACC={sunshine:'banff',norquay:'banff',louise:'banff',panorama:'panorama',kickinghorse:'kickinghorse',revelstoke:'revelstoke',whitewater:'whitewater',red:'red',schweitzer:'schweitzer'};
+var STOPACC={banff:'banff',invermere:'panorama',golden:'kickinghorse',revelstoke:'revelstoke',nelson:'whitewater',rossland:'red',sandpoint:'schweitzer'};
+var ACCENTS={banff:['var(--pr-pink)','var(--pr-pink-text)'],panorama:['var(--pr-purple)','var(--pr-purple-text)'],kickinghorse:['var(--pr-orange)','var(--pr-orange-text)'],revelstoke:['var(--pr-blue)','var(--pr-blue-text)'],whitewater:['var(--pr-lime)','var(--pr-lime-text)'],red:['var(--pr-teal)','var(--pr-teal-text)'],schweitzer:['var(--pr-yellow)','var(--pr-yellow-text)']};
+var ACCLABEL={banff:'Banff',panorama:'Panorama',kickinghorse:'Kicking Horse',revelstoke:'Revelstoke',whitewater:'Whitewater',red:'RED',schweitzer:'Schweitzer'};
+function dayAccent(day){ var g=day.rid?GROUPACC[day.rid]:STOPACC[day.stop]; return g?ACCENTS[g]:null; }
+function jumpGroup(g){ var el=$('dayg-'+g); if(el)el.scrollIntoView({behavior:'smooth',block:'start'}); }
+function resortOfDay(day){return day.rid?D.resorts[day.rid]:null;}
+var TICKET_R={kickinghorse:1,whitewater:1}, PASSTOT={banff:5,panorama:5,revelstoke:5,red:5,schweitzer:5}, PASSNAME={banff:'SkiBig3',panorama:'Panorama',revelstoke:'Revelstoke',red:'RED',schweitzer:'Schweitzer'};
+function skiGroupOf(day){ if(!day||!day.ski)return null; if(day.rid&&TICKET_R[day.rid])return null; var g=day.rid?GROUPACC[day.rid]:(day.stop==='banff'?'banff':null); return g||null; }
+function passChip(i){ var day=D.days[i]; if(!day||!day.ski)return '';
+  if(day.rid&&TICKET_R[day.rid])return '<span class="pill warn" style="font-size:10px">'+ic('ticket',10)+' Ticket needed</span>';
+  var g=skiGroupOf(day); if(!g)return ''; var nth=0; for(var j=0;j<=i;j++){ if(skiGroupOf(D.days[j])===g)nth++; }
+  return '<span class="pill muted" style="font-size:10px">'+ic('ticket',10)+' IKON · '+PASSNAME[g]+' '+nth+'/'+PASSTOT[g]+'</span>'; }
+function firstResortDayName(i){ var d=D.days[i]; if(!d||!d.rid)return ''; for(var j=0;j<i;j++){ if(D.days[j].rid===d.rid)return ''; } return (D.resorts[d.rid]||{}).name||d.rid; }
+function stopById(id){return (D.stops||[]).filter(function(s){return s.id===id;})[0]||null;}
+function guideFor(id){ return (D.guide||{})[id]||null; }
+function stashFor(rid){ var a=(D.secret||[]); for(var i=0;i<a.length;i++){ if(a[i].rid===rid) return a[i].t; } return ''; }
+function fmtDT(iso){ return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+function mapsUrl(q){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);}
+function gsearch(q){return 'https://www.google.com/search?q='+encodeURIComponent(q);}
+
+/* ---- nav ---- */
+function sw(v){if(!D)return; CUR=v; var vs=document.querySelectorAll('.view'); for(var i=0;i<vs.length;i++)vs[i].classList.remove('active'); $('v-'+v).classList.add('active'); var nb=document.querySelectorAll('.nb'); for(var j=0;j<nb.length;j++)nb[j].classList.toggle('on',nb[j].dataset.t===v); window.scrollTo(0,0); render(v);}
+function render(v){({home:rHome,days:rDays,snow:rSnow,drive:rDrive,scene:rScene,more:rMore})[v]();}
+function openGuide(id){ SCENE_TOWN=id; sw('scene'); }
+
+/* ---- pre-trip checklist + emergency + packing ---- */
+function ckDone(){ try{ return JSON.parse(localStorage.getItem('ckDone')||'{}'); }catch(e){ return {}; } }
+function toggleCheck(id){ var d=ckDone(); d[id]=!d[id]; localStorage.setItem('ckDone',JSON.stringify(d)); render('home'); }
+function checklistCard(){ var items=D.checklist||[]; if(!items.length)return ''; var dn=ckDone(); var left=items.filter(function(x){return !dn[x.id];}).length;
+  var h='<div class="card todo"><div class="between"><h2 style="margin:0">'+ic('check',13)+' Pre-trip checklist</h2><span class="pill '+(left?'warn':'ok')+'">'+(left?left+' to go':'all done')+'</span></div>';
+  var sorted=items.slice().sort(function(a,b){ var ad=dn[a.id]?1:0,bd=dn[b.id]?1:0; if(ad!==bd)return ad-bd; return ((a.due||'9999')<(b.due||'9999'))?-1:1; });
+  sorted.forEach(function(x){ var done=!!dn[x.id]; h+='<div style="display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--pr-hairline);cursor:pointer" onclick="toggleCheck(\''+x.id+'\')"><div style="color:'+(done?'var(--pr-ok-text)':'var(--pr-border)')+'">'+ic(done?'check':'more',15)+'</div><div class="sm" style="flex:1'+(done?';opacity:.5;text-decoration:line-through':'')+'">'+esc(x.text)+(x.due?' <span class="xs muted">· by '+fmtShort(x.due)+'</span>':'')+'</div></div>'; });
+  return h+'</div>';
+}
+function hospitalFor(id){ var a=D.hospitals||[]; for(var i=0;i<a.length;i++){ if(a[i].town===id)return a[i]; } return null; }
+function emergencyCard(stop){ if(!stop)return ''; var ho=hospitalFor(stop.id);
+  return '<div class="card alertcard"><div class="between"><h2 style="margin:0;color:var(--pr-danger-text)">'+ic('alert',13)+' Emergency · '+esc(stop.name)+'</h2><a class="btn" href="tel:911" style="border-color:var(--pr-danger-text);color:var(--pr-danger-text);font-weight:700">911</a></div>'+(ho?'<div class="sm" style="margin-top:8px"><a href="tel:'+esc(ho.v)+'">'+ic('phone',13)+' '+esc(ho.name)+' · '+esc(ho.v)+'</a></div>':'')+'<div class="xs" style="margin-top:5px"><a href="https://avalanche.ca" target="_blank">'+ic('mountain',12)+' Avalanche Canada forecast ↗</a></div>'+hurtHtml()+contactRows()+'</div>';
+}
+function pkDone(){ try{ return JSON.parse(localStorage.getItem('packDone')||'{}'); }catch(e){ return {}; } }
+function togglePack(k){ var d=pkDone(); d[k]=!d[k]; localStorage.setItem('packDone',JSON.stringify(d)); render('more'); }
+function packingCard(){ var cats=D.packing||[]; if(!cats.length)return ''; var d=pkDone(); var i=0,tot=0,done=0,rows='';
+  cats.forEach(function(c){ rows+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-text-muted);margin:10px 0 4px">'+esc(c.cat)+'</div>'; (c.items||[]).forEach(function(it){ var key='p'+i; i++; tot++; var dn=!!d[key]; if(dn)done++; rows+='<div style="display:flex;gap:9px;padding:5px 0;cursor:pointer" onclick="togglePack(\''+key+'\')"><div style="color:'+(dn?'var(--pr-ok-text)':'var(--pr-border)')+'">'+ic(dn?'check':'more',15)+'</div><div class="sm" style="flex:1'+(dn?';opacity:.5;text-decoration:line-through':'')+'">'+esc(it)+'</div></div>'; }); });
+  return '<div class="card todo"><div class="between"><h2 style="margin:0">'+ic('checklist',13)+' Packing list</h2><span class="pill muted">'+done+'/'+tot+'</span></div>'+rows+'</div>';
+}
+
+/* ---- HOME ---- */
+
+/* ---- section headers + desktop-only Home cards (hidden under 900px) ---- */
+function sec(t,c){ return '<div class="sechd"><h2>'+t+'</h2><div class="rule"></div>'+
+  (c?'<div class="cnt">'+esc(c)+'</div>':'')+'</div>'; }
+
+function deskStats(){
+  var idx=tripDayIdx(), nres=Object.keys(D.resorts||{}).length,
+      nights=(D.days||[]).length-1, ncrew=(D.crew||[]).length,
+      first=(idx===-1)?[daysUntilStart(),'days out']:(idx>=0?[(idx+1)+'/'+D.days.length,'day of the trip']:['\u2713','that\u2019s a wrap']);
+  function st(v,l){ return '<div><div class="v">'+esc(String(v))+'</div><div class="l">'+esc(l)+'</div></div>'; }
+  return '<div class="hstats">'+st(first[0],first[1])+st(nres,'resorts')+st(nights,'nights')+st(ncrew,'riders')+'</div>';
+}
+
+function fmtCancel(x){ var d=new Date(x);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+
+         d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
+
+function deskStops(){
+  var h='<div class="card deskonly"><h2>'+ic('bed',13)+' Where we sleep</h2>';
+  (D.stops||[]).forEach(function(s){
+    var g=STOPACC[s.id], a=g?ACCENTS[g]:null;
+    h+='<div class="drail" style="margin-bottom:11px'+(a?';border-left-color:'+a[0]:'')+'">'+
+       '<div class="between"><div><div style="font-weight:700;font-size:14px">'+esc(s.hotel)+'</div>'+
+       '<div class="xs muted">'+esc(s.name)+' \u00b7 '+fmtShort(s.in)+'\u2013'+fmtShort(s.out)+'</div></div>'+
+       '<div class="xs" style="font-weight:700;white-space:nowrap">'+esc(s.cost||'')+'</div></div>'+
+       (s.cancel?'<div class="xs muted" style="margin-top:2px">Free cancel to '+fmtCancel(s.cancel)+'</div>':'')+
+       '</div>';
+  });
+  return h+'</div>';
+}
+
+function deskDays(){
+  var idx=tripDayIdx(), start=(idx>=0?idx:0), list=(D.days||[]).slice(start,start+5);
+  var h='<div class="card deskonly"><h2>'+ic('calendar',13)+' '+(idx>=0?'Next up':'How it opens')+'</h2>';
+  list.forEach(function(d){
+    var g=d.rid?GROUPACC[d.rid]:STOPACC[d.stop], a=g?ACCENTS[g]:null;
+    h+='<div class="drail" style="margin-bottom:10px'+(a?';border-left-color:'+a[0]:'')+'">'+
+       '<div class="xs muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.5px">'+esc(d.wd)+' \u00b7 '+fmtShort(d.dt)+'</div>'+
+       '<div style="font-weight:700;font-size:14px;margin-top:1px">'+esc(d.title)+'</div>'+
+       (d.drive?'<div class="xs muted" style="margin-top:2px">'+esc(d.drive)+'</div>':'')+'</div>';
+  });
+  return h+'<button class="btn" style="margin-top:4px" onclick="sw(\'days\')">Full itinerary \u2192</button></div>';
+}
+
+function deskTown(){
+  var idx=tripDayIdx(), sid=(idx>=0&&D.days[idx])?D.days[idx].stop:((D.stops||[])[0]||{}).id;
+  var g=guideFor(sid), st=stopById(sid);
+  if(!g||!st) return '';
+  var h='<div class="card deskonly"><h2>'+ic('pin',13)+' '+esc(st.name)+(idx>=0?' \u2014 tonight':' \u2014 first stop')+'</h2>';
+  if(g.tonight) h+='<div class="sm" style="margin-bottom:9px">'+esc(g.tonight)+'</div>';
+  [['drink','Business meetings'],['eat','Eat'],['do','Stupid fun']].forEach(function(p){
+    var a=(g[p[0]]||[]).slice(0,2); if(!a.length) return;
+    h+='<div class="xs muted" style="text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin:9px 0 2px">'+p[1]+'</div>';
+    a.forEach(function(x){ h+='<div class="dpick"><div class="n">'+esc(x.name)+'</div>'+
+      (x.note?'<div class="xs muted">'+esc(x.note)+'</div>':'')+'</div>'; });
+  });
+  return h+'<button class="btn" style="margin-top:10px" onclick="sw(\'scene\')">All of '+esc(st.name)+' \u2192</button></div>';
+}
+
+function deskCrew(){
+  var h='<div class="card deskonly"><h2>The crew</h2>';
+  (D.crew||[]).forEach(function(c){
+    h+='<div class="drow"><div style="font-weight:700;font-size:14px">'+esc(c.name)+
+       (c.note?' <span class="xs muted" style="font-weight:400">'+esc(c.note)+'</span>':'')+'</div>'+
+       '<div class="xs muted" style="white-space:nowrap">'+esc(c.legs||'')+'</div></div>';
+  });
+  if(D.rooming) h+='<div class="xs muted" style="margin-top:10px">'+esc(D.rooming)+'</div>';
+  return h+'</div>';
+}
+
+function rHome(){
+  var idx=tripDayIdx(), h=testBanner();
+  h+='<div class="hh"><h1>'+esc(D.meta.title)+' '+esc(D.meta.year)+'</h1><div class="sub">'+esc(D.meta.tagline)+'</div></div>';
+  if(idx===-1){ h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Countdown</div><div class="big" style="margin:6px 0 2px">'+daysUntilStart()+'</div><div class="sm" style="opacity:.85">days until Banff · first chair '+fmtShort(D.meta.firstChair||D.meta.start)+'</div><div class="stripe"></div></div>'; }
+  else if(idx>=0){ var td=D.days[idx], r=resortOfDay(td); h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Today · '+td.wd+' '+fmtShort(td.dt)+'</div><div class="hero-ti" style="margin:6px 0 3px">'+esc(td.title)+'</div>'+(passChip(idx)?'<div style="margin-top:5px">'+passChip(idx)+'</div>':'')+'<div class="stripe"></div></div>'; }
+  else { h+='<div class="banner"><div class="hero-ti">That’s a wrap 🎿</div><div class="sm" style="opacity:.85;margin-top:4px">Hope it was deep. Drive safe home.</div><div class="stripe"></div></div>'; }
+  h+=deskStats();
+  var sname=(idx>=0)?firstResortDayName(idx):''; if(sname)h+='<div class="card" style="background:var(--pr-purple-tint);border-color:#DCC9F4"><div class="sm" style="font-weight:700;color:var(--pr-purple-text)">🏷️ First day at '+esc(sname)+' — '+esc(D.meta.sticker||'grab a trip sticker!')+'</div></div>';
+  h+=sec(idx>=0?'Today':'Snow &amp; mountains');
+  h+=homeSnowCard();
+  if(idx>=0){ var tday=D.days[idx], trid=tday.rid, tstop=stopById(tday.stop);
+    if(trid&&stashFor(trid)){ h+='<div class="card stash"><h2>🤫 Today’s secret stash · '+esc((D.resorts[trid]||{}).name||'')+'</h2><div class="sm">'+esc(stashFor(trid))+'</div></div>'; }
+    var tg=tstop?guideFor(tstop.id):null; if(tg){ h+='<div class="card meeting"><h2>'+ic('meeting',13)+' '+esc(tstop.name)+' tonight</h2>'+(tg.tonight?'<div class="sm">'+esc(tg.tonight)+'</div>':'')+((tg.facts&&tg.facts.length)?'<div class="xs muted" style="margin-top:7px">'+ic('tip',12)+' '+esc(tg.facts[0])+'</div>':'')+'<div class="btn" style="width:100%;justify-content:center;margin-top:10px" onclick="openGuide(\''+tstop.id+'\')">'+ic('cheers',14)+' Full '+esc(tstop.name)+' guide</div></div>'; }
+    if(tstop){ h+='<div class="card"><h2>Tonight’s base</h2><div style="font-weight:700">'+esc(tstop.hotel)+'</div><div class="xs muted">'+esc(tstop.name)+'</div><div style="margin-top:8px;display:flex;gap:6px"><a class="btn" href="'+mapsUrl(tstop.hotel+' '+tstop.addr)+'" target="_blank">'+ic('pin',14)+' Map</a><a class="btn" href="tel:'+esc(tstop.phone)+'">'+ic('phone',14)+' Call</a></div><div class="xs muted" style="margin-top:7px">Conf '+esc(tstop.conf)+' · '+esc(tstop.cost)+'</div>'+(tstop.note?'<div class="xs muted" style="margin-top:5px">'+esc(tstop.note)+'</div>':'')+'</div>'; }
+    if(tstop)h+=emergencyCard(tstop);
+  }
+  h+=sec('Deadlines &amp; money');
+  var now=getNow(), nx=null;
+  if(idx===-1)(D.stops||[]).forEach(function(s){ if(s.cancel){var c=new Date(s.cancel); if(c>now&&(!nx||c<nx.c))nx={c:c,s:s};} });
+  if(nx){ var dd=Math.ceil((nx.c-now)/864e5); h+='<div class="card money"><div class="between"><div><div class="xs" style="text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:var(--pr-card-money-fg)">Next free-cancel deadline</div><div style="font-weight:700;margin-top:3px">'+esc(nx.s.hotel)+'</div><div class="sm muted">'+esc(nx.s.name)+' · '+nx.c.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+nx.c.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+'</div></div><span class="pill '+(dd<14?'warn':'ok')+'">'+dd+'d</span></div></div>'; }
+  h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div></div>';
+  if(idx===-1)h+=sec('What needs doing');
+  if(idx===-1)h+=checklistCard();
+  h+=sec('The route','7 stops \u00b7 '+D.days.length+' days')+deskStops()+deskDays();
+  h+=sec('The town &amp; the crew')+deskTown()+deskCrew();
+  h+='<div class="btn pri" style="width:100%;justify-content:center" onclick="sw(\'days\')">'+ic('calendar',14)+' Full itinerary</div>';
+  setView('v-home',h); initFx();
+}
+
+
+/* setView — renders a view, then lifts its <div class="hh"> (and the countdown
+   banner that follows it on Home) into a .hero band and drops everything else
+   into a .wrap. On phones .hero/.heroin/.wrap are plain blocks, so the output
+   is byte-for-byte the layout we already ship. */
+function nextEl(n){ while(n&&n.nodeType!==1) n=n.nextSibling; return n; }
+function setView(id,h){
+  var el=$(id); if(!el) return; el.innerHTML=h;
+  var hh=null, kids=el.children;
+  for(var i=0;i<kids.length;i++){ if(kids[i].className&&/\bhh\b/.test(kids[i].className)){ hh=kids[i]; break; } }
+  if(!hh) return;
+  var hero=document.createElement('section'); hero.className='hero';
+  var hin=document.createElement('div'); hin.className='heroin';
+  hero.appendChild(hin);
+  el.insertBefore(hero,hh); hin.appendChild(hh);
+  var nx=nextEl(hero.nextSibling);
+  if(nx&&/\bbanner\b/.test(nx.className||'')) hin.appendChild(nx);
+  var st2=nextEl(hero.nextSibling);
+  if(st2&&/\bhstats\b/.test(st2.className||'')) hin.appendChild(st2);
+  var st=document.createElement('div'); st.className='hstripe';
+  el.insertBefore(st,hero.nextSibling);
+  var wrap=document.createElement('div'); wrap.className='wrap';
+  el.insertBefore(wrap,st.nextSibling);
+  while(wrap.nextSibling) wrap.appendChild(wrap.nextSibling);
+  /* every sec() header opens a .sect that swallows the cards after it, so each
+     section gets its own grid. Views with no headers are left untouched. */
+  var cur=null;
+  [].slice.call(wrap.children).forEach(function(n){
+    if(/\bsechd\b/.test(n.className||'')){
+      cur=document.createElement('div'); cur.className='sect';
+      wrap.insertBefore(cur,n.nextSibling); return; }
+    if(cur) cur.appendChild(n);
+  });
+  /* a header whose section produced nothing (e.g. the snow card is empty in
+     July) drops out rather than sitting over a blank row */
+  [].slice.call(wrap.getElementsByClassName('sect')).forEach(function(g){
+    if(g.children.length) return;
+    var p=g.previousSibling; while(p&&p.nodeType!==1) p=p.previousSibling;
+    if(p&&/\bsechd\b/.test(p.className||'')) p.parentNode.removeChild(p);
+    g.parentNode.removeChild(g);
+  });
+}
+
+/* ---- DAYS ---- */
+function rDays(){
+  var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Itinerary</h1><div class="sub">'+fmtShort(D.meta.start)+' – '+fmtShort(D.meta.end)+' · '+D.days.length+' days · color = where we\u2019re riding</div></div>';
+  var seenAcc=[]; D.days.forEach(function(d){ var g=d.rid?GROUPACC[d.rid]:STOPACC[d.stop]; if(g&&seenAcc.indexOf(g)<0)seenAcc.push(g); });
+  if(seenAcc.length){ h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">'; seenAcc.forEach(function(g){ h+='<button onclick="jumpGroup(\''+g+'\')" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;font-family:inherit;color:var(--pr-text-2);background:var(--pr-card);border:1px solid var(--pr-border);border-radius:999px;padding:3px 9px 3px 6px;cursor:pointer"><span style="width:9px;height:9px;border-radius:99px;background:'+ACCENTS[g][0]+'"></span>'+ACCLABEL[g]+'</button>'; }); h+='</div>'; }
+  var seenFirst={};
+  D.days.forEach(function(day,i){ var r=resortOfDay(day), st=stopById(day.stop), today=(i===idx), checkin=(st&&st.in===day.dt);
+    var acc=dayAccent(day), g=day.rid?GROUPACC[day.rid]:STOPACC[day.stop], anchor=(g&&!seenFirst[g])?' id="dayg-'+g+'"':''; if(g)seenFirst[g]=true;
+    var isPast=(idx>=0&&i<idx&&!PAST_OPEN[i]);
+    if(isPast){ h+='<div class="day"'+anchor+' style="opacity:.5;cursor:pointer;padding-top:9px;padding-bottom:9px'+(acc?';border-left:3px solid '+acc[0]:'')+'" onclick="PAST_OPEN['+i+']=1;rDays()"><div class="dt">'+day.wd+' · '+fmtShort(day.dt)+' · done ✓</div><div class="ti" style="font-size:15px">'+esc(day.title)+'</div></div>'; return; }
+    h+='<div class="day'+(today?' today':'')+'"'+(today?' id="day-today"':anchor)+(acc?' style="border-left:'+(today?'4px':'3px')+' solid '+acc[0]+'"':'')+'><div class="dt"'+(today&&acc?' style="color:'+acc[1]+'"':'')+'>'+day.wd+' · '+fmtShort(day.dt)+(today?' · TODAY':'')+'</div><div class="ti">'+esc(day.title)+'</div>';
+    var b=[]; if(r)b.push(ic('skier',14)+' '+esc(r.name)); if(st&&!checkin)b.push(ic('bed',14)+' '+esc(st.hotel)); if(day.drive)b.push(ic('car',14)+' '+esc(day.drive)); if(b.length)h+='<div class="tl">'+b.join('<br>')+'</div>';
+    var pc=passChip(i); if(pc)h+='<div style="margin-top:5px">'+pc+'</div>';
+    if(day.note)h+='<div class="tl muted">'+esc(day.note)+'</div>';
+    if(checkin)h+=lodgeBox(st);
+    h+='</div>';
+  });
+  setView('v-days',h);
+  if(idx>=0){ setTimeout(function(){ var el=$('day-today'); if(el)el.scrollIntoView({block:'start'}); },60); }
+}
+function lodgeBox(s){
+  var h='<div style="margin-top:9px;background:#F9F5EC;border:1px solid var(--pr-hairline);border-radius:11px;padding:11px">';
+  h+='<div class="between"><div style="font-weight:700;font-size:14px">'+ic('bed',14)+' Check in · '+esc(s.hotel)+'</div><span class="xs muted">'+esc(s.cost)+'</span></div>';
+  h+='<div class="xs muted" style="margin-top:2px">'+fmtShort(s.in)+'–'+fmtShort(s.out)+' · Conf '+esc(s.conf)+'</div>';
+  if(s.cancel)h+='<div class="xs" style="margin-top:5px;color:var(--pr-warn-text);font-weight:600">'+ic('warning',13)+' Free cancel by '+fmtDT(s.cancel)+'</div>';
+  h+='<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><a class="btn" href="'+mapsUrl(s.hotel+' '+s.addr)+'" target="_blank">'+ic('pin',14)+' Map</a><a class="btn" href="tel:'+esc(s.phone)+'">'+ic('phone',14)+' Call</a></div>';
+  var g=guideFor(s.id); if(g&&g.tonight)h+='<div class="sm" style="margin-top:9px;border-top:1px solid var(--pr-hairline);padding-top:8px">'+ic('cheers',13)+' '+esc(g.tonight)+'</div>'; if(g)h+='<div class="btn" style="margin-top:8px;width:100%;justify-content:center" onclick="openGuide(\''+s.id+'\')">'+ic('cheers',14)+' '+esc(s.name)+' nightlife &amp; eats</div>';
+  if(s.note)h+='<div class="xs muted" style="margin-top:7px">'+esc(s.note)+'</div>';
+  return h+'</div>';
+}
+
+/* ---- placeholders (built in later phases) ---- */
+function soon(view,icon,title,desc){ $(view).innerHTML=testBanner()+'<div class="soon"><div class="ic">'+icon+'</div><div class="t">'+title+'</div><div class="sm muted" style="margin-top:6px">'+desc+'</div></div>'; }
+function cF(c){ return Math.round(c*9/5+32); }
+function isDemo(){ var n=getNow(); return n.getMonth()===6 && n.getDate()===4; }
+function passLabel(r){ return (r&&r.ticket)?ic('ticket',12)+' Tickets required':''; }
+function roadLink(t){ var rs=D.roads||[], us=/border|Sandpoint|Idaho|US/i.test(t||''), key=us?'511':'drivebc'; for(var i=0;i<rs.length;i++){ if((rs[i].url||'').toLowerCase().indexOf(key)>=0) return rs[i].url; } return us?'https://511.idaho.gov':'https://www.drivebc.ca'; }
+var DPAT=[12,18,8,3,0,6,2], DDROP=[5,8,4,2,0,5,2];
+function scaleOf(k){ var n=(D.normals||{})[k]; return Math.max(0.6,(((n&&n.snowIn)||8))/8); }
+function demoDay(k,off){ return Math.round(DPAT[Math.min(off,DPAT.length-1)]*scaleOf(k)); }
+function demoBase(k){ var n=(D.normals||{})[k]; return Math.round(50+(((n&&n.snowIn)||8))*6); }
+function renderDemo(k){
+  var n=(D.normals||{})[k]||{hiC:-6,loC:-14}, sc=scaleOf(k), lab=['Today','+1','+2','+3','+4','+5','+6'], baseHi=cF(n.hiC), strip='', n24=0, n7=0;
+  for(var i=0;i<7;i++){ var sn=Math.round(DPAT[i]*sc); if(i===0)n24=sn; n7+=sn; strip+='<div style="flex:0 0 auto;width:54px;text-align:center;background:#F9F5EC;border:1px solid var(--pr-hairline);border-radius:10px;padding:7px 4px"><div style="font-size:10.5px;color:var(--pr-text-muted);font-weight:600">'+lab[i]+'</div><div style="font-size:13px;font-weight:700;margin-top:3px">'+(baseHi-DDROP[i])+'°</div><div style="font-size:11px;color:var(--pr-teal-text);font-weight:700;margin-top:3px">'+(sn>0?sn+'″':'–')+'</div></div>'; }
+  var baseIn=demoBase(k), nowT=cF(n.loC)+6, frz=Math.round(3300-sc*500), gust=18+Math.round(sc*14);
+  var h='<span class="pill ok">🧪 DEMO storm</span><div style="margin-top:6px"><b>'+n24+'″ overnight</b> · '+n7+'″ next 7 days · powder day</div>';
+  h+='<div style="display:flex;gap:6px;overflow-x:auto;margin-top:9px;padding-bottom:2px">'+strip+'</div>';
+  h+='<div class="xs muted" style="margin-top:8px;border-top:1px solid var(--pr-hairline);padding-top:7px">Now at the hill (demo): '+nowT+'°F · base '+baseIn+'″ · freezing lvl '+frz+' ft · gusts '+gust+' mph</div>';
+  $('snb-'+k).innerHTML=h;
+  if($('snp-'+k)){ $('snp-'+k).textContent=nowT+'°F'; $('snp-'+k).className='pill'; }
+}
+function homeSnowCard(){
+  var idx=tripDayIdx(), pairs=[];
+  if(idx>=0){ if(D.days[idx]&&D.days[idx].rid)pairs.push({lab:'Today',d:D.days[idx]}); if(D.days[idx+1]&&D.days[idx+1].rid)pairs.push({lab:'Tomorrow',d:D.days[idx+1]}); }
+  else if(isDemo()){ if(D.days[1])pairs.push({lab:'Today',d:D.days[1]}); if(D.days[2])pairs.push({lab:'Tomorrow',d:D.days[2]}); }
+  if(!pairs.length) return '';
+  var demo=isDemo(), h='<div class="card snow"><h2>'+(demo?'🧪 Snow — today &amp; tomorrow (demo)':'Snow — today &amp; tomorrow')+'</h2>';
+  pairs.forEach(function(p,i){ var r=D.resorts[p.d.rid]||{name:p.d.rid}, val=demo?('🌨 '+demoDay(p.d.rid,i)+'″ new · base '+demoBase(p.d.rid)+'″'):'<span class="muted">loading…</span>';
+    h+='<div style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="between"><div><div style="font-weight:700">'+p.lab+' · '+esc(r.name)+'</div><div class="xs muted">'+p.d.wd+' '+fmtShort(p.d.dt)+(r.ticket?' · '+ic('ticket',11)+' ticket':'')+'</div></div><div class="sm" id="hs-'+i+'" style="text-align:right;font-weight:600">'+val+'</div></div>'+(p.d.drive?'<div class="xs" style="margin-top:4px"><a href="'+roadLink(p.d.drive)+'" target="_blank">'+ic('car',12)+' '+esc(p.d.drive)+' · check roads ↗</a></div>':'')+'</div>'; });
+  h+='</div>';
+  if(!demo){ pairs.forEach(function(p,i){ fillHomeSnow('hs-'+i,p.d.rid,p.d.dt); }); }
+  return h;
+}
+function fillHomeSnow(id,rid,dt){ var r=D.resorts[rid]; if(!r)return;
+  fetch('https://api.open-meteo.com/v1/forecast?latitude='+r.lat+'&longitude='+r.lon+'&daily=snowfall_sum,temperature_2m_max,temperature_2m_min&forecast_days=16&timezone=auto&temperature_unit=fahrenheit').then(function(x){return x.json();}).then(function(j){ var el=$(id); if(!el)return; var k=(j.daily&&j.daily.time)?j.daily.time.indexOf(dt):-1; if(k>=0){ var sfIn=(j.daily.snowfall_sum[k]||0)/2.54; el.innerHTML=(sfIn>=0.3?(sfIn<1?sfIn.toFixed(1):Math.round(sfIn))+'″ new':'no new snow')+' · hi '+Math.round(j.daily.temperature_2m_max[k])+'°'; } else { var nm=(D.normals||{})[rid]; el.innerHTML=nm?('~'+nm.snowIn+'″ typical'):'—'; } }).catch(function(){ var el=$(id); if(el){ var nm=(D.normals||{})[rid]; el.textContent=nm?('~'+nm.snowIn+'″ typical'):'—'; } });
+}
+function resortSkiDate(rid){ for(var i=0;i<D.days.length;i++){ if(D.days[i].rid===rid) return D.days[i].dt; } return D.meta.start; }
+function saveMapsOffline(){ var u=[]; Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k]; if(r.map)u.push(r.map); if(r.map2)u.push(r.map2); if(r.map3)u.push(r.map3); if(r.basemap)u.push(r.basemap); }); if(!u.length)return; toast('Saving '+u.length+' maps for offline…'); var done=0; Promise.all(u.map(function(x){ return fetch(x,{cache:'reload'}).then(function(){done++;}).catch(function(){}); })).then(function(){ toast(done+'/'+u.length+' maps saved — available offline'); }); }
+function climoHtml(k){ var n=(D.normals||{})[k]; if(!n) return '<span class="muted">No climatology yet.</span>'; return '<div><b>~'+n.snowIn+'″</b> snow over Feb 5–21 <span class="muted">(ranged '+n.minIn+'–'+n.maxIn+'″ · '+n.yrs+'-yr avg)</span><br><span class="muted">typical hi '+cF(n.hiC)+'° / lo '+cF(n.loC)+'°F</span></div>'; }
+function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
+  var h='<div style="margin-top:6px">';
+  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn" onclick="setTerrainMode(\''+k+'\',\'all\')" style="flex:1;justify-content:center'+(mode!=='mellow'?';background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)':'')+'">All terrain</button><button class="btn" onclick="setTerrainMode(\''+k+'\',\'mellow\')" style="flex:1;justify-content:center'+(mode==='mellow'?';background:var(--pr-ok-text);color:#fff;border-color:var(--pr-ok-text)':'')+'">Mellow &amp; cruisers</button></div>';
+  if(t.overview)h+='<div class="sm">'+esc(t.overview)+'</div>';
+  if(t.snowTiming)h+='<div class="xs muted" style="margin-top:6px">'+ic('snowflake',12)+' '+esc(t.snowTiming)+'</div>';
+  if((t.cruisers||[]).length){ h+='<div style="margin-top:9px;background:var(--pr-card-terrain-bg);border:1px solid rgba(0,0,0,.07);border-radius:8px;padding:8px 10px"><div style="font-weight:700;font-size:12px;color:var(--pr-card-terrain-fg)">'+ic('snowboarder',13)+' Carve &amp; cruise — wide, mellow &amp; scenic</div>'; t.cruisers.forEach(function(c){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(c.name)+'</b>'+(c.level?' <span class="muted">('+esc(c.level)+')</span>':'')+(c.where?' <span class="muted">· '+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
+  if(mode!=='mellow'){
+  (t.flags||[]).forEach(function(f){ h+='<div class="xs" style="margin-top:6px;background:var(--pr-warn-bg);border:1px solid #EFD9A0;color:var(--pr-warn-text);border-radius:8px;padding:6px 8px">'+ic('warning',12)+' '+esc(f)+'</div>'; });
+  (t.zones||[]).forEach(function(z){
+    h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="font-weight:700;font-size:13px">'+esc(z.name)+'</div>';
+    var meta=[]; if(z.access)meta.push(ic('gondola',12)+' '+esc(z.access)); if(z.aspect)meta.push(ic('compass',12)+' '+esc(z.aspect)); if(z.timing)meta.push('⏱ '+esc(z.timing));
+    if(meta.length)h+='<div class="xs muted" style="margin-top:2px">'+meta.join(' · ')+'</div>';
+    if(z.closure)h+='<div class="xs" style="margin-top:3px;color:var(--pr-warn-text);font-weight:700">'+ic('closed',12)+' '+esc(z.closure)+'</div>';
+    (z.runs||[]).forEach(function(r){ var tag=r.level?(' <span class="muted">('+esc(r.level)+(r.type?' '+esc(r.type):'')+')</span>'):''; h+='<div class="xs" style="margin-top:4px"><b>'+esc(r.name)+'</b>'+tag+(r.note?' — '+esc(r.note):'')+((r.conf&&r.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(r.conf)+'</span>':'')+'</div>'; });
+    h+='</div>';
+  });
+  }
+  if((t.cabins||[]).length){ h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-text-muted)">'+ic('food',12)+' On-mountain food &amp; huts</div>'; t.cabins.forEach(function(c){ h+='<div class="xs" style="margin-top:4px"><b>'+esc(c.name)+'</b>'+(c.where?' <span class="muted">'+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
+  if((t.woods||[]).length){ h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-card-terrain-fg)">'+ic('trees',12)+' In the trees — hidden spots</div>'; t.woods.forEach(function(w){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(w.name)+'</b>'+(w.type?' <span class="muted">('+esc(w.type)+')</span>':'')+((w.conf&&w.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(w.conf)+'</span>':'')+(w.find?'<div class="muted" style="margin-top:1px">'+ic('pin',11)+' '+esc(w.find)+'</div>':'')+(w.note?'<div style="margin-top:2px">'+esc(w.note)+'</div>':'')+'</div>'; }); h+='<div class="muted" style="font-size:10px;margin-top:7px;font-style:italic">Word-of-mouth &amp; unofficial. Open booze outside licensed areas can cost your pass; unsanctioned structures get torn down; tree wells are lethal — ride glades with a partner and pack out everything.</div></div>'; }
+  if(t.mellow)h+='<div class="xs" style="margin-top:9px;background:var(--pr-ok-bg);border-radius:8px;padding:6px 8px"><b>Mellow:</b> '+esc(t.mellow)+'</div>';
+  return h+'</div>';
+}
+function toggleLinks(k){ var el=$('lks-'+k), c=$('lkcar-'+k); if(!el)return; if(el.style.display==='none'){ el.style.display='flex'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
+function setTerrainMode(k,m){ TMODE[k]=m; var el=$('terr-'+k); if(el)el.innerHTML=terrainHtml((D.terrain||{})[k],m,k); }
+function toggleTerrain(k){ var el=$('terr-'+k), c=$('terrcar-'+k); if(!el)return; if(!el.style.display||el.style.display==='none'){ el.innerHTML=terrainHtml((D.terrain||{})[k],TMODE[k]||'all',k); el.style.display='block'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
+function rSnow(){
+  var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1><div class="sub">'+(isDemo()?'🧪 Example storm conditions — set the test date off Jul 4 to exit':'Forecast when it’s close · typical averages until then')+'</div></div><div class="xs muted" style="margin:0 0 8px">Tap a map to download it — on wifi it’ll open offline from your Files/Photos.</div><button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button><div id="snowwrap"></div>';
+  setView('v-snow',h); var w=$('snowwrap');
+  Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k];
+    w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(r.map?'<a class="btn" href="'+r.map+'" download>'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+r.map2+'" download>'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+r.map3+'" download>'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+r.basemap+'" download>'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
+    fetchSnow(k);
+  });
+}
+function fetchSnow(k){
+  var r=D.resorts[k];
+  if(isDemo()){ renderDemo(k); return; }
+  $('snb-'+k).innerHTML=climoHtml(k);
+  var skiDate=resortSkiDate(k);
+  var u='https://api.open-meteo.com/v1/forecast?latitude='+r.lat+'&longitude='+r.lon+'&current=temperature_2m,wind_gusts_10m&hourly=snow_depth,freezing_level_height&daily=snowfall_sum,temperature_2m_max,temperature_2m_min&forecast_days=16&timezone=auto&temperature_unit=fahrenheit&wind_speed_unit=mph';
+  fetch(u).then(function(x){return x.json();}).then(function(j){
+    var cur='';
+    if(j.current){
+      var parts=[Math.round(j.current.temperature_2m)+'°F'];
+      try{ var hi=j.hourly.time.indexOf(j.current.time); if(hi>=0){ var sd=j.hourly.snow_depth[hi], fl=j.hourly.freezing_level_height[hi]; if(sd!=null)parts.push('base '+Math.round(sd*39.37)+'″'); if(fl!=null)parts.push('freezing lvl '+Math.round(fl*3.281)+' ft'); } }catch(e){}
+      if(j.current.wind_gusts_10m!=null)parts.push('gusts '+Math.round(j.current.wind_gusts_10m)+' mph');
+      cur='<div class="xs muted" style="margin-top:8px;border-top:1px solid var(--pr-hairline);padding-top:7px">Now at the hill (live): '+parts.join(' · ')+'</div>';
+      $('snp-'+k).textContent=Math.round(j.current.temperature_2m)+'°F'; $('snp-'+k).className='pill';
+    }
+    var lead=climoHtml(k);
+    if(j.daily&&j.daily.time){ var idx=j.daily.time.indexOf(skiDate); if(idx>=0){ var sfIn=(j.daily.snowfall_sum[idx]||0)/2.54; lead='<span class="pill ok">forecast · '+fmtShort(skiDate)+'</span><div style="margin-top:6px"><b>'+(sfIn>=0.3?(sfIn<1?sfIn.toFixed(1):Math.round(sfIn))+'″ snow':'no new snow')+'</b> on your day · hi '+Math.round(j.daily.temperature_2m_max[idx])+'° / lo '+Math.round(j.daily.temperature_2m_min[idx])+'°F</div>'; } }
+    $('snb-'+k).innerHTML=lead+cur;
+  }).catch(function(){ if($('snp-'+k)){$('snp-'+k).textContent='typical';} });
+}
+function dirUrl(leg){ var p=leg.split(' → '); if(p.length===2){ return 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(p[0])+'&destination='+encodeURIComponent(p[1]); } return mapsUrl(leg); }
+function driveCard(x,today){ return '<div class="card"'+(today?' style="border:1.5px solid var(--pr-btn-primary-bg)"':'')+'><div class="between"><div style="font-weight:700">'+(today?'Today · ':'')+esc(x.leg)+'</div><span class="pill">'+esc(x.t)+'</span></div><div class="xs muted" style="margin-top:3px">'+esc(x.d)+'</div><div class="sm" style="margin-top:5px">'+esc(x.note)+'</div><div style="margin-top:8px"><a class="btn" href="'+dirUrl(x.leg)+'" target="_blank">'+ic('compass',14)+' Directions</a></div></div>'; }
+function rDrive(){
+  var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Drives &amp; roads</h1><div class="sub">Legs, the ferry, the border &amp; shuttles</div></div>';
+  var legs=(D.drives||[]).slice(), todayLegs=[];
+  if(idx>=0){ var ds=fmtShort(D.days[idx].dt); todayLegs=legs.filter(function(x){ return (x.d||'').indexOf(ds)>=0; }); legs=legs.filter(function(x){ return todayLegs.indexOf(x)<0; }); }
+  todayLegs.forEach(function(x){ h+=driveCard(x,true); });
+  if((D.roads||[]).length){ h+='<div class="card"><h2>Road &amp; avalanche conditions</h2>'; D.roads.forEach(function(x){ h+='<div class="lk"><a href="'+x.url+'" target="_blank" style="flex:1">'+esc(x.name)+'</a><span class="muted">↗</span></div>'; }); h+='</div>'; }
+  if((D.shuttles||[]).length){ h+='<div class="card"><h2>Shuttles</h2>'; D.shuttles.forEach(function(x){ h+='<div style="padding:8px 0;border-bottom:1px solid var(--pr-hairline)"><div style="font-weight:700">'+esc(x.place)+'</div><div class="sm">'+esc(x.name)+'</div><div class="xs muted" style="margin-top:2px">'+esc(x.info)+'</div><div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">'+(x.url?'<a class="btn" href="'+x.url+'" target="_blank">'+ic('ticket',14)+' '+esc(x.urlLabel||'Book')+' ↗</a>':'')+(x.pin?'<a class="btn" href="'+mapsUrl(x.pin)+'" target="_blank">'+ic('pin',14)+' Pickup</a>':'')+'</div></div>'; }); h+='</div>'; }
+  if(legs.length){ h+='<div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin:18px 4px 9px">'+(todayLegs.length?'All drive legs':'Drive legs')+'</div>'; legs.forEach(function(x){ h+=driveCard(x,false); }); }
+  if((D.airports||[]).length){ h+='<div class="card"><h2>'+ic('ticket',13)+' Airports</h2>'; D.airports.forEach(function(a){ h+='<div style="padding:7px 0;border-bottom:1px solid var(--pr-hairline)"><div style="font-weight:700">'+esc(a.name)+'</div>'+(a.note?'<div class="sm muted" style="margin-top:2px">'+esc(a.note)+'</div>':'')+'</div>'; }); h+='</div>'; }
+  h+='<div class="xs muted" style="margin:4px 4px 0">Roadside sights live in Scene → “The Road”.</div>';
+  setView('v-drive',h);
+}
+var RUN_FILTER='all', RUN_KIND='run', LAST_RUNS=[];
+function localRuns(){ try{ return JSON.parse(localStorage.getItem('runsLocal')||'[]'); }catch(e){ return []; } }
+function kindIcon(k){ return k==='spot'?ic('cheers',14):ic('skier',14); }
+function setKind(k){ RUN_KIND=k; ['run','spot'].forEach(function(x){ var el=$('rk-'+x); if(el){ el.style.background=(x===k?'var(--pr-btn-primary-bg)':'#fff'); el.style.color=(x===k?'#fff':'var(--pr-ink)'); } }); }
+function setFilter(f){ RUN_FILTER=f; ['all','run','spot'].forEach(function(x){ var el=$('rf-'+x); if(el){ el.style.background=(x===f?'var(--pr-btn-primary-bg)':'#fff'); el.style.color=(x===f?'#fff':'var(--pr-ink)'); } }); drawRuns(); }
+function drawRuns(arr){
+  if(arr!=null) LAST_RUNS=arr;
+  var list=LAST_RUNS.slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+  if(RUN_FILTER!=='all') list=list.filter(function(r){ return (r.kind||'run')===RUN_FILTER; });
+  var h=''; if(!list.length){ h='<div class="card sm muted">Nothing here yet — add the first one above.</div>'; }
+  list.forEach(function(r){ h+='<div class="card"><div class="between"><div style="font-weight:600">'+kindIcon(r.kind)+' '+esc(r.text)+'</div>'+(r.resort?'<span class="pill">'+esc(r.resort)+'</span>':'')+'</div><div class="xs muted" style="margin-top:5px">'+(r.by?esc(r.by)+' · ':'')+(r.ts?new Date(Number(r.ts)).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+'</div></div>'; });
+  if($('runlist'))$('runlist').innerHTML=h;
+}
+function loadRuns(){
+  if(!D.runsUrl){ drawRuns(localRuns()); return; }
+  fetch(D.runsUrl).then(function(x){ return x.json(); }).then(function(j){ var arr=Array.isArray(j)?j:(j.runs||[]); localStorage.setItem('runsCache',JSON.stringify(arr)); drawRuns(arr); }).catch(function(){ try{ drawRuns(JSON.parse(localStorage.getItem('runsCache')||'[]')); }catch(e){ drawRuns([]); } });
+}
+function addRun(){
+  var t=($('runText')||{}).value; t=t?t.trim():''; if(!t)return;
+  var by=(($('runBy')||{}).value||'').trim(), res=(($('runResort')||{}).value||'').trim();
+  if(by)localStorage.setItem('me',by);
+  var run={text:t,by:by,resort:res,kind:RUN_KIND,ts:Date.now()};
+  if($('runText'))$('runText').value='';
+  if(!D.runsUrl){ var a=localRuns(); a.push(run); localStorage.setItem('runsLocal',JSON.stringify(a)); drawRuns(a); toast('Added (on this phone)'); return; }
+  try{ var c=JSON.parse(localStorage.getItem('runsCache')||'[]'); c.push(run); localStorage.setItem('runsCache',JSON.stringify(c)); drawRuns(c); }catch(e){}
+  toast('Adding…');
+  fetch(D.runsUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'add',ts:run.ts,by:run.by,resort:run.resort,kind:run.kind,text:run.text})}).then(function(){ setTimeout(loadRuns,1500); }).catch(function(){ toast('Saved — will sync when online'); });
+}
+function rRuns(){
+  var meSel=localStorage.getItem('me')||((D.crew||[])[0]||{}).name||'', crewOpts=(D.crew||[]).map(function(c){ return '<option'+(c.name===meSel?' selected':'')+'>'+esc(c.name)+'</option>'; }).join('')||'<option>'+esc(meSel||'Me')+'</option>';
+  var h=testBanner()+'<div class="hh"><h1>Runs &amp; spots</h1><div class="sub">'+(D.runsUrl?'Shared with the crew':'Saved on this phone — sharing not set up yet')+'</div></div>';
+  h+='<div class="card"><input class="inp" id="runText" placeholder="What — a run, bar, sight…">'
+   +'<div style="display:flex;gap:7px;margin-top:8px"><button class="btn" id="rk-run" style="flex:1;justify-content:center;background:var(--pr-btn-primary-bg);color:#fff" onclick="setKind(\'run\')">'+ic('skier',14)+' Run</button><button class="btn" id="rk-spot" style="flex:1;justify-content:center" onclick="setKind(\'spot\')">'+ic('cheers',14)+' Spot</button></div>'
+   +'<div style="display:flex;gap:7px;margin-top:8px"><input class="inp" id="runResort" placeholder="Where (resort, town, drive)" style="flex:1"><select class="inp" id="runBy" style="flex:1">'+crewOpts+'</select></div>'
+   +'<button class="btn pri" style="width:100%;justify-content:center;margin-top:8px" onclick="addRun()">＋ Add</button></div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn" id="rf-all" style="background:var(--pr-btn-primary-bg);color:#fff" onclick="setFilter(\'all\')">All</button><button class="btn" id="rf-run" onclick="setFilter(\'run\')">'+ic('skier',14)+' Runs</button><button class="btn" id="rf-spot" onclick="setFilter(\'spot\')">'+ic('cheers',14)+' Spots</button></div>';
+  h+='<div id="runlist"><div class="card sm muted">Loading…</div></div>';
+  setView('v-runs',h); loadRuns();
+}
+
+/* ---- SCENE / town guide ---- */
+function rScene(){
+  var stops=D.stops||[], idx=tripDayIdx();
+  if(!SCENE_TOWN || !guideFor(SCENE_TOWN)){ var ts=(idx>=0&&D.days[idx])?D.days[idx].stop:null; SCENE_TOWN=(ts&&guideFor(ts))?ts:((stops[0]&&stops[0].id)||null); }
+  var h=testBanner()+'<div class="hh"><h1>Scene &amp; town guide</h1><div class="sub">Bars, eats, stupid fun &amp; fun facts — by town</div></div>';
+  h+='<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px">';
+  stops.forEach(function(s){ var on=(s.id===SCENE_TOWN); h+='<button class="btn" onclick="setSceneTown(\''+s.id+'\')" style="flex:0 0 auto'+(on?';background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)':'')+'">'+esc(s.name)+'</button>'; });
+  var onRoad=(SCENE_TOWN==='__road'); h+='<button class="btn" onclick="setSceneTown(\'__road\')" style="flex:0 0 auto'+(onRoad?';background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)':'')+'">'+ic('car',13)+' The Road</button>';
+  h+='</div>';
+  if(onRoad){ (D.roadside||[]).forEach(function(seg){ h+='<div class="card"><h2>'+esc(seg.leg)+'</h2>'; (seg.sights||[]).forEach(function(x){ h+='<div style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div style="font-weight:600;font-size:14px">'+esc(x.name)+'</div>'+(x.note?'<div class="xs muted" style="margin-top:1px">'+esc(x.note)+'</div>':'')+'</div>'; }); h+='</div>'; }); h+=crewPicksHtml(); setView('v-scene',h); loadRuns(); return; }
+  var g=guideFor(SCENE_TOWN);
+  if(!g){ setView('v-scene',h+'<div class="card sm muted">No guide for this town yet.</div>'); return; }
+  if(g.heads_up)h+='<div class="tbann">'+ic('warning',14)+' '+esc(g.heads_up)+'</div>';
+  if(g.tonight)h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Tonight’s agenda</div><div class="sm" style="margin-top:5px;opacity:.95">'+esc(g.tonight)+'</div></div>';
+  [[ic('meeting',13)+' Business meetings',g.drink],[ic('food',13)+' Eat',g.eat],[ic('snowboarder',13)+' Stupid fun',g.do],[ic('map',13)+' See &amp; planner stuff',g.see],[ic('compass',13)+' Weird',g.weird]].forEach(function(pair,pi){ var arr=pair[1]; if(!arr||!arr.length)return; h+='<div class="card'+(pi===0?' meeting':'')+'"><h2>'+pair[0]+'</h2>'; arr.forEach(function(x){ h+='<div style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div style="font-weight:600;font-size:14px">'+esc(x.name)+'</div>'+(x.note?'<div class="xs muted" style="margin-top:1px">'+esc(x.note)+'</div>':'')+(x.special?'<div class="xs" style="margin-top:3px;color:var(--pr-ok-text);font-weight:700">'+ic('cheers',12)+' '+esc(x.special)+'</div>':'')+'</div>'; }); h+='</div>'; });
+  if(g.facts&&g.facts.length){ h+='<div class="card"><h2>'+ic('tip',13)+' Fun facts</h2>'; g.facts.forEach(function(t){ h+='<div class="sm" style="padding:5px 0;border-bottom:1px solid var(--pr-hairline)">• '+esc(t)+'</div>'; }); h+='</div>'; }
+  h+=crewPicksHtml();
+  setView('v-scene',h); loadRuns();
+}
+function crewPicksHtml(){
+  var crew=(D.crew||[]), def=crew.length?crew[0].name:'', meSel=localStorage.getItem('me')||def, crewOpts=crew.map(function(c){ return '<option'+(c.name===meSel?' selected':'')+'>'+esc(c.name)+'</option>'; }).join('')||'<option>'+esc(def||'Me')+'</option>';
+  var h='<div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin:18px 4px 9px">'+ic('checklist',13)+' Crew picks — runs &amp; spots'+(D.runsUrl?'':' · this phone only')+'</div>';
+  h+='<div class="card"><input class="inp" id="runText" placeholder="What — a run, bar, sight…">'
+   +'<div style="display:flex;gap:7px;margin-top:8px"><button class="btn" id="rk-run" style="flex:1;justify-content:center;background:var(--pr-btn-primary-bg);color:#fff" onclick="setKind(\'run\')">'+ic('skier',14)+' Run</button><button class="btn" id="rk-spot" style="flex:1;justify-content:center" onclick="setKind(\'spot\')">'+ic('cheers',14)+' Spot</button></div>'
+   +'<div style="display:flex;gap:7px;margin-top:8px"><input class="inp" id="runResort" placeholder="Where (resort, town, drive)" style="flex:1"><select class="inp" id="runBy" style="flex:1">'+crewOpts+'</select></div>'
+   +'<button class="btn pri" style="width:100%;justify-content:center;margin-top:8px" onclick="addRun()">＋ Add</button></div>'
+   +'<div id="runlist"><div class="card sm muted">Loading…</div></div>';
+  return h;
+}
+function setSceneTown(id){ SCENE_TOWN=id; rScene(); window.scrollTo(0,0); }
+
+/* ---- MORE ---- */
+var RATE=null;
+function showRate(){ var el=$('fxrate'); if(el)el.textContent='CA$1 ≈ US$'+(RATE?RATE.toFixed(4):'—'); }
+function fromCad(){ var c=parseFloat(($('cad')||{}).value); if($('usd'))$('usd').value=isNaN(c)?'':(c*RATE).toFixed(2); }
+function fromUsd(){ var u=parseFloat(($('usd')||{}).value); if($('cad'))$('cad').value=isNaN(u)?'':(u/RATE).toFixed(2); }
+function initFx(){ try{ var p=JSON.parse(localStorage.getItem('fx')||'null'); if(p&&p.r)RATE=p.r; }catch(e){} if(!RATE)RATE=(D.currencyFallback||0.715); showRate(); fromCad(); fetch('https://open.er-api.com/v6/latest/CAD').then(function(x){return x.json();}).then(function(j){ if(j&&j.rates&&j.rates.USD){ RATE=j.rates.USD; localStorage.setItem('fx',JSON.stringify({r:RATE,ts:Date.now()})); showRate(); fromCad(); } }).catch(function(){}); }
+var DB=null;
+function openDB(cb){ if(DB){cb();return;} try{ var rq=indexedDB.open('powderDocs',1); rq.onupgradeneeded=function(e){ e.target.result.createObjectStore('docs',{keyPath:'id'}); }; rq.onsuccess=function(e){ DB=e.target.result; cb(); }; rq.onerror=function(){ cb(); }; }catch(e){ cb(); } }
+function listDocs(){ openDB(function(){ var el=$('doclist'); if(!el)return; if(!DB){ el.textContent='Storage unavailable on this browser.'; return; } var tx=DB.transaction('docs').objectStore('docs').getAll(); tx.onsuccess=function(){ var a=tx.result||[]; if(!a.length){ el.innerHTML='<span class="muted">No files yet.</span>'; return; } var h=''; a.forEach(function(d){ h+='<div class="between" style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm" style="font-weight:600">'+esc(d.name)+'</div><div><button class="btn" onclick="viewDoc(\''+d.id+'\')">Open</button> <button class="btn" onclick="delDoc(\''+d.id+'\')">✕</button></div></div>'; }); el.innerHTML=h; }; }); }
+function addDoc(inp){ var f=inp.files[0]; if(!f)return; var rd=new FileReader(); rd.onload=function(){ openDB(function(){ if(!DB){toast('Storage unavailable');return;} var o={id:'d'+Date.now(),name:f.name,type:f.type,blob:rd.result}; DB.transaction('docs','readwrite').objectStore('docs').put(o).onsuccess=function(){ listDocs(); toast('Saved on this phone'); }; }); }; rd.readAsArrayBuffer(f); }
+function viewDoc(id){ openDB(function(){ var rq=DB.transaction('docs').objectStore('docs').get(id); rq.onsuccess=function(){ var d=rq.result; if(!d)return; var url=URL.createObjectURL(new Blob([d.blob],{type:d.type||'application/octet-stream'})); window.open(url,'_blank'); }; }); }
+function delDoc(id){ if(!confirm('Remove this file?'))return; openDB(function(){ DB.transaction('docs','readwrite').objectStore('docs').delete(id).onsuccess=function(){ listDocs(); }; }); }
+function rMore(){
+  var h=testBanner()+'<div class="hh"><h1>More</h1></div>';
+  h+='<div class="card"><h2>Crew &amp; rooming</h2>';
+  (D.crew||[]).forEach(function(c){h+='<div class="between" style="padding:5px 0;border-bottom:1px solid var(--pr-hairline)"><div style="font-weight:600">'+esc(c.name)+(c.note?' <span class="xs muted">'+esc(c.note)+'</span>':'')+'</div><span class="xs muted">'+esc(c.legs)+'</span></div>';});
+  if(D.rooming)h+='<div class="sm muted" style="margin-top:9px">'+esc(D.rooming)+'</div>';
+  h+='</div>';
+  h+='<div class="card"><h2>Document vault</h2><div class="xs muted" style="margin-bottom:8px"><b>My files</b> — stored on this phone, works offline.</div><div id="doclist" class="sm muted">…</div><label class="btn" style="margin-top:8px;cursor:pointer">＋ Add file<input type="file" hidden onchange="addDoc(this)"></label><div style="border-top:1px solid var(--pr-hairline);margin-top:12px;padding-top:10px"><div class="xs muted" style="margin-bottom:8px"><b>Trip docs</b> — built into the app, work offline on every phone.</div>'+((D.docs||[]).map(function(dd){ return '<div class="between" style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm" style="font-weight:600;flex:1;padding-right:8px">'+esc(dd.name)+'</div><button class="btn" onclick="openEmbDoc(\''+esc(dd.id)+'\')">Open</button></div>'; }).join('')||'<div class="sm muted">None yet.</div>')+'</div><div style="border-top:1px solid var(--pr-hairline);margin-top:12px;padding-top:10px"><div class="xs muted" style="margin-bottom:8px"><b>Crew files</b> — shared with everyone, encrypted with the trip password before upload.</div><div id="sdoclist" class="sm muted">…</div><label class="btn" style="margin-top:8px;cursor:pointer">＋ Share a file<input type="file" hidden onchange="addSharedDoc(this)"></label></div></div>';
+  h+='<div class="card alertcard"><h2 style="color:var(--pr-danger-text)">'+ic('alert',13)+' Emergency</h2>'+hurtHtml()+'<div style="margin-top:10px;border-top:1px solid var(--pr-hairline);padding-top:6px"><div class="xs muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.4px">Everyone</div>'+contactRows()+'</div></div>';
+  h+=emgFormCard();
+  h+='<div class="card"><h2>Safety &amp; emergency</h2>'; (D.safety||[]).forEach(function(s){ h+='<div class="between" style="padding:5px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm">'+esc(s.name)+'</div>'+(s.url?'<a href="'+s.url+'" target="_blank" class="sm">open ↗</a>':'<a href="tel:'+esc(s.v)+'" class="sm" style="font-weight:700">'+esc(s.v)+'</a>')+'</div>'; }); h+='</div>';
+  h+=packingCard();
+  h+='<div class="card"><h2>App</h2><div class="lk" onclick="lockApp()"><div style="flex:1">Lock this phone<small>sign out — trip name &amp; password needed again</small></div><span>🔒</span></div><div class="lk" onclick="hardRefresh()"><div style="flex:1">Refresh app &amp; data<small>clear the offline cache, reload the latest now</small></div><span>⟳</span></div></div>';
+  if(adminOn()){
+    h+='<div class="card"><h2>🧪 Test mode (admin)</h2><div class="xs muted" style="margin-bottom:8px">Pretend it’s a different date/time. Set it to <b>Jul 4</b> to preview example storm/ski conditions on the Snow tab.</div><input class="inp" type="datetime-local" id="testInput"><div style="margin-top:8px"><button class="btn pri" onclick="setTest()">Set test time</button> <button class="btn" onclick="clearTest()">Reset to now</button></div></div>';
+    h+='<div class="card"><h2>Trip access (admin)</h2><div class="xs muted">Change the trip name &amp; password: re-encrypts everything on this phone and downloads a fresh <b>trip-data.json</b>. Drag it to Netlify, share the new phrase, done. (Also how you mint a NEW trip: import that trip\u2019s plain data below first.)</div><input class="inp" id="adName" placeholder="New trip name" style="margin-top:8px"><input class="inp" id="adPw" placeholder="New trip password" style="margin-top:8px"><button class="btn pri" style="width:100%;justify-content:center;margin-top:8px" onclick="adminReEncrypt()">Re-encrypt &amp; download</button></div>';
+    h+='<div class="card"><h2>Trip data (admin)</h2>'
+     +'<label class="lk" style="cursor:pointer"><div style="flex:1">Import updated data<small>load a new trip-data.json</small></div><span>＋</span><input type="file" hidden accept="application/json,.json" onchange="importData(this)"></label>'
+     +'<div class="lk" onclick="exportData()"><div style="flex:1">Export decrypted data<small>plain-JSON backup of everything (keep it private)</small></div><span>⬇</span></div>'
+     +(localStorage.getItem('dataOverride')?'<div class="lk" onclick="resetData()"><div style="flex:1">Clear imported data<small>go back to the hosted file</small></div><span>↺</span></div>':'')
+     +'<div class="lk" onclick="lockAdmin()"><div style="flex:1">Lock admin<small>hide these controls again</small></div><span>🔒</span></div>'
+     +'<div class="xs muted" style="margin-top:8px">Source: '+(localStorage.getItem('dataOverride')?'imported override':'hosted trip-data.json')+'</div></div>';
+  }
+  h+='<div class="xs muted" style="text-align:center;padding:6px 0 10px;cursor:pointer" onclick="bumpVer()">BC Powder Run · v'+esc((D.version||'?'))+(adminOn()?' · admin on':'')+'</div>';
+  setView('v-more',h); listDocs(); listSharedDocs();
+}
+
+/* ---- data import/export ---- */
+function importData(inp){var f=inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var j=JSON.parse(rd.result);localStorage.setItem('dataOverride',JSON.stringify(j));if(j.gate){toast('Encrypted data imported — reloading');setTimeout(function(){location.reload();},700);}else{D=j;toast('Plain trip data loaded (this phone only)');render('more');}}catch(e){toast('Not valid JSON');}};rd.readAsText(f);}
+function exportData(){var b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='trip-data.json';a.click();}
+function resetData(){localStorage.removeItem('dataOverride');toast('Cleared — reloading');setTimeout(function(){location.reload();},700);}
+function hardRefresh(){
+  if(!confirm('Clear the offline cache and reload the latest version & data?')) return;
+  toast('Refreshing…');
+  var fin=function(){ location.reload(); };
+  var tasks=[];
+  try{ localStorage.removeItem('dataCache'); }catch(e){}
+  if(window.caches){ tasks.push(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));})); }
+  if(navigator.serviceWorker){ tasks.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister();}));})); }
+  Promise.all(tasks).then(fin).catch(fin);
+  setTimeout(fin, 2500);
+}
+function adminOn(){ return localStorage.getItem('admin')==='1'; }
+var _vt=0;
+function bumpVer(){ if(adminOn())return; _vt++; if(_vt>=5){ localStorage.setItem('admin','1'); _vt=0; toast('Admin unlocked'); rMore(); } else if(_vt>=3){ toast((5-_vt)+' more taps…'); } }
+function lockAdmin(){ localStorage.removeItem('admin'); _vt=0; toast('Admin locked'); rMore(); }
+
+/* ---- boot: load data (override > network > cache) ---- */
+function showNoData(){ $('v-home').innerHTML='<div class="hh"><h1>BC Powder Run</h1></div><div class="card"><h2>Couldn’t load trip data</h2><div class="sm">This app reads <b>trip-data.json</b> from the same folder. It works once hosted (or pick the file below to load it now).</div><label class="btn pri" style="margin-top:10px;display:inline-flex;cursor:pointer">Choose trip-data.json<input type="file" hidden accept="application/json,.json" onchange="importData(this)"></label></div>'; }
+async function boot(){
+  var data=null, ov=localStorage.getItem('dataOverride');
+  if(ov){ try{ data=JSON.parse(ov); }catch(e){} }
+  if(data && !data.gate){ D=data; EMB={open:{title:(D.meta||{}).title,year:(D.meta||{}).year}}; render('home'); return; }
+  if(!data){ try{ var r=await fetch('trip-data.json?v='+Date.now(),{cache:'no-store'}); if(r.ok){ data=await r.json(); localStorage.setItem('dataCache',JSON.stringify(data)); } }catch(e){} }
+  if(!data){ var c=localStorage.getItem('dataCache'); if(c){ try{ data=JSON.parse(c); }catch(e){} } }
+  if(!data){ showNoData(); return; }
+  if(data.gate){ EMB=data; var nm=localStorage.getItem('gname'), pw=localStorage.getItem('gpw');
+    if(nm&&pw){ try{ await gateTry(nm,pw); var nav=document.querySelector('.bnav'); if(nav)nav.style.display=''; render('home'); loadEmg(); return; }catch(e){} }
+    showGate(); return; }
+  D=data; EMB={open:{title:(D.meta||{}).title,year:(D.meta||{}).year}}; render('home');
+}
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
+boot();
+</script>
+</body>
+</html>

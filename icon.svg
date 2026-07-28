@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Powder Run">
+<rect width="512" height="512" fill="#FBF6EC"></rect>
+<circle cx="256" cy="205" r="140" fill="#FFC53D"></circle>
+<rect x="100" y="196" width="312" height="10" fill="#FBF6EC"></rect>
+<rect x="100" y="226" width="312" height="13" fill="#FBF6EC"></rect>
+<rect x="100" y="258" width="312" height="16" fill="#FBF6EC"></rect>
+<polygon points="70,392 218,150 350,392" fill="#FF4D9D"></polygon>
+<polygon points="218,150 190,196 204,188 218,202 232,188 246,196" fill="#FBF6EC"></polygon>
+<polygon points="180,392 336,168 468,392" fill="#0B6E66"></polygon>
+<polygon points="336,168 306,216 320,208 336,222 352,208 366,216" fill="#FBF6EC"></polygon>
+<rect y="380" width="512" height="132" fill="#241E2C"></rect>
+</svg>
