@@ -238,7 +238,7 @@ async function adminReEncrypt(){ var nm=($('adName')||{}).value||'', pw=($('adPw
   var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,new TextEncoder().encode(JSON.stringify(D)));
   var wrapper={gate:{salt:b64e(salt.buffer),iv:b64e(iv.buffer),ct:b64e(ct)},open:(EMB&&EMB.open)||{title:(D.meta||{}).title||'Trip',year:(D.meta||{}).year||''}};
   var b=new Blob([JSON.stringify(wrapper)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='trip-data.json'; a.click();
-  toast('Downloaded — drag to Netlify, then share the new phrase'); }
+  toast('Downloaded — upload to GitHub, then share the new phrase'); }
 var HURT_SEL=null;
 function pickHurt(nm){ HURT_SEL=(HURT_SEL===nm?null:nm); render(CUR); }
 function openEmbDoc(id){ var dd=null; (D.docs||[]).forEach(function(x){ if(x.id===id)dd=x; }); if(!dd){ toast('Doc not found'); return; }
@@ -788,7 +788,7 @@ function rMore(){
   h+='<div class="card"><h2>App</h2><div class="lk" onclick="lockApp()"><div style="flex:1">Lock this phone<small>sign out — trip name &amp; password needed again</small></div><span>🔒</span></div><div class="lk" onclick="hardRefresh()"><div style="flex:1">Refresh app &amp; data<small>clear the offline cache, reload the latest now</small></div><span>⟳</span></div></div>';
   if(adminOn()){
     h+='<div class="card"><h2>🧪 Test mode (admin)</h2><div class="xs muted" style="margin-bottom:8px">Pretend it’s a different date/time. Set it to <b>Jul 4</b> to preview example storm/ski conditions on the Snow tab.</div><input class="inp" type="datetime-local" id="testInput"><div style="margin-top:8px"><button class="btn pri" onclick="setTest()">Set test time</button> <button class="btn" onclick="clearTest()">Reset to now</button></div></div>';
-    h+='<div class="card"><h2>Trip access (admin)</h2><div class="xs muted">Change the trip name &amp; password: re-encrypts everything on this phone and downloads a fresh <b>trip-data.json</b>. Drag it to Netlify, share the new phrase, done. (Also how you mint a NEW trip: import that trip\u2019s plain data below first.)</div><input class="inp" id="adName" placeholder="New trip name" style="margin-top:8px"><input class="inp" id="adPw" placeholder="New trip password" style="margin-top:8px"><button class="btn pri" style="width:100%;justify-content:center;margin-top:8px" onclick="adminReEncrypt()">Re-encrypt &amp; download</button></div>';
+    h+='<div class="card"><h2>Trip access (admin)</h2><div class="xs muted">Change the trip name &amp; password: re-encrypts everything on this phone and downloads a fresh <b>trip-data.json</b>. Upload it to GitHub, share the new phrase, done. (Also how you mint a NEW trip: import that trip\u2019s plain data below first.)</div><input class="inp" id="adName" placeholder="New trip name" style="margin-top:8px"><input class="inp" id="adPw" placeholder="New trip password" style="margin-top:8px"><button class="btn pri" style="width:100%;justify-content:center;margin-top:8px" onclick="adminReEncrypt()">Re-encrypt &amp; download</button></div>';
     h+='<div class="card"><h2>Trip data (admin)</h2>'
      +'<label class="lk" style="cursor:pointer"><div style="flex:1">Import updated data<small>load a new trip-data.json</small></div><span>＋</span><input type="file" hidden accept="application/json,.json" onchange="importData(this)"></label>'
      +'<div class="lk" onclick="exportData()"><div style="flex:1">Export decrypted data<small>plain-JSON backup of everything (keep it private)</small></div><span>⬇</span></div>'

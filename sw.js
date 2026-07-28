@@ -1,4 +1,4 @@
-const CACHE = 'powder-v56';
+const CACHE = 'powder-v57';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg', './icon-512.png', './icon-180.png', './fonts/space-grotesk-latin-400-normal.woff2', './fonts/space-grotesk-latin-500-normal.woff2', './fonts/space-grotesk-latin-600-normal.woff2', './fonts/space-grotesk-latin-700-normal.woff2', './fonts/righteous-latin-400-normal.woff2'];
 
 self.addEventListener('install', e => {
