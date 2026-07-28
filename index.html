@@ -20,8 +20,8 @@
 --pr-pink:#FF4D9D;--pr-teal:#1FC9B7;--pr-purple:#8A4DEB;--pr-yellow:#FFC53D;--pr-orange:#FF8A3C;--pr-blue:#35B5E8;--pr-lime:#B8E332;
 --pr-pink-text:#C4116B;--pr-teal-text:#0B6E66;--pr-purple-text:#5E2CA5;--pr-yellow-text:#7A5200;--pr-orange-text:#9C4A00;--pr-blue-text:#0E6285;--pr-lime-text:#4E6B00;
 --pr-pink-tint:#FCEEF4;--pr-teal-tint:#E9F5F1;--pr-purple-tint:#F2EDFA;--pr-yellow-tint:#FBF3DA;--pr-orange-tint:#FCEFE4;--pr-blue-tint:#EAF4FB;--pr-lime-tint:#F2F7E2;
---pr-info-bg:#E9F5F1;--pr-info-text:#0B6E66;--pr-ok-bg:#E5F3E7;--pr-ok-text:#17693A;
---pr-warn-bg:#FFF3D2;--pr-warn-text:#7A5200;--pr-danger-bg:#FBE9E9;--pr-danger-text:#B01E28;
+--pr-info-bg:#E9F5F1;--pr-info-text:#0B6E66;--pr-ok-bg:#F2F7E2;--pr-ok-text:#4E6B00;
+--pr-warn-bg:#FFF3D2;--pr-warn-text:#7A5200;--pr-danger-bg:#FCEFE4;--pr-danger-text:#9C4A00;
 --pr-card-snow-bg:var(--pr-blue-tint);--pr-card-snow-fg:var(--pr-blue-text);
 --pr-card-todo-bg:var(--pr-pink-tint);--pr-card-todo-fg:var(--pr-pink-text);
 --pr-card-money-bg:var(--pr-teal-tint);--pr-card-money-fg:var(--pr-teal-text);
@@ -29,7 +29,7 @@
 --pr-card-meeting-bg:var(--pr-orange-tint);--pr-card-meeting-fg:var(--pr-orange-text);
 --pr-card-terrain-bg:var(--pr-lime-tint);--pr-card-terrain-fg:var(--pr-lime-text);
 --pr-card-warn-border:1.5px solid #C89B3C;
---pr-card-alert-border:1.5px solid #B01E28;
+--pr-card-alert-border:1.5px solid #9C4A00;
 --pr-link:var(--pr-pink-text);--pr-btn-primary-bg:var(--pr-pink-text);
 --pr-nav-selected:var(--pr-pink-text);--pr-nav-idle:#A29AA8;
 --pr-hero-bg:var(--pr-ink);--pr-hero-text:var(--pr-cream);
@@ -386,7 +386,7 @@ var CVN=0;
 function toggleCvd(id){ var el=document.getElementById(id); if(el)el.style.display=(el.style.display==='none'?'block':'none'); }
 function covRow(cv){ CVN++; var did='cvd'+CVN;
   var cf=!!cv.callFirst;
-  var h='<div style="margin-top:7px;border:1.5px solid '+(cf?'var(--pr-danger-text)':'var(--pr-hairline)')+';border-radius:10px;padding:8px 10px'+(cf?';background:var(--pr-danger-bg,#FDECEF)':'')+'">';
+  var h='<div style="margin-top:7px;border:1.5px solid '+(cf?'var(--pr-danger-text)':'var(--pr-hairline)')+';border-radius:10px;padding:8px 10px'+(cf?';background:var(--pr-danger-bg)':'')+'">';
   h+='<div class="between"><div class="sm" style="font-weight:700;flex:1;padding-right:8px">'+(cf?'⚠ ':'')+esc(cv.name)+'</div>'+(cv.phone?'<a class="btn" href="tel:'+esc(cv.phone)+'" style="font-weight:700'+(cf?';border-color:var(--pr-danger-text);color:var(--pr-danger-text)':'')+'">'+ic('phone',13)+' Call</a>':'')+'</div>';
   h+='<div class="xs" style="margin-top:2px;font-weight:700;'+(cf?'color:var(--pr-danger-text)':'color:var(--pr-text-muted)')+'">'+(cf?'CALL FIRST — before arranging any transport':'Pay out of pocket → reimburse later')+(cv.phone?' · '+esc(cv.phone):'')+'</div>';
   if(cv.policy)h+='<div class="xs" style="margin-top:3px;font-weight:700">'+esc(cv.policy)+'</div>';
