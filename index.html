@@ -164,6 +164,18 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .zrun{cursor:pointer}
 .zrun:active{opacity:.6}
 .zrun .zmi{color:var(--pr-link)}
+/* Snow tab: "Cruisers only" filter card (replaces the All/Mellow button pair) */
+.filt{display:flex;align-items:center;gap:10px;padding:10px 11px;margin-bottom:10px;
+ background:var(--pr-card-terrain-bg);border:1px solid rgba(0,0,0,.07);border-radius:11px}
+.filt label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;
+ color:var(--pr-text-2);flex:1}
+.filt input{width:18px;height:18px;accent-color:var(--pr-btn-primary-bg);cursor:pointer;margin:0;flex:0 0 auto}
+.filt .hint{font-size:11.5px;color:var(--pr-text-2);margin-top:3px;font-weight:400}
+.filt .ct{font-size:11.5px;font-weight:600;background:var(--pr-card);color:var(--pr-lime-text);
+ border-radius:999px;padding:2px 9px;flex:0 0 auto}
+.zblk.zoff{opacity:.55}
+.zempty{font-size:11.5px;color:var(--pr-text-2);margin-top:5px;display:flex;gap:7px;align-items:flex-start}
+#zchips button.dim{opacity:.5}
 @media(min-width:900px){
  #zov{--zdh:46%}
  .zrow .zkey{flex:0 0 30%}
@@ -298,7 +310,8 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
         <div class="znote"><div class="zsub" id="zsub"></div><div id="zopen" style="margin-top:10px"></div></div>
         <div class="zkey"><img id="zkeyimg" alt=""></div>
       </div>
-      <div class="zgroup"><label><input type="checkbox" id="zbylift" onchange="zByLift(this.checked)"><span>Group by lift</span></label></div>
+      <div class="zgroup"><label><input type="checkbox" id="zcruise" onchange="setCruisers(ZR,this.checked)"><span>Cruisers only</span></label></div>
+      <div class="zgroup" style="padding-top:9px"><label><input type="checkbox" id="zbylift" onchange="zByLift(this.checked)"><span>Group by lift</span></label></div>
       <div class="zruns" id="zruns"></div>
     </div>
   </div>
@@ -465,6 +478,23 @@ function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clear
    and on each run as r.x / r.y / r.lift (+ r.approx when the sheet doesn't
    name the line). A zone with no zmap simply renders as it always has. */
 var ZR=null, ZI=0, ZRUN=-1, ZSHUT=false, ZBYLIFT=false, ZPULSE=null, ZOPEN=false, ZPUSHED=false;
+
+/* "Cruisers only" is ONE state per resort (TMODE[rid]), shared by the Snow-tab
+   checkbox and the drawer checkbox — tick either and both follow. Level is the
+   only trustworthy signal here: r.type is free text with 130+ distinct values. */
+function isMellowRun(r){ return r.level==='int'||r.level==='beginner'; }
+function cruisersOn(k){ return TMODE[k]==='mellow'; }
+function zKeep(r){ return !cruisersOn(ZR)||isMellowRun(r); }
+function setCruisers(k,on){
+  if(!k)return; TMODE[k]=on?'mellow':'all';
+  var el=$('terr-'+k); if(el&&el.style.display!=='none')el.innerHTML=terrainHtml((D.terrain||{})[k],TMODE[k],k);
+  if(ZOPEN&&ZR===k){
+    var cb=$('zcruise'); if(cb)cb.checked=on;
+    var z=zZone();
+    if(ZRUN>=0&&z&&z.runs&&z.runs[ZRUN]&&!zKeep(z.runs[ZRUN])){ ZRUN=-1; zClearPulse(); }
+    zChips(); zRenderRuns();
+  }
+}
 function zHasMap(z){ return !!(z&&z.zmap&&z.zmap.img); }
 function zMapZones(k){ var t=(D.terrain||{})[k]||{}; return (t.zones||[]).filter(zHasMap); }
 function zZone(){ return zMapZones(ZR)[ZI]; }
@@ -475,6 +505,7 @@ function zOpen(k,zi,ri){
   $('zov').classList.add('on'); $('zov').setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
   if(!ZPUSHED){ try{ history.pushState({zov:1},''); ZPUSHED=true; }catch(e){} }
+  var cb=$('zcruise'); if(cb)cb.checked=cruisersOn(k);
   zChips(); zSetZone(zi);
   requestAnimationFrame(function(){
     zSizeDrawer();
@@ -495,6 +526,8 @@ function zChips(){
   zMapZones(ZR).forEach(function(z,i){
     var b=document.createElement('button');
     b.innerHTML=(z.zmap.gated?ic('warning',12):'')+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''));
+    if(i===ZI)b.className='on';
+    else if(cruisersOn(ZR)&&!(z.runs||[]).some(isMellowRun))b.className='dim';
     b.onclick=function(){ zSetZone(i); ZRUN=-1; zClearPulse(); zRenderRuns(); };
     box.appendChild(b);
   });
@@ -516,8 +549,11 @@ function zSetZone(i){
   $('zsub').innerHTML=sub;
   var sk=z.zmap.sheet||'map', href=r[sk], lab=r[sk+'Label'];
   $('zopen').innerHTML=href?('<a class="btn" href="'+href+'" download>'+ic('map',14)+' Open the full '+esc(lab||'trail')+' map</a>'):'';
-  var kids=$('zchips').children;
-  for(var j=0;j<kids.length;j++)kids[j].className=(j===i?'on':'');
+  var box=$('zchips'), kids=box.children, zs=zMapZones(ZR);
+  for(var j=0;j<kids.length;j++)kids[j].className=(j===i?'on':
+    ((cruisersOn(ZR)&&!(zs[j].runs||[]).some(isMellowRun))?'dim':''));
+  /* keep the active chip visible — zones 4 and 5 sit off the right edge */
+  if(kids[i])box.scrollLeft=Math.max(0,kids[i].offsetLeft-(box.clientWidth-kids[i].offsetWidth)/2);
   zRenderRuns();
 }
 function zRunRow(z,zi,r,ri,showZone){
@@ -534,12 +570,15 @@ function zRenderRuns(){
   if(!ZBYLIFT){
     var z=zs[ZI]; if(!z)return;
     var l=document.createElement('div'); l.className='zlab';
-    l.innerHTML=ic('skier',14)+'Runs in this zone'; box.appendChild(l);
-    (z.runs||[]).forEach(function(r,ri){ if(r.x!=null) box.appendChild(zRunRow(z,ZI,r,ri,false)); });
+    l.innerHTML=ic('skier',14)+(cruisersOn(ZR)?'Cruisers in this zone':'Runs in this zone'); box.appendChild(l);
+    var n=0;
+    (z.runs||[]).forEach(function(r,ri){ if(r.x!=null&&zKeep(r)){ n++; box.appendChild(zRunRow(z,ZI,r,ri,false)); } });
+    if(!n)box.insertAdjacentHTML('beforeend','<div class="zempty">'+ic('closed',13)+
+      '<span>Nothing mellow in '+esc(z.name)+'. Try another zone — the dimmed chips have none either.</span></div>');
   } else {
     var groups={}, order=[];
     zs.forEach(function(z,zi){ (z.runs||[]).forEach(function(r,ri){
-      if(r.x==null)return; var lf=r.lift||'Other';
+      if(r.x==null||!zKeep(r))return; var lf=r.lift||'Other';
       if(!groups[lf]){groups[lf]=[];order.push(lf);}
       groups[lf].push([z,zi,r,ri]);
     });});
@@ -873,22 +912,27 @@ function saveMapsOffline(){ var u=[]; Object.keys(D.resorts||{}).forEach(functio
 function climoHtml(k){ var n=(D.normals||{})[k]; if(!n) return '<span class="muted">No climatology yet.</span>'; return '<div><b>~'+n.snowIn+'″</b> snow over Feb 5–21 <span class="muted">(ranged '+n.minIn+'–'+n.maxIn+'″ · '+n.yrs+'-yr avg)</span><br><span class="muted">typical hi '+cF(n.hiC)+'° / lo '+cF(n.loC)+'°F</span></div>'; }
 function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
   var h='<div style="margin-top:6px">';
-  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn" onclick="setTerrainMode(\''+k+'\',\'all\')" style="flex:1;justify-content:center'+(mode!=='mellow'?';background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)':'')+'">All terrain</button><button class="btn" onclick="setTerrainMode(\''+k+'\',\'mellow\')" style="flex:1;justify-content:center'+(mode==='mellow'?';background:var(--pr-ok-text);color:#fff;border-color:var(--pr-ok-text)':'')+'">Mellow &amp; cruisers</button></div>';
+  var nMel=0; (t.zones||[]).forEach(function(z){ (z.runs||[]).forEach(function(r){ if(isMellowRun(r))nMel++; }); });
+  h+='<div class="filt"><label><input type="checkbox"'+(mode==='mellow'?' checked':'')+' onchange="setCruisers(\''+k+'\',this.checked)"><span>Cruisers only<div class="hint">Blues, greens &amp; mellow lines \u2014 skip the gnar</div></span></label><span class="ct">'+nMel+' mellow</span></div>';
   if(t.overview)h+='<div class="sm">'+esc(t.overview)+'</div>';
   if(t.snowTiming)h+='<div class="xs muted" style="margin-top:6px">'+ic('snowflake',12)+' '+esc(t.snowTiming)+'</div>';
   if((t.cruisers||[]).length){ h+='<div style="margin-top:9px;background:var(--pr-card-terrain-bg);border:1px solid rgba(0,0,0,.07);border-radius:8px;padding:8px 10px"><div style="font-weight:700;font-size:12px;color:var(--pr-card-terrain-fg)">'+ic('snowboarder',13)+' Carve &amp; cruise — wide, mellow &amp; scenic</div>'; t.cruisers.forEach(function(c){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(c.name)+'</b>'+(c.level?' <span class="muted">('+esc(c.level)+')</span>':'')+(c.where?' <span class="muted">· '+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
-  if(mode!=='mellow'){
   (t.flags||[]).forEach(function(f){ h+='<div class="xs" style="margin-top:6px;background:var(--pr-warn-bg);border:1px solid #EFD9A0;color:var(--pr-warn-text);border-radius:8px;padding:6px 8px">'+ic('warning',12)+' '+esc(f)+'</div>'; });
   (t.zones||[]).forEach(function(z){
     var zmi=zHasMap(z)?zMapZones(k).indexOf(z):-1;
-    h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="display:flex;align-items:center;gap:8px"><div style="font-weight:700;font-size:13px;flex:1">'+esc(z.name)+'</div>'+(zmi>=0?'<span class="zvm" onclick="zOpen(\''+k+'\','+zmi+',-1)">View map \u2197</span>':'')+'</div>';
+    var shown=(z.runs||[]).map(function(r,ri){return [r,ri];}).filter(function(p){ return mode!=='mellow'||isMellowRun(p[0]); });
+    var gated=/\(gated\)/i.test(z.name)||!!(z.zmap&&z.zmap.gated);
+    h+='<div class="zblk'+(shown.length?'':' zoff')+'" style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="display:flex;align-items:center;gap:8px"><div style="font-weight:700;font-size:13px;flex:1">'+esc(z.name)+'</div>'+(zmi>=0?'<span class="zvm" onclick="zOpen(\''+k+'\','+zmi+',-1)">View map ↗</span>':'')+'</div>';
     var meta=[]; if(z.access)meta.push(ic('gondola',12)+' '+esc(z.access)); if(z.aspect)meta.push(ic('compass',12)+' '+esc(z.aspect)); if(z.timing)meta.push('⏱ '+esc(z.timing));
     if(meta.length)h+='<div class="xs muted" style="margin-top:2px">'+meta.join(' · ')+'</div>';
     if(z.closure)h+='<div class="xs" style="margin-top:3px;color:var(--pr-warn-text);font-weight:700">'+ic('closed',12)+' '+esc(z.closure)+'</div>';
-    (z.runs||[]).forEach(function(r,ri){ var pin=(zmi>=0&&r.x!=null); var tag=r.level?(' <span class="muted">('+esc(r.level)+(r.type?' '+esc(r.type):'')+')</span>'):''; h+='<div class="xs'+(pin?' zrun':'')+'" style="margin-top:4px"'+(pin?' onclick="zOpen(\''+k+'\','+zmi+','+ri+')"':'')+'><b>'+esc(r.name)+'</b>'+tag+(r.note?' — '+esc(r.note):'')+((r.conf&&r.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(r.conf)+'</span>':'')+(pin?' <span class="zmi">'+ic('map',12)+'</span>':'')+'</div>'; });
+    if(!shown.length)h+='<div class="zempty">'+ic('closed',12)+'<span>Nothing mellow here'+(gated?' — gated expert terrain only.':' — steeps and chutes only.')+'</span></div>';
+    shown.forEach(function(p){ var r=p[0], ri=p[1], pin=(zmi>=0&&r.x!=null);
+      var tag=r.level?(' <span class="muted">('+esc(r.level)+(r.type?' '+esc(r.type):'')+')</span>'):'';
+      h+='<div class="xs'+(pin?' zrun':'')+'" style="margin-top:4px"'+(pin?' onclick="zOpen(\''+k+'\','+zmi+','+ri+')"':'')+'><b>'+esc(r.name)+'</b>'+tag+(r.note?' — '+esc(r.note):'')+((r.conf&&r.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(r.conf)+'</span>':'')+(pin?' <span class="zmi">'+ic('map',12)+'</span>':'')+'</div>';
+    });
     h+='</div>';
   });
-  }
   if((t.cabins||[]).length){ h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-text-muted)">'+ic('food',12)+' On-mountain food &amp; huts</div>'; t.cabins.forEach(function(c){ h+='<div class="xs" style="margin-top:4px"><b>'+esc(c.name)+'</b>'+(c.where?' <span class="muted">'+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
   if((t.woods||[]).length){ h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-card-terrain-fg)">'+ic('trees',12)+' In the trees — hidden spots</div>'; t.woods.forEach(function(w){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(w.name)+'</b>'+(w.type?' <span class="muted">('+esc(w.type)+')</span>':'')+((w.conf&&w.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(w.conf)+'</span>':'')+(w.find?'<div class="muted" style="margin-top:1px">'+ic('pin',11)+' '+esc(w.find)+'</div>':'')+(w.note?'<div style="margin-top:2px">'+esc(w.note)+'</div>':'')+'</div>'; }); h+='<div class="muted" style="font-size:10px;margin-top:7px;font-style:italic">Word-of-mouth &amp; unofficial. Open booze outside licensed areas can cost your pass; unsanctioned structures get torn down; tree wells are lethal — ride glades with a partner and pack out everything.</div></div>'; }
   if(t.mellow)h+='<div class="xs" style="margin-top:9px;background:var(--pr-ok-bg);border-radius:8px;padding:6px 8px"><b>Mellow:</b> '+esc(t.mellow)+'</div>';
