@@ -85,6 +85,91 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:var(--pr-ink);color:#fff;font-size:13px;padding:9px 15px;border-radius:10px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 
+/* ===================== ZONE MAP OVERLAY =====================
+   Opens from Snow -> Terrain (a zone header, or any run row). Full-screen,
+   sits above the nav; the Snow tab underneath is untouched. Map fills the
+   stage, runs + keymap live in a drawer that collapses to give the map the
+   whole screen. Solid ink chrome, no scrims, no blur (chairlift glare rule). */
+#zov{position:fixed;inset:0;z-index:300;background:var(--pr-ink);display:none;--zdh:52%}
+#zov.on{display:block}
+#zstage{position:absolute;left:0;right:0;top:0;bottom:var(--zdh);transition:bottom .28s ease;overflow:hidden}
+#zstage img{width:100%;height:100%;object-fit:contain;display:block}
+.zpulse{position:absolute;width:0;height:0;pointer-events:none;transition:left .28s ease,top .28s ease}
+.zpulse i{position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;border:3px solid var(--pr-yellow);opacity:0}
+.zpulse b{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--pr-yellow);border:2px solid var(--pr-ink);opacity:0}
+.zpulse.go i{animation:zring 1.15s ease-out 2}
+.zpulse.go i:nth-child(2){animation-delay:.3s}
+.zpulse.go b{animation:zdot 2.4s ease-out 1}
+@keyframes zring{0%{transform:scale(.4);opacity:0}20%{opacity:1}100%{transform:scale(2);opacity:0}}
+@keyframes zdot{0%{opacity:0}10%{opacity:1}75%{opacity:1}100%{opacity:0}}
+#ztop{position:absolute;top:0;left:0;right:0;z-index:4;display:flex;gap:8px;align-items:center;
+ padding:9px 12px;padding-top:calc(9px + env(safe-area-inset-top));
+ background:var(--pr-ink);border-bottom:3px solid var(--pr-teal)}
+#ztop .zx{flex:0 0 auto;width:32px;height:32px;border-radius:999px;background:var(--pr-cream);color:var(--pr-ink);
+ border:0;font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#ztop .zx:active{opacity:.7}
+#zchips{display:flex;gap:6px;overflow-x:auto;flex:1}
+#zchips button{white-space:nowrap;font-family:inherit;font-size:12.5px;font-weight:600;border:0;border-radius:999px;
+ padding:7px 12px;background:var(--pr-cream);color:var(--pr-text-2);cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+#zchips button.on{background:var(--pr-btn-primary-bg);color:#fff}
+#zchips button:active{opacity:.8}
+#zreflash{position:absolute;left:50%;margin-left:-40vw;width:80vw;justify-content:center;z-index:5;display:none;
+ align-items:center;gap:9px;background:var(--pr-ink);color:var(--pr-cream);border:1px solid var(--pr-text-2);
+ border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+#zreflash.on{display:flex}
+#zreflash:active{opacity:.8}
+#zreflash .zrd{width:10px;height:10px;border-radius:50%;background:var(--pr-yellow);flex:0 0 auto}
+#zreflash .zrn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zdrawer{position:absolute;left:0;right:0;bottom:0;height:var(--zdh);z-index:6;background:var(--pr-card);
+ border-top:1px solid var(--pr-border);border-radius:14px 14px 0 0;transition:height .28s ease;
+ overflow:hidden;display:flex;flex-direction:column}
+#zdrawer .zgrab{position:absolute;top:7px;left:50%;margin-left:-19px;width:38px;height:4px;border-radius:3px;
+ background:var(--pr-border);z-index:2;pointer-events:none}
+#zbar{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:17px 16px 10px;cursor:pointer}
+#zbar .zdt{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zbar .zdg{font-size:11.5px;font-weight:700;background:var(--pr-danger-bg);color:var(--pr-danger-text);
+ padding:2px 8px;border-radius:999px;display:none;align-items:center;gap:4px}
+#zbar .zdg.on{display:inline-flex}
+#zbar .zdc{font-size:12px;color:var(--pr-text-muted);transition:transform .28s}
+#zdrawer.shut #zbar .zdc{transform:rotate(180deg)}
+#zbody{flex:1;overflow-y:auto;padding-bottom:calc(14px + env(safe-area-inset-bottom));opacity:1;transition:opacity .16s}
+#zdrawer.shut #zbody{opacity:0;pointer-events:none;overflow:hidden}
+.zrow{display:flex;gap:12px;padding:0 16px;align-items:flex-start}
+.zrow .znote{flex:1;min-width:0}
+.zrow .znote .zsub{font-size:11.5px;color:var(--pr-text-2);line-height:1.5}
+.zrow .zkey{flex:0 0 44%;border:1px solid var(--pr-border);border-radius:11px;overflow:hidden;line-height:0}
+.zrow .zkey img{width:100%;display:block}
+.zgroup{padding:14px 16px 2px}
+.zgroup label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--pr-text-2)}
+.zgroup input{width:18px;height:18px;accent-color:var(--pr-btn-primary-bg);cursor:pointer;margin:0;flex:0 0 auto}
+.zruns{padding:2px 16px 0}
+.zruns .zlab{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-2);
+ margin:13px 0 7px;display:flex;align-items:center;gap:7px}
+.zruns .zlab .zct{background:var(--pr-yellow-tint);color:var(--pr-yellow-text);border-radius:999px;
+ padding:2px 8px;font-size:11.5px;letter-spacing:0}
+.zrr{display:flex;align-items:center;gap:10px;border:1px solid var(--pr-border);background:var(--pr-card);
+ border-radius:11px;padding:9px 11px;margin-bottom:6px;cursor:pointer}
+.zrr:active{opacity:.7}
+.zrr.on{border:1.5px solid var(--pr-btn-primary-bg)}
+.zrr .zd{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--pr-text-2)}
+.zrr .znm{font-size:13px;font-weight:600;flex:1}
+.zrr .zzt{font-size:11.5px;font-weight:600;color:var(--pr-text-muted)}
+.lv-expert .zd,.lv-adv .zd{background:var(--pr-ink)}
+.lv-extreme .zd{background:var(--pr-danger-text)}
+.lv-int .zd{background:var(--pr-blue-text)}
+.lv-beginner .zd{background:var(--pr-ok-text)}
+/* Snow tab: zone header + run rows become the launchers */
+.zvm{font-size:11.5px;font-weight:600;color:var(--pr-link);white-space:nowrap;cursor:pointer;flex:0 0 auto}
+.zvm:active{opacity:.6}
+.zrun{cursor:pointer}
+.zrun:active{opacity:.6}
+.zrun .zmi{color:var(--pr-link)}
+@media(min-width:900px){
+ #zov{--zdh:46%}
+ .zrow .zkey{flex:0 0 30%}
+ #zbody,.zrow,.zgroup,.zruns{max-width:900px;margin-left:auto;margin-right:auto}
+}
+
 /* --- desktop scaffolding: inert on phones (see the min-width:900px block) --- */
 .hero,.heroin,.wrap{display:block}
 .hstripe{display:none}
@@ -200,6 +285,24 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 <div id="v-runs" class="view"></div>
 <div id="v-scene" class="view"></div>
 <div id="v-more" class="view"></div>
+
+<div id="zov" aria-hidden="true">
+  <div id="zstage"><img id="zimg" alt=""></div>
+  <div id="ztop"><button class="zx" onclick="zClose()" aria-label="Close map">&#10005;</button><div id="zchips"></div></div>
+  <button id="zreflash" onclick="zReflash()"><span class="zrd"></span><span class="zrn" id="zreflashname"></span></button>
+  <div id="zdrawer">
+    <span class="zgrab"></span>
+    <div id="zbar" onclick="zToggleDrawer()"><span class="zdt" id="zdtitle"></span><span class="zdg" id="zdgate"></span><span class="zdc">&#9662;</span></div>
+    <div id="zbody">
+      <div class="zrow">
+        <div class="znote"><div class="zsub" id="zsub"></div><div id="zopen" style="margin-top:10px"></div></div>
+        <div class="zkey"><img id="zkeyimg" alt=""></div>
+      </div>
+      <div class="zgroup"><label><input type="checkbox" id="zbylift" onchange="zByLift(this.checked)"><span>Group by lift</span></label></div>
+      <div class="zruns" id="zruns"></div>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -352,6 +455,150 @@ var IC={mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7
 function ic(n,s){s=s||14;var g=IC[n];if(!g)return '';return '<svg class="pri" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="currentColor" aria-hidden="true">'+g+'</svg>';}
 function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1900);}
+
+/* ===================== ZONE MAP OVERLAY =====================
+   Pre-cut zone crops (spotlight dim baked in at build time) + a pre-baked
+   keymap per sheet. No pan/zoom engine, no fly-to: tap a run, the crop for
+   its zone comes up and a ring pulses where the run is. The pulse is
+   deliberately forgiving, so pins only have to be roughly right.
+   Data lives on each terrain zone as z.zmap {img,key,asp,sheet,gated,entry,note}
+   and on each run as r.x / r.y / r.lift (+ r.approx when the sheet doesn't
+   name the line). A zone with no zmap simply renders as it always has. */
+var ZR=null, ZI=0, ZRUN=-1, ZSHUT=false, ZBYLIFT=false, ZPULSE=null, ZOPEN=false, ZPUSHED=false;
+function zHasMap(z){ return !!(z&&z.zmap&&z.zmap.img); }
+function zMapZones(k){ var t=(D.terrain||{})[k]||{}; return (t.zones||[]).filter(zHasMap); }
+function zZone(){ return zMapZones(ZR)[ZI]; }
+
+function zOpen(k,zi,ri){
+  if(!D||!D.terrain||!D.terrain[k])return;
+  ZR=k; ZSHUT=false; ZOPEN=true;
+  $('zov').classList.add('on'); $('zov').setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  if(!ZPUSHED){ try{ history.pushState({zov:1},''); ZPUSHED=true; }catch(e){} }
+  zChips(); zSetZone(zi);
+  requestAnimationFrame(function(){
+    zSizeDrawer();
+    if(ri>=0){ setTimeout(function(){ zFlash(ri); },330); }
+    else { var z=zZone(); if(z&&z.zmap.entry) setTimeout(function(){ zFlashAt(z.zmap.entry[0],z.zmap.entry[1]); },330); }
+  });
+}
+function zClose(fromPop){
+  ZOPEN=false; ZRUN=-1; zClearPulse();
+  $('zov').classList.remove('on'); $('zov').setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+  if(fromPop!==true && ZPUSHED){ ZPUSHED=false; try{ history.back(); }catch(e){} }
+}
+window.addEventListener('popstate',function(){ if(ZOPEN){ ZPUSHED=false; zClose(true); } });
+
+function zChips(){
+  var box=$('zchips'); box.innerHTML='';
+  zMapZones(ZR).forEach(function(z,i){
+    var b=document.createElement('button');
+    b.innerHTML=(z.zmap.gated?ic('warning',12):'')+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''));
+    b.onclick=function(){ zSetZone(i); ZRUN=-1; zClearPulse(); zRenderRuns(); };
+    box.appendChild(b);
+  });
+}
+function zSetZone(i){
+  ZI=i; var z=zZone(); if(!z)return; var r=(D.resorts||{})[ZR]||{};
+  $('zimg').src=z.zmap.img; $('zimg').alt=z.name+' zone map';
+  $('zkeyimg').src=z.zmap.key; $('zkeyimg').alt='Where '+z.name+' sits on the sheet';
+  $('zdtitle').textContent=z.name;
+  $('zdgate').innerHTML=ic('warning',12)+' Gated';
+  $('zdgate').className='zdg'+(z.zmap.gated?' on':'');
+  var bits=[];
+  if(z.access)bits.push(esc(z.access));
+  if(z.aspect)bits.push(esc(z.aspect));
+  if(z.timing)bits.push(esc(z.timing));
+  var sub=bits.join(' \u00b7 ');
+  if(z.closure)sub+='<div style="margin-top:4px;color:var(--pr-warn-text);font-weight:700">'+ic('closed',12)+' '+esc(z.closure)+'</div>';
+  if(z.zmap.note)sub+='<div style="margin-top:4px">'+ic('tip',12)+' '+esc(z.zmap.note)+'</div>';
+  $('zsub').innerHTML=sub;
+  var sk=z.zmap.sheet||'map', href=r[sk], lab=r[sk+'Label'];
+  $('zopen').innerHTML=href?('<a class="btn" href="'+href+'" download>'+ic('map',14)+' Open the full '+esc(lab||'trail')+' map</a>'):'';
+  var kids=$('zchips').children;
+  for(var j=0;j<kids.length;j++)kids[j].className=(j===i?'on':'');
+  zRenderRuns();
+}
+function zRunRow(z,zi,r,ri,showZone){
+  var d=document.createElement('div');
+  d.className='zrr lv-'+(r.level||'info')+((zi===ZI&&ri===ZRUN)?' on':'');
+  d.innerHTML='<span class="zd"></span><span class="znm">'+esc(r.name)+'</span>'+
+    (r.approx?'<span class="pill muted" style="font-size:9px;padding:1px 6px">approx</span>':'')+
+    (showZone?'<span class="zzt">'+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+'</span>':'');
+  d.onclick=function(){ if(zi!==ZI)zSetZone(zi); zFlash(ri); };
+  return d;
+}
+function zRenderRuns(){
+  var box=$('zruns'); box.innerHTML=''; var zs=zMapZones(ZR);
+  if(!ZBYLIFT){
+    var z=zs[ZI]; if(!z)return;
+    var l=document.createElement('div'); l.className='zlab';
+    l.innerHTML=ic('skier',14)+'Runs in this zone'; box.appendChild(l);
+    (z.runs||[]).forEach(function(r,ri){ if(r.x!=null) box.appendChild(zRunRow(z,ZI,r,ri,false)); });
+  } else {
+    var groups={}, order=[];
+    zs.forEach(function(z,zi){ (z.runs||[]).forEach(function(r,ri){
+      if(r.x==null)return; var lf=r.lift||'Other';
+      if(!groups[lf]){groups[lf]=[];order.push(lf);}
+      groups[lf].push([z,zi,r,ri]);
+    });});
+    order.forEach(function(lf){
+      var l=document.createElement('div'); l.className='zlab';
+      l.innerHTML=ic('gondola',14)+esc(lf)+'<span class="zct">'+groups[lf].length+'</span>';
+      box.appendChild(l);
+      groups[lf].forEach(function(t){ box.appendChild(zRunRow(t[0],t[1],t[2],t[3],true)); });
+    });
+  }
+}
+function zByLift(v){ ZBYLIFT=v; zRenderRuns(); }
+
+/* the crop is object-fit:contain, so a percentage pin lands in the letterbox.
+   Work out the rendered image rect first and place the pulse in px. */
+function zPinXY(x,y){
+  var st=$('zstage'), W=st.clientWidth, H=st.clientHeight, a=(zZone()||{}).zmap.asp||1, rw,rh,ox,oy;
+  if(W/H>a){ rh=H; rw=H*a; ox=(W-rw)/2; oy=0; } else { rw=W; rh=W/a; ox=0; oy=(H-rh)/2; }
+  return [(ox+x*rw)+'px',(oy+y*rh)+'px'];
+}
+function zClearPulse(){
+  if(ZPULSE){ ZPULSE.parentNode&&ZPULSE.parentNode.removeChild(ZPULSE); ZPULSE=null; }
+  var rr=document.querySelectorAll('#zruns .zrr');
+  for(var i=0;i<rr.length;i++)rr[i].classList.remove('on');
+  zUpdateReflash();
+}
+function zFlashAt(x,y){
+  zClearPulse();
+  var p=document.createElement('div'); p.className='zpulse'; p.innerHTML='<i></i><i></i><b></b>';
+  var xy=zPinXY(x,y); p.style.left=xy[0]; p.style.top=xy[1];
+  $('zstage').appendChild(p); ZPULSE=p; void p.offsetWidth; p.classList.add('go');
+  return p;
+}
+function zFlash(ri){
+  var z=zZone(); if(!z)return; var r=(z.runs||[])[ri]; if(!r||r.x==null)return;
+  ZRUN=ri; zFlashAt(r.x,r.y); zRenderRuns(); zUpdateReflash();
+}
+function zReflash(){ if(ZRUN>=0)zFlash(ZRUN); }
+function zPlace(){
+  if(ZRUN<0||!ZPULSE)return; var z=zZone(); if(!z)return; var r=(z.runs||[])[ZRUN]; if(!r)return;
+  var xy=zPinXY(r.x,r.y); ZPULSE.style.left=xy[0]; ZPULSE.style.top=xy[1];
+}
+function zSizeDrawer(){
+  if(!ZOPEN)return;
+  var ov=$('zov'), bar=$('zbar');
+  var full=Math.round(ov.clientHeight*(window.innerWidth>=900?0.46:0.52));
+  var min=bar.offsetHeight+8;
+  ov.style.setProperty('--zdh',(ZSHUT?min:full)+'px');
+  $('zdrawer').classList.toggle('shut',ZSHUT);
+  $('zreflash').style.bottom=(min+14)+'px';
+  zUpdateReflash(); setTimeout(zPlace,30); setTimeout(zPlace,320);
+}
+function zToggleDrawer(){ ZSHUT=!ZSHUT; zSizeDrawer(); }
+function zUpdateReflash(){
+  var z=zZone(), show=ZSHUT&&ZRUN>=0&&z&&z.runs&&z.runs[ZRUN];
+  $('zreflash').className=show?'on':'';
+  if(show)$('zreflashname').textContent='Show '+z.runs[ZRUN].name;
+}
+window.addEventListener('resize',zSizeDrawer);
 
 /* ---- test mode: getNow() drives all date logic ---- */
 function getNow(){var t=localStorage.getItem('testNow'); return t? new Date(t): new Date();}
@@ -622,7 +869,7 @@ function fillHomeSnow(id,rid,dt){ var r=D.resorts[rid]; if(!r)return;
   fetch('https://api.open-meteo.com/v1/forecast?latitude='+r.lat+'&longitude='+r.lon+'&daily=snowfall_sum,temperature_2m_max,temperature_2m_min&forecast_days=16&timezone=auto&temperature_unit=fahrenheit').then(function(x){return x.json();}).then(function(j){ var el=$(id); if(!el)return; var k=(j.daily&&j.daily.time)?j.daily.time.indexOf(dt):-1; if(k>=0){ var sfIn=(j.daily.snowfall_sum[k]||0)/2.54; el.innerHTML=(sfIn>=0.3?(sfIn<1?sfIn.toFixed(1):Math.round(sfIn))+'″ new':'no new snow')+' · hi '+Math.round(j.daily.temperature_2m_max[k])+'°'; } else { var nm=(D.normals||{})[rid]; el.innerHTML=nm?('~'+nm.snowIn+'″ typical'):'—'; } }).catch(function(){ var el=$(id); if(el){ var nm=(D.normals||{})[rid]; el.textContent=nm?('~'+nm.snowIn+'″ typical'):'—'; } });
 }
 function resortSkiDate(rid){ for(var i=0;i<D.days.length;i++){ if(D.days[i].rid===rid) return D.days[i].dt; } return D.meta.start; }
-function saveMapsOffline(){ var u=[]; Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k]; if(r.map)u.push(r.map); if(r.map2)u.push(r.map2); if(r.map3)u.push(r.map3); if(r.basemap)u.push(r.basemap); }); if(!u.length)return; toast('Saving '+u.length+' maps for offline…'); var done=0; Promise.all(u.map(function(x){ return fetch(x,{cache:'reload'}).then(function(){done++;}).catch(function(){}); })).then(function(){ toast(done+'/'+u.length+' maps saved — available offline'); }); }
+function saveMapsOffline(){ var u=[]; Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k]; if(r.map)u.push(r.map); if(r.map2)u.push(r.map2); if(r.map3)u.push(r.map3); if(r.basemap)u.push(r.basemap); }); Object.keys(D.terrain||{}).forEach(function(k){ ((D.terrain[k]||{}).zones||[]).forEach(function(z){ if(z.zmap&&z.zmap.img){u.push(z.zmap.img); if(z.zmap.key)u.push(z.zmap.key);} }); }); if(!u.length)return; toast('Saving '+u.length+' maps for offline…'); var done=0; Promise.all(u.map(function(x){ return fetch(x,{cache:'reload'}).then(function(){done++;}).catch(function(){}); })).then(function(){ toast(done+'/'+u.length+' maps saved — available offline'); }); }
 function climoHtml(k){ var n=(D.normals||{})[k]; if(!n) return '<span class="muted">No climatology yet.</span>'; return '<div><b>~'+n.snowIn+'″</b> snow over Feb 5–21 <span class="muted">(ranged '+n.minIn+'–'+n.maxIn+'″ · '+n.yrs+'-yr avg)</span><br><span class="muted">typical hi '+cF(n.hiC)+'° / lo '+cF(n.loC)+'°F</span></div>'; }
 function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
   var h='<div style="margin-top:6px">';
@@ -633,11 +880,12 @@ function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
   if(mode!=='mellow'){
   (t.flags||[]).forEach(function(f){ h+='<div class="xs" style="margin-top:6px;background:var(--pr-warn-bg);border:1px solid #EFD9A0;color:var(--pr-warn-text);border-radius:8px;padding:6px 8px">'+ic('warning',12)+' '+esc(f)+'</div>'; });
   (t.zones||[]).forEach(function(z){
-    h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="font-weight:700;font-size:13px">'+esc(z.name)+'</div>';
+    var zmi=zHasMap(z)?zMapZones(k).indexOf(z):-1;
+    h+='<div style="margin-top:11px;border-top:1px solid var(--pr-hairline);padding-top:8px"><div style="display:flex;align-items:center;gap:8px"><div style="font-weight:700;font-size:13px;flex:1">'+esc(z.name)+'</div>'+(zmi>=0?'<span class="zvm" onclick="zOpen(\''+k+'\','+zmi+',-1)">View map \u2197</span>':'')+'</div>';
     var meta=[]; if(z.access)meta.push(ic('gondola',12)+' '+esc(z.access)); if(z.aspect)meta.push(ic('compass',12)+' '+esc(z.aspect)); if(z.timing)meta.push('⏱ '+esc(z.timing));
     if(meta.length)h+='<div class="xs muted" style="margin-top:2px">'+meta.join(' · ')+'</div>';
     if(z.closure)h+='<div class="xs" style="margin-top:3px;color:var(--pr-warn-text);font-weight:700">'+ic('closed',12)+' '+esc(z.closure)+'</div>';
-    (z.runs||[]).forEach(function(r){ var tag=r.level?(' <span class="muted">('+esc(r.level)+(r.type?' '+esc(r.type):'')+')</span>'):''; h+='<div class="xs" style="margin-top:4px"><b>'+esc(r.name)+'</b>'+tag+(r.note?' — '+esc(r.note):'')+((r.conf&&r.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(r.conf)+'</span>':'')+'</div>'; });
+    (z.runs||[]).forEach(function(r,ri){ var pin=(zmi>=0&&r.x!=null); var tag=r.level?(' <span class="muted">('+esc(r.level)+(r.type?' '+esc(r.type):'')+')</span>'):''; h+='<div class="xs'+(pin?' zrun':'')+'" style="margin-top:4px"'+(pin?' onclick="zOpen(\''+k+'\','+zmi+','+ri+')"':'')+'><b>'+esc(r.name)+'</b>'+tag+(r.note?' — '+esc(r.note):'')+((r.conf&&r.conf!=='verified')?' <span class="pill muted" style="font-size:9px;padding:1px 6px">'+esc(r.conf)+'</span>':'')+(pin?' <span class="zmi">'+ic('map',12)+'</span>':'')+'</div>'; });
     h+='</div>';
   });
   }
