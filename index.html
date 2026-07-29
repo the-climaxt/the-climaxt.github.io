@@ -92,7 +92,13 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
    whole screen. Solid ink chrome, no scrims, no blur (chairlift glare rule). */
 #zov{position:fixed;inset:0;z-index:300;background:var(--pr-ink);display:none;--zdh:52%}
 #zov.on{display:block}
-#zstage{position:absolute;left:0;right:0;top:0;bottom:var(--zdh);transition:bottom .28s ease;overflow:hidden}
+#zstage{position:absolute;left:0;right:0;top:0;bottom:var(--zdh);transition:bottom .28s ease;overflow:hidden;touch-action:none}
+#zpan{position:absolute;inset:0;transform-origin:0 0}
+#zzoom{position:absolute;left:12px;z-index:5;display:none;align-items:center;gap:7px;
+ background:var(--pr-ink);color:var(--pr-cream);border:1px solid var(--pr-text-2);
+ border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+#zzoom.on{display:inline-flex}
+#zzoom:active{opacity:.8}
 #zstage img{width:100%;height:100%;object-fit:contain;display:block}
 .zpulse{position:absolute;width:0;height:0;pointer-events:none;transition:left .28s ease,top .28s ease}
 .zpulse i{position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;border:3px solid var(--pr-yellow);opacity:0}
@@ -321,7 +327,8 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 <div id="v-more" class="view"></div>
 
 <div id="zov" aria-hidden="true">
-  <div id="zstage"><img id="zimg" alt=""></div>
+  <div id="zstage"><div id="zpan"><img id="zimg" alt=""></div></div>
+  <button id="zzoom" onclick="zResetZoom()"></button>
   <div id="ztop"><button class="zx" onclick="zClose()" aria-label="Close map">&#10005;</button><div id="zchips"></div></div>
   <button id="zreflash" onclick="zReflash()"><span class="zrd"></span><span class="zrn" id="zreflashname"></span></button>
   <div id="zdrawer">
@@ -541,6 +548,7 @@ function zOpen(k,zi,ri){
   document.body.style.overflow='hidden';
   if(!ZPUSHED){ try{ history.pushState({zov:1},''); ZPUSHED=true; }catch(e){} }
   var cb=$('zcruise'); if(cb)cb.checked=cruisersOn(k);
+  zBindZoom(); zResetZoom();
   zChips(); zSetZone(zi);
   requestAnimationFrame(function(){
     zSizeDrawer();
@@ -549,7 +557,7 @@ function zOpen(k,zi,ri){
   });
 }
 function zClose(fromPop){
-  ZOPEN=false; ZRUN=-1; zClearPulse();
+  ZOPEN=false; ZRUN=-1; zClearPulse(); zResetZoom();
   $('zov').classList.remove('on'); $('zov').setAttribute('aria-hidden','true');
   document.body.style.overflow='';
   if(fromPop!==true && ZPUSHED){ ZPUSHED=false; try{ history.back(); }catch(e){} }
@@ -568,7 +576,7 @@ function zChips(){
   });
 }
 function zSetZone(i){
-  ZI=i; var z=zZone(); if(!z)return; var r=(D.resorts||{})[ZR]||{};
+  ZI=i; zResetZoom(); var z=zZone(); if(!z)return; var r=(D.resorts||{})[ZR]||{};
   $('zimg').src=z.zmap.img; $('zimg').alt=z.name+' zone map';
   $('zkeyimg').src=z.zmap.key; $('zkeyimg').alt='Where '+z.name+' sits on the sheet';
   $('zdtitle').textContent=z.name;
@@ -646,7 +654,9 @@ function zFlashAt(x,y){
   zClearPulse();
   var p=document.createElement('div'); p.className='zpulse'; p.innerHTML='<i></i><i></i><b></b>';
   var xy=zPinXY(x,y); p.style.left=xy[0]; p.style.top=xy[1];
-  $('zstage').appendChild(p); ZPULSE=p; void p.offsetWidth; p.classList.add('go');
+  $('zpan').appendChild(p); ZPULSE=p; p.style.transform='scale('+(1/ZS)+')';
+  void p.offsetWidth; p.classList.add('go');
+  zCenterOn(x,y);
   return p;
 }
 function zFlash(ri){
@@ -657,7 +667,91 @@ function zReflash(){ if(ZRUN>=0)zFlash(ZRUN); }
 function zPlace(){
   if(ZRUN<0||!ZPULSE)return; var r=zList()[ZRUN]; if(!r)return;
   var xy=zPinXY(r.x,r.y); ZPULSE.style.left=xy[0]; ZPULSE.style.top=xy[1];
+  ZPULSE.style.transform='scale('+(1/ZS)+')';
 }
+/* ================= pinch zoom =================
+   Only live while the drawer is collapsed — that's the "give me the map" mode,
+   and it keeps the gesture from fighting the drawer. Resets on zone change, on
+   expanding the drawer, and on close.
+   Note the source crops top out at 1400px (median 889), so past ~2x on the
+   smaller zones you're magnifying interpolation, not detail. Raising CROP_W in
+   make_zone_crops.py is the fix if that ever matters. */
+var ZS=1, ZTX=0, ZTY=0, ZPTR=new Map(), ZPREV=null, ZMAX=5;
+/* the un-transformed rect the letterboxed image occupies inside the stage */
+function zImgRect(){
+  var st=$('zstage'), W=st.clientWidth, H=st.clientHeight, z=zZone();
+  var a=(z&&z.zmap&&z.zmap.asp)||1, rw, rh;
+  if(W/H>a){ rh=H; rw=H*a; return [(W-rw)/2,0,rw,rh,W,H]; }
+  rw=W; rh=W/a; return [0,(H-rh)/2,rw,rh,W,H];
+}
+/* keep the image covering the stage when it's bigger than it, centred when not */
+function zClampPan(){
+  var r=zImgRect();
+  function fit(off,len,view,t){
+    var a=off*ZS, b=(off+len)*ZS;
+    if(b-a>=view) return Math.min(-a, Math.max(view-b, t));
+    return (view-(b-a))/2 - a;
+  }
+  ZTX=fit(r[0],r[2],r[4],ZTX); ZTY=fit(r[1],r[3],r[5],ZTY);
+}
+function zApplyZoom(){
+  zClampPan();
+  var pan=$('zpan'); if(pan)pan.style.transform='translate('+ZTX+'px,'+ZTY+'px) scale('+ZS+')';
+  if(ZPULSE)ZPULSE.style.transform='scale('+(1/ZS)+')';
+  var b=$('zzoom'); if(!b)return;
+  b.className=(ZOPEN&&ZSHUT)?'on':'';
+  b.textContent=(ZS>1.02)?(ZS.toFixed(1)+'× · tap to reset'):'Pinch to zoom';
+}
+function zResetZoom(){ ZS=1; ZTX=0; ZTY=0; ZPTR.clear(); ZPREV=null; zApplyZoom(); }
+/* bring a pin into view when the user is zoomed in — otherwise "Show <run>"
+   would fire the ring somewhere off screen */
+function zCenterOn(x,y){
+  if(ZS<=1.02)return;
+  var r=zImgRect();
+  ZTX=r[4]/2-(r[0]+x*r[2])*ZS; ZTY=r[5]/2-(r[1]+y*r[3])*ZS;
+  zApplyZoom();
+}
+function zPtOf(e){
+  var b=$('zstage').getBoundingClientRect();
+  return {x:e.clientX-b.left, y:e.clientY-b.top};
+}
+function zPointerDown(e){
+  if(!ZOPEN||!ZSHUT)return;
+  ZPTR.set(e.pointerId,zPtOf(e)); ZPREV=null;
+  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(_){}
+}
+function zPointerMove(e){
+  if(!ZOPEN||!ZSHUT||!ZPTR.has(e.pointerId))return;
+  ZPTR.set(e.pointerId,zPtOf(e));
+  var pts=[]; ZPTR.forEach(function(v){ pts.push(v); });
+  if(pts.length===1){
+    if(ZS>1.02&&ZPREV&&ZPREV.n===1){
+      ZTX+=pts[0].x-ZPREV.cx; ZTY+=pts[0].y-ZPREV.cy; zApplyZoom();
+    }
+    ZPREV={n:1,cx:pts[0].x,cy:pts[0].y};
+  } else {
+    var cx=(pts[0].x+pts[1].x)/2, cy=(pts[0].y+pts[1].y)/2;
+    var d=Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
+    if(ZPREV&&ZPREV.n===2&&ZPREV.d>0){
+      var ns=Math.min(ZMAX,Math.max(1,ZS*(d/ZPREV.d)));
+      ZTX=cx-(cx-ZTX)*(ns/ZS); ZTY=cy-(cy-ZTY)*(ns/ZS); ZS=ns;   /* zoom about the pinch centre */
+      ZTX+=cx-ZPREV.cx; ZTY+=cy-ZPREV.cy;                        /* ...and follow it if it drifts */
+      zApplyZoom();
+    }
+    ZPREV={n:2,cx:cx,cy:cy,d:d};
+  }
+  if(e.cancelable)e.preventDefault();
+}
+function zPointerUp(e){ ZPTR.delete(e.pointerId); ZPREV=null; }
+function zBindZoom(){
+  var st=$('zstage'); if(!st||st._zbound)return; st._zbound=1;
+  st.addEventListener('pointerdown',zPointerDown);
+  st.addEventListener('pointermove',zPointerMove,{passive:false});
+  st.addEventListener('pointerup',zPointerUp);
+  st.addEventListener('pointercancel',zPointerUp);
+  st.addEventListener('pointerleave',zPointerUp);
+}
+
 function zSizeDrawer(){
   if(!ZOPEN)return;
   var ov=$('zov'), bar=$('zbar');
@@ -666,6 +760,8 @@ function zSizeDrawer(){
   ov.style.setProperty('--zdh',(ZSHUT?min:full)+'px');
   $('zdrawer').classList.toggle('shut',ZSHUT);
   $('zreflash').style.bottom=(min+14)+'px';
+  $('zzoom').style.top=($('ztop').offsetHeight+12)+'px';
+  if(!ZSHUT)zResetZoom(); else zApplyZoom();
   zUpdateReflash(); setTimeout(zPlace,30); setTimeout(zPlace,320);
 }
 function zToggleDrawer(){ ZSHUT=!ZSHUT; zSizeDrawer(); }

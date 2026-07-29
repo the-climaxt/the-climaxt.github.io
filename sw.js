@@ -36,9 +36,15 @@ self.addEventListener('fetch', e => {
     })));
     return;
   }
-  // app shell: cache-first; cache new same-origin GETs on first fetch
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
+  // app shell: stale-while-revalidate. Serve the cached copy instantly (so the
+  // app still opens fast, and offline), but always refresh it in the background.
+  // A code change then lands on the next launch WITHOUT bumping CACHE — which
+  // matters because bumping CACHE makes activate() delete every old cache,
+  // including ~55 MB of trail maps the crew saved for offline.
+  const fresh = fetch(e.request).then(resp => {
     if (resp && resp.ok) { const cp = resp.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); }
     return resp;
-  })));
+  });
+  e.waitUntil(fresh.catch(() => {}));           // keep the SW alive for the refresh, swallow offline errors
+  e.respondWith(caches.match(e.request).then(r => r || fresh));   // no cache yet -> plain network, as before
 });
