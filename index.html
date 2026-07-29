@@ -99,6 +99,16 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
  border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
 #zzoom.on{display:inline-flex}
 #zzoom:active{opacity:.8}
+/* mouse-driven devices can't pinch — give them buttons (and the wheel) */
+#zbtns{position:absolute;right:12px;z-index:5;display:none;flex-direction:column;gap:6px}
+#zbtns.on{display:none}
+#zbtns button{width:36px;height:36px;border-radius:999px;background:var(--pr-cream);color:var(--pr-ink);
+ border:0;font-size:17px;font-family:inherit;font-weight:600;cursor:pointer;
+ display:flex;align-items:center;justify-content:center;padding:0}
+#zbtns button:hover{background:#fff}
+#zbtns button:active{opacity:.7}
+#zbtns button:disabled{opacity:.4;cursor:default}
+@media (hover:hover) and (pointer:fine){ #zbtns.on{display:flex} }
 #zstage img{width:100%;height:100%;object-fit:contain;display:block}
 .zpulse{position:absolute;width:0;height:0;pointer-events:none;transition:left .28s ease,top .28s ease}
 .zpulse i{position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;border:3px solid var(--pr-yellow);opacity:0}
@@ -129,15 +139,15 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 #zdrawer{position:absolute;left:0;right:0;bottom:0;height:var(--zdh);z-index:6;background:var(--pr-card);
  border-top:1px solid var(--pr-border);border-radius:14px 14px 0 0;transition:height .28s ease;
  overflow:hidden;display:flex;flex-direction:column}
-#zdrawer .zgrab{position:absolute;top:7px;left:50%;margin-left:-19px;width:38px;height:4px;border-radius:3px;
- background:var(--pr-border);z-index:2;pointer-events:none}
+#zdrawer .zgrab{position:absolute;top:3px;left:50%;margin-left:-10px;width:20px;height:15px;
+ line-height:15px;text-align:center;font-size:12px;color:var(--pr-text-muted);
+ z-index:2;pointer-events:none;transition:transform .28s}
+#zdrawer.shut .zgrab{transform:rotate(180deg)}
 #zbar{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:17px 16px 10px;cursor:pointer}
 #zbar .zdt{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #zbar .zdg{font-size:11.5px;font-weight:700;background:var(--pr-danger-bg);color:var(--pr-danger-text);
  padding:2px 8px;border-radius:999px;display:none;align-items:center;gap:4px}
 #zbar .zdg.on{display:inline-flex}
-#zbar .zdc{font-size:12px;color:var(--pr-text-muted);transition:transform .28s}
-#zdrawer.shut #zbar .zdc{transform:rotate(180deg)}
 #zbody{flex:1;overflow-y:auto;padding-bottom:calc(14px + env(safe-area-inset-bottom));opacity:1;transition:opacity .16s}
 #zdrawer.shut #zbody{opacity:0;pointer-events:none;overflow:hidden}
 .zrow{display:flex;gap:12px;padding:0 16px;align-items:flex-start}
@@ -329,11 +339,12 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 <div id="zov" aria-hidden="true">
   <div id="zstage"><div id="zpan"><img id="zimg" alt=""></div></div>
   <button id="zzoom" onclick="zResetZoom()"></button>
+  <div id="zbtns"><button onclick="zZoomBy(1.5)" aria-label="Zoom in">&#65291;</button><button onclick="zZoomBy(1/1.5)" aria-label="Zoom out">&#8722;</button></div>
   <div id="ztop"><button class="zx" onclick="zClose()" aria-label="Close map">&#10005;</button><div id="zchips"></div></div>
   <button id="zreflash" onclick="zReflash()"><span class="zrd"></span><span class="zrn" id="zreflashname"></span></button>
   <div id="zdrawer">
-    <span class="zgrab"></span>
-    <div id="zbar" onclick="zToggleDrawer()"><span class="zdt" id="zdtitle"></span><span class="zdg" id="zdgate"></span><span class="zdc">&#9662;</span></div>
+    <span class="zgrab">&#9662;</span>
+    <div id="zbar" onclick="zToggleDrawer()"><span class="zdt" id="zdtitle"></span><span class="zdg" id="zdgate"></span></div>
     <div id="zbody">
       <div class="zrow">
         <div class="znote"><div class="zsub" id="zsub"></div><div id="zopen" style="margin-top:10px"></div></div>
@@ -698,9 +709,28 @@ function zApplyZoom(){
   zClampPan();
   var pan=$('zpan'); if(pan)pan.style.transform='translate('+ZTX+'px,'+ZTY+'px) scale('+ZS+')';
   if(ZPULSE)ZPULSE.style.transform='scale('+(1/ZS)+')';
-  var b=$('zzoom'); if(!b)return;
-  b.className=(ZOPEN&&ZSHUT)?'on':'';
-  b.textContent=(ZS>1.02)?(ZS.toFixed(1)+'× · tap to reset'):'Pinch to zoom';
+  var on=(ZOPEN&&ZSHUT);
+  var b=$('zzoom');
+  if(b){ b.className=on?'on':'';
+    b.textContent=(ZS>1.02)?(ZS.toFixed(1)+'× · tap to reset')
+                           :(ZFINE?'Scroll or +/− to zoom':'Pinch to zoom'); }
+  var g=$('zbtns');
+  if(g){ g.className=on?'on':'';
+    g.children[0].disabled=(ZS>=ZMAX-0.001);
+    g.children[1].disabled=(ZS<=1.001); }
+}
+var ZFINE=(window.matchMedia&&window.matchMedia('(hover:hover) and (pointer:fine)').matches);
+function zZoomBy(k){
+  if(!ZOPEN||!ZSHUT)return;
+  var st=$('zstage'), cx=st.clientWidth/2, cy=st.clientHeight/2;
+  var ns=Math.min(ZMAX,Math.max(1,ZS*k));
+  ZTX=cx-(cx-ZTX)*(ns/ZS); ZTY=cy-(cy-ZTY)*(ns/ZS); ZS=ns; zApplyZoom();
+}
+function zWheel(e){
+  if(!ZOPEN||!ZSHUT)return;
+  e.preventDefault();
+  var p=zPtOf(e), k=(e.deltaY<0?1.12:1/1.12), ns=Math.min(ZMAX,Math.max(1,ZS*k));
+  ZTX=p.x-(p.x-ZTX)*(ns/ZS); ZTY=p.y-(p.y-ZTY)*(ns/ZS); ZS=ns; zApplyZoom();
 }
 function zResetZoom(){ ZS=1; ZTX=0; ZTY=0; ZPTR.clear(); ZPREV=null; zApplyZoom(); }
 /* bring a pin into view when the user is zoomed in — otherwise "Show <run>"
@@ -750,6 +780,7 @@ function zBindZoom(){
   st.addEventListener('pointerup',zPointerUp);
   st.addEventListener('pointercancel',zPointerUp);
   st.addEventListener('pointerleave',zPointerUp);
+  st.addEventListener('wheel',zWheel,{passive:false});
 }
 
 function zSizeDrawer(){
@@ -761,6 +792,7 @@ function zSizeDrawer(){
   $('zdrawer').classList.toggle('shut',ZSHUT);
   $('zreflash').style.bottom=(min+14)+'px';
   $('zzoom').style.top=($('ztop').offsetHeight+12)+'px';
+  $('zbtns').style.top=($('ztop').offsetHeight+12)+'px';
   if(!ZSHUT)zResetZoom(); else zApplyZoom();
   zUpdateReflash(); setTimeout(zPlace,30); setTimeout(zPlace,320);
 }
