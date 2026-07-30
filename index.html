@@ -352,6 +352,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
       </div>
       <div class="zgroup"><label><input type="checkbox" id="zcruise" onchange="setCruisers(ZR,this.checked)"><span>Cruisers only</span></label></div>
       <div class="zgroup" style="padding-top:9px"><label><input type="checkbox" id="zbylift" onchange="zByLift(this.checked)"><span>Group by lift</span></label></div>
+      <div class="zgroup" id="zbybowlrow" style="padding-top:9px;display:none"><label><input type="checkbox" id="zbybowl" onchange="zByBowl(this.checked)"><span>Group by bowl</span></label></div>
       <div class="zruns" id="zruns"></div>
     </div>
   </div>
@@ -517,7 +518,7 @@ function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clear
    Data lives on each terrain zone as z.zmap {img,key,asp,sheet,gated,entry,note}
    and on each run as r.x / r.y / r.lift (+ r.approx when the sheet doesn't
    name the line). A zone with no zmap simply renders as it always has. */
-var ZR=null, ZI=0, ZRUN=-1, ZSHUT=false, ZBYLIFT=false, ZPULSE=null, ZOPEN=false, ZPUSHED=false;
+var ZR=null, ZI=0, ZRUN=-1, ZSHUT=false, ZBYLIFT=false, ZBYBOWL=false, ZPULSE=null, ZOPEN=false, ZPUSHED=false;
 
 /* "Cruisers only" is ONE state per resort (TMODE[rid]), shared by the Snow-tab
    checkbox and the drawer checkbox — tick either and both follow. For runs,
@@ -559,6 +560,10 @@ function zOpen(k,zi,ri){
   document.body.style.overflow='hidden';
   if(!ZPUSHED){ try{ history.pushState({zov:1},''); ZPUSHED=true; }catch(e){} }
   var cb=$('zcruise'); if(cb)cb.checked=cruisersOn(k);
+  /* "Group by bowl" only makes sense where the zones ARE bowls — Kicking Horse.
+     Everywhere else the row hides and the state resets. */
+  var br=$('zbybowlrow'); if(br)br.style.display=(k==='kickinghorse')?'':'none';
+  if(k!=='kickinghorse'){ ZBYBOWL=false; var bb=$('zbybowl'); if(bb)bb.checked=false; }
   zBindZoom(); zResetZoom();
   zChips(); zSetZone(zi);
   requestAnimationFrame(function(){
@@ -623,7 +628,7 @@ function zRunRow(z,zi,r,ri,showZone){
 }
 function zRenderRuns(){
   var box=$('zruns'); box.innerHTML=''; var zs=zMapZones(ZR);
-  if(!ZBYLIFT){
+  if(!ZBYLIFT&&!ZBYBOWL){
     var z=zs[ZI]; if(!z)return;
     var l=document.createElement('div'); l.className='zlab';
     l.innerHTML=ic('skier',14)+(cruisersOn(ZR)?'Cruisers in this zone':'Runs in this zone'); box.appendChild(l);
@@ -632,21 +637,23 @@ function zRenderRuns(){
     if(!n)box.insertAdjacentHTML('beforeend','<div class="zempty">'+ic('closed',13)+
       '<span>Nothing mellow in '+esc(z.name)+'. Try another zone — the dimmed chips have none either.</span></div>');
   } else {
-    var groups={}, order=[];
+    var byBowl=ZBYBOWL, groups={}, order=[];
     zs.forEach(function(z,zi){ zItems((D.terrain||{})[ZR],z).forEach(function(r,ri){
-      if(r.x==null||!zKeep(r))return; var lf=r.lift||'Other';
-      if(!groups[lf]){groups[lf]=[];order.push(lf);}
-      groups[lf].push([z,zi,r,ri]);
+      if(r.x==null||!zKeep(r))return;
+      var gk=byBowl ? z.name.replace(/\s*\((gated|mellow|hike)\)\s*$/,'') : (r.lift||'Other');
+      if(!groups[gk]){groups[gk]=[];order.push(gk);}
+      groups[gk].push([z,zi,r,ri]);
     });});
-    order.forEach(function(lf){
+    order.forEach(function(gk){
       var l=document.createElement('div'); l.className='zlab';
-      l.innerHTML=ic('gondola',14)+esc(lf)+'<span class="zct">'+groups[lf].length+'</span>';
+      l.innerHTML=ic(byBowl?'mountain':'gondola',14)+esc(gk)+'<span class="zct">'+groups[gk].length+'</span>';
       box.appendChild(l);
-      groups[lf].forEach(function(t){ box.appendChild(zRunRow(t[0],t[1],t[2],t[3],true)); });
+      groups[gk].forEach(function(t){ box.appendChild(zRunRow(t[0],t[1],t[2],t[3],true)); });
     });
   }
 }
-function zByLift(v){ ZBYLIFT=v; zRenderRuns(); }
+function zByLift(v){ ZBYLIFT=v; if(v){ ZBYBOWL=false; var b=$('zbybowl'); if(b)b.checked=false; } zRenderRuns(); }
+function zByBowl(v){ ZBYBOWL=v; if(v){ ZBYLIFT=false; var b=$('zbylift'); if(b)b.checked=false; } zRenderRuns(); }
 
 /* the crop is object-fit:contain, so a percentage pin lands in the letterbox.
    Work out the rendered image rect first and place the pulse in px. */
