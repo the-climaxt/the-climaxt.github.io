@@ -884,7 +884,7 @@ window.addEventListener('resize',zSizeDrawer);
    the town-nights legend: shuttle + hotel badge rows, category columns,
    Worth-the-trip rows with walk/drive glyphs. */
 var SOPEN=false,SSHUT=false,SPUSHED=false,SS=1,STX=0,STY=0,SPTR=new Map(),SPREV=null,SMAX=6;
-var SFCAT=[['drink','BUSINESS MEETINGS','#FF8A3C'],['eat','EAT','#1FC9B7'],['do','STUPID FUN','#FFC53D'],['see','PHOTO OPS &amp; SIGHTS','#8A4DEB'],['weird','WEIRD','#B8E332']];
+var SFCAT=[['drink','BUSINESS MEETINGS','#FF8A3C'],['eat','EAT','#1FC9B7'],['do','STUPID FUN','#FFC53D'],['see','PHOTO OPS &amp; SIGHTS','#8A4DEB'],['tune','TUNE YOUR GEAR','#FF4D9D'],['weird','WEIRD','#B8E332']];
 var SMODE='town', SKEY=null, STF=null, SDAY=-1;
 function sfTf(){ return STF; }
 function sfInject(key,svg,tf){ SKEY=key; STF=tf; $('smappan').innerHTML=svg.replace(/id="sc/g,'id="fsc'); }
@@ -950,17 +950,23 @@ function sfSizeDrawer(){ if(!SOPEN)return;
   if(!SSHUT)sfResetZoom(); else sfApplyZoom(); }
 function sfToggleDrawer(){ SSHUT=!SSHUT; sfSizeDrawer(); }
 window.addEventListener('resize',sfSizeDrawer);
+function sfAccChip(label,acc,on){
+  var b=document.createElement('button');
+  if(acc&&on){ b.className='on'; b.style.background=acc[0]; b.style.color='var(--pr-ink)'; b.style.border='1px solid var(--pr-ink)'; b.style.fontWeight='700'; b.textContent=label; }
+  else if(acc){ b.innerHTML='<span style="display:inline-block;width:9px;height:9px;border-radius:99px;background:'+acc[0]+';margin-right:5px;vertical-align:0"></span>'+label; }
+  else { if(on)b.className='on'; b.textContent=label; }
+  return b; }
 function sfChips(){ var box=$('schips'); if(!box)return; box.innerHTML='';
   if(SMODE==='day'){
     (D.days||[]).forEach(function(day,i){
-      var b=document.createElement('button'); b.textContent=day.wd+' '+parseInt(day.dt.slice(8),10);
-      if(i===SDAY)b.className='on';
+      var acc=dayAccent(day);
+      var b=sfAccChip(day.wd+' '+parseInt(day.dt.slice(8),10),acc,i===SDAY);
       b.onclick=function(){ dsSetDay(i); };
       box.appendChild(b); });
   } else {
     (D.stops||[]).forEach(function(st){ if(!(D.scene||{})[st.id])return;
-      var b=document.createElement('button'); b.textContent=st.name;
-      if(st.id===SCENE_TOWN)b.className='on';
+      var ga=STOPACC[st.id], acc=ga?ACCENTS[ga]:null;
+      var b=sfAccChip(st.name,acc,st.id===SCENE_TOWN);
       b.onclick=function(){ sfSetTown(st.id); };
       box.appendChild(b); });
   }
@@ -1027,9 +1033,9 @@ function dsHtml(i){
     var K='b_'+day.rid;
     if(b.shut)h+='<div class="slgi" style="padding-top:12px;align-items:center" onclick="sfPulse(\''+K+'\',\'shut\')">'+DSBADGE+'<span style="font-size:10.5px;font-weight:700;color:#35B5E8;letter-spacing:.06em">'+esc(b.shut).toUpperCase()+'</span></div>';
     if(b.din)h+='<div class="slgi" style="align-items:center" onclick="sfPulse(\''+K+'\',\'din\')"><span style="flex:0 0 auto;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #8A4DEB"></span><span style="font-size:10.5px;font-weight:700;color:#8A4DEB;letter-spacing:.06em">'+esc(b.din).toUpperCase()+'</span></div>';
-    var CATL={apres:['APR\u00c8S','#FF4D9D'],fuel:['FUEL','#FFC53D'],tickets:['TICKETS','#8A4DEB'],patrol:['PATROL','#FF8A3C'],parking:['PARKING','#35B5E8']};
+    var CATL={apres:['APR\u00c8S','#FF4D9D'],fuel:['FUEL','#FFC53D'],tickets:['TICKETS','#8A4DEB'],patrol:['PATROL','#FF8A3C'],parking:['PARKING','#35B5E8'],tune:['TUNE','#1FC9B7']};
     h+='<div style="column-count:2;column-gap:16px;margin-top:4px">';
-    ['apres','fuel','tickets','patrol','parking'].forEach(function(c){
+    ['apres','fuel','tickets','patrol','parking','tune'].forEach(function(c){
       var rows=(b.rows||[]).filter(function(x){return x.cat===c;}); if(!rows.length)return;
       h+='<div class="slgsec"><div class="slgh" style="color:'+CATL[c][1]+'">'+CATL[c][0]+'</div>';
       rows.forEach(function(x){ h+='<div class="slgi" onclick="sfPulse(\''+K+'\','+x.n+')"><span class="slgn" style="color:'+CATL[c][1]+'">'+x.n+'</span><span class="slgt">'+esc(x.name)+(x.note?'<div style="font-size:10px;font-weight:400;color:#8f8697;line-height:1.4;margin-top:1px">'+esc(x.note)+'</div>':'')+'</span></div>'; });
