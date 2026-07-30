@@ -221,6 +221,58 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
  #zbody,.zrow,.zgroup,.zruns{max-width:900px;margin-left:auto;margin-right:auto}
 }
 
+/* ===================== TOWN MAP FULL-SCREEN =====================
+   Same tap-to-open setup as the zone maps: tap the Scene map card, the map
+   fills the screen; the legend lives in a drawer that collapses to a peek
+   bar. Ink chrome throughout (the legend drawer stays dark, matching the
+   map). Pinch/pan only while the drawer is collapsed — zone-map rule. */
+#sov{position:fixed;inset:0;z-index:300;background:var(--pr-ink);display:none;--sdh:52%}
+#sov.on{display:block}
+#sstage{position:absolute;left:0;right:0;top:0;bottom:var(--sdh);transition:bottom .28s ease;overflow:hidden;touch-action:none}
+#smappan{position:absolute;inset:0;transform-origin:0 0}
+#smappan svg{width:100%;height:100%;display:block}
+#stopbar{position:absolute;top:0;left:0;right:0;z-index:4;display:flex;gap:8px;align-items:center;
+ padding:9px 12px;padding-top:calc(9px + env(safe-area-inset-top));
+ background:var(--pr-ink);border-bottom:3px solid var(--pr-pink)}
+#stopbar .zx{flex:0 0 auto;width:32px;height:32px;border-radius:999px;background:var(--pr-cream);color:var(--pr-ink);
+ border:0;font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#stopbar .zx:active{opacity:.7}
+#schips{display:flex;gap:6px;overflow-x:auto;flex:1}
+#schips button{white-space:nowrap;font-family:inherit;font-size:12.5px;font-weight:600;border:0;border-radius:999px;
+ padding:7px 12px;background:var(--pr-cream);color:var(--pr-text-2);cursor:pointer}
+#schips button.on{background:var(--pr-btn-primary-bg);color:#fff}
+#schips button:active{opacity:.8}
+#szoom{position:absolute;left:12px;z-index:5;display:none;align-items:center;gap:7px;
+ background:var(--pr-ink);color:var(--pr-cream);border:1px solid var(--pr-text-2);
+ border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+#szoom.on{display:inline-flex}
+#szoom:active{opacity:.8}
+#sbtns{position:absolute;right:12px;z-index:5;display:none;flex-direction:column;gap:6px}
+#sbtns button{width:36px;height:36px;border-radius:999px;background:var(--pr-cream);color:var(--pr-ink);
+ border:0;font-size:17px;font-family:inherit;font-weight:600;cursor:pointer;
+ display:flex;align-items:center;justify-content:center;padding:0}
+#sbtns button:disabled{opacity:.4;cursor:default}
+@media (hover:hover) and (pointer:fine){ #sbtns.on{display:flex} }
+#snothere2{position:absolute;left:12px;right:12px;z-index:5;display:none}
+#sdrawer{position:absolute;left:0;right:0;bottom:0;height:var(--sdh);z-index:6;background:var(--pr-ink);
+ border-top:1px solid #3A3346;border-radius:14px 14px 0 0;transition:height .28s ease;
+ overflow:hidden;display:flex;flex-direction:column;color:var(--pr-cream)}
+#sdrawer .zgrab{position:absolute;top:3px;left:50%;margin-left:-10px;width:20px;height:15px;
+ line-height:15px;text-align:center;font-size:12px;color:#8f8697;
+ z-index:2;pointer-events:none;transition:transform .28s}
+#sdrawer.shut .zgrab{transform:rotate(180deg)}
+#sbar{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:17px 16px 10px;cursor:pointer}
+#sbar .zdt{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--pr-cream)}
+#sbody{flex:1;overflow-y:auto;padding:0 16px calc(14px + env(safe-area-inset-bottom));opacity:1;transition:opacity .16s}
+#sdrawer.shut #sbody{opacity:0;pointer-events:none;overflow:hidden}
+.slgh{font-family:var(--pr-font-app-display);font-size:11px;font-weight:700;letter-spacing:.14em;margin:13px 0 5px}
+.slgi{display:flex;gap:7px;align-items:flex-start;padding:3px 0;cursor:pointer;break-inside:avoid}
+.slgi:active{opacity:.7}
+.slgn{flex:0 0 16px;text-align:right;font-weight:700;font-size:11px;line-height:1.5}
+.slgt{font-size:12px;font-weight:600;color:var(--pr-cream);line-height:1.4;min-width:0}
+.slgsec{break-inside:avoid;margin-bottom:4px}
+@media(min-width:900px){ #sov{--sdh:46%} #sbody{max-width:900px;margin:0 auto} }
+
 /* --- desktop scaffolding: inert on phones (see the min-width:900px block) --- */
 .hero,.heroin,.wrap{display:block}
 .hstripe{display:none}
@@ -355,6 +407,19 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
       <div class="zgroup" id="zbybowlrow" style="padding-top:9px;display:none"><label><input type="checkbox" id="zbybowl" onchange="zByBowl(this.checked)"><span>Group by bowl</span></label></div>
       <div class="zruns" id="zruns"></div>
     </div>
+  </div>
+</div>
+
+<div id="sov" aria-hidden="true">
+  <div id="sstage"><div id="smappan"></div></div>
+  <button id="szoom" onclick="sfResetZoom()"></button>
+  <div id="sbtns"><button onclick="sfZoomBy(1.5)" aria-label="Zoom in">&#65291;</button><button onclick="sfZoomBy(1/1.5)" aria-label="Zoom out">&#8722;</button></div>
+  <div id="stopbar"><button class="zx" onclick="sfClose()" aria-label="Close map">&#10005;</button><div id="schips"></div></div>
+  <div id="snothere2"></div>
+  <div id="sdrawer">
+    <span class="zgrab">&#9662;</span>
+    <div id="sbar" onclick="sfToggleDrawer()"><span class="zdt" id="sdtitle"></span></div>
+    <div id="sbody"></div>
   </div>
 </div>
 
@@ -811,6 +876,134 @@ function zUpdateReflash(){
 }
 window.addEventListener('resize',zSizeDrawer);
 
+/* ================= TOWN MAP FULL-SCREEN =================
+   sfOpen() from the Scene map card. Same interaction contract as the zone
+   overlay: drawer starts open, collapse it for gestures; tap a legend item ->
+   drawer drops to peek, the dot pulses, and the view pans+zooms to it
+   (2.4x floor -- pan without zoom was ruled not useful). The legend drawer is
+   the town-nights legend: shuttle + hotel badge rows, category columns,
+   Worth-the-trip rows with walk/drive glyphs. */
+var SOPEN=false,SSHUT=false,SPUSHED=false,SS=1,STX=0,STY=0,SPTR=new Map(),SPREV=null,SMAX=6;
+var SFCAT=[['drink','BUSINESS MEETINGS','#FF4D9D'],['eat','EAT','#FFC53D'],['do','STUPID FUN','#1FC9B7'],['see','PHOTO OPS &amp; SIGHTS','#8A4DEB'],['weird','WEIRD','#FF8A3C']];
+function sfTf(){ var sc=(D.scene||{})[SCENE_TOWN]; return sc?sc.tf:null; }
+function sfRect(){ var st=$('sstage'),W=st.clientWidth,H=st.clientHeight,tf=sfTf(),a=tf?tf.W/tf.H:1,rw,rh;
+  if(W/H>a){ rh=H; rw=H*a; return [(W-rw)/2,0,rw,rh,W,H]; }
+  rw=W; rh=W/a; return [0,(H-rh)/2,rw,rh,W,H]; }
+function sfClampPan(){ var r=sfRect();
+  function fit(off,len,view,t){ var a=off*SS,b=(off+len)*SS;
+    if(b-a>=view) return Math.min(-a,Math.max(view-b,t));
+    return (view-(b-a))/2-a; }
+  STX=fit(r[0],r[2],r[4],STX); STY=fit(r[1],r[3],r[5],STY); }
+function sfApplyZoom(){ sfClampPan();
+  var p=$('smappan'); if(p)p.style.transform='translate('+STX+'px,'+STY+'px) scale('+SS+')';
+  var on=(SOPEN&&SSHUT), b=$('szoom');
+  if(b){ b.className=on?'on':'';
+    b.textContent=(SS>1.02)?(SS.toFixed(1)+'\u00d7 \u00b7 tap to reset')
+                           :(ZFINE?'Scroll or +/\u2212 to zoom':'Pinch to zoom'); }
+  var g=$('sbtns');
+  if(g){ g.className=on?'on':'';
+    g.children[0].disabled=(SS>=SMAX-0.001);
+    g.children[1].disabled=(SS<=1.001); } }
+function sfResetZoom(){ SS=1;STX=0;STY=0;SPTR.clear();SPREV=null;sfApplyZoom(); }
+function sfZoomBy(k){ if(!SOPEN||!SSHUT)return;
+  var st=$('sstage'),cx=st.clientWidth/2,cy=st.clientHeight/2,ns=Math.min(SMAX,Math.max(1,SS*k));
+  STX=cx-(cx-STX)*(ns/SS); STY=cy-(cy-STY)*(ns/SS); SS=ns; sfApplyZoom(); }
+function sfPtOf(e){ var b=$('sstage').getBoundingClientRect(); return {x:e.clientX-b.left,y:e.clientY-b.top}; }
+function sfWheel(e){ if(!SOPEN||!SSHUT)return; e.preventDefault();
+  var p=sfPtOf(e),k=(e.deltaY<0?1.12:1/1.12),ns=Math.min(SMAX,Math.max(1,SS*k));
+  STX=p.x-(p.x-STX)*(ns/SS); STY=p.y-(p.y-STY)*(ns/SS); SS=ns; sfApplyZoom(); }
+function sfPointerDown(e){ if(!SOPEN||!SSHUT)return; SPTR.set(e.pointerId,sfPtOf(e)); SPREV=null;
+  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(_){} }
+function sfPointerMove(e){ if(!SOPEN||!SSHUT||!SPTR.has(e.pointerId))return;
+  SPTR.set(e.pointerId,sfPtOf(e)); var pts=[]; SPTR.forEach(function(v){pts.push(v);});
+  if(pts.length===1){
+    if(SS>1.02&&SPREV&&SPREV.n===1){ STX+=pts[0].x-SPREV.cx; STY+=pts[0].y-SPREV.cy; sfApplyZoom(); }
+    SPREV={n:1,cx:pts[0].x,cy:pts[0].y};
+  } else {
+    var cx=(pts[0].x+pts[1].x)/2,cy=(pts[0].y+pts[1].y)/2,d=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+    if(SPREV&&SPREV.n===2&&SPREV.d>0){
+      var ns=Math.min(SMAX,Math.max(1,SS*(d/SPREV.d)));
+      STX=cx-(cx-STX)*(ns/SS); STY=cy-(cy-STY)*(ns/SS); SS=ns;
+      STX+=cx-SPREV.cx; STY+=cy-SPREV.cy; sfApplyZoom(); }
+    SPREV={n:2,cx:cx,cy:cy,d:d}; }
+  if(e.cancelable)e.preventDefault(); }
+function sfPointerUp(e){ SPTR.delete(e.pointerId); SPREV=null; }
+function sfBindZoom(){ var st=$('sstage'); if(!st||st._sbound)return; st._sbound=1;
+  st.addEventListener('pointerdown',sfPointerDown);
+  st.addEventListener('pointermove',sfPointerMove,{passive:false});
+  st.addEventListener('pointerup',sfPointerUp);
+  st.addEventListener('pointercancel',sfPointerUp);
+  st.addEventListener('pointerleave',sfPointerUp);
+  st.addEventListener('wheel',sfWheel,{passive:false}); }
+function sfSizeDrawer(){ if(!SOPEN)return;
+  var ov=$('sov'),bar=$('sbar');
+  var full=Math.round(ov.clientHeight*(window.innerWidth>=900?0.46:0.52));
+  var min=bar.offsetHeight+8;
+  ov.style.setProperty('--sdh',(SSHUT?min:full)+'px');
+  $('sdrawer').classList.toggle('shut',SSHUT);
+  $('snothere2').style.bottom=(min+14)+'px';
+  $('szoom').style.top=($('stopbar').offsetHeight+12)+'px';
+  $('sbtns').style.top=($('stopbar').offsetHeight+12)+'px';
+  if(!SSHUT)sfResetZoom(); else sfApplyZoom(); }
+function sfToggleDrawer(){ SSHUT=!SSHUT; sfSizeDrawer(); }
+window.addEventListener('resize',sfSizeDrawer);
+function sfChips(){ var box=$('schips'); if(!box)return; box.innerHTML='';
+  (D.stops||[]).forEach(function(st){ if(!(D.scene||{})[st.id])return;
+    var b=document.createElement('button'); b.textContent=st.name;
+    if(st.id===SCENE_TOWN)b.className='on';
+    b.onclick=function(){ sfSetTown(st.id); };
+    box.appendChild(b); }); }
+function sfWalkIc(){ return '<svg viewBox="0 0 24 24" width="11" height="11" fill="#8f8697" style="flex:0 0 auto;margin-top:2px"><circle cx="13.2" cy="3.9" r="2.1"/><path d="M12.4 7.1 8.7 9.2l-1.6 4.2 1.9.7 1.3-3.4 1.5-.8-1 5.1-3.4 6.1 2 1.1 3.2-5.7 2.6 5.5 1.9-.9-2.7-5.8-.7-3.5 1.9 1.6 3.1 1.4.8-1.8-2.9-1.4-2.1-2.7z"/></svg>'; }
+function sfTruckIc(){ return '<svg viewBox="0 0 24 24" width="12" height="12" fill="#8f8697" style="flex:0 0 auto;margin-top:2px"><path d="M2 6.2h11.2v9H2z"/><path d="M14.4 9.2h3.9l3.2 3.1v2.9h-7.1z"/><circle cx="6.1" cy="17.7" r="2"/><circle cx="17.4" cy="17.7" r="2"/></svg>'; }
+function sfLegendHtml(t){
+  var sc=(D.scene||{})[t], g=guideFor(t)||{}, h='';
+  var lodge='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:4px;background:#FBF6EC;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path fill-rule="evenodd" d="M12 2.2 22.5 21H1.5L12 2.2Zm0 7.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM9.9 21v-5.6h4.2V21H9.9Z"/></svg></span>';
+  var van='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:4px;background:#1FC9B7;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span>';
+  if(!sc.combo) h+='<div class="slgi" style="padding-top:12px;align-items:center" onclick="sfPulse(\''+t+'\',\'shut\')">'+van+'<span style="font-size:10.5px;font-weight:700;color:#1FC9B7;letter-spacing:.08em">'+esc(sc.shut).toUpperCase()+'</span></div>';
+  h+='<div class="slgi" style="align-items:center'+(sc.combo?';padding-top:12px':'')+'" onclick="sfPulse(\''+t+'\',\'hq\')">'+lodge+'<span style="font-size:10.5px;font-weight:700;color:#FBF6EC;letter-spacing:.08em">OUR HOTEL'+(sc.combo?' + SHUTTLE':'')+' \u2014 '+esc(sc.hotel).toUpperCase()+'</span></div>';
+  h+='<div style="column-count:2;column-gap:16px;margin-top:2px">';
+  SFCAT.forEach(function(cat){ var arr=(g[cat[0]]||[]).filter(function(x){return x.n;}); if(!arr.length)return;
+    h+='<div class="slgsec"><div class="slgh" style="color:'+cat[2]+'">'+cat[1]+'</div>';
+    arr.forEach(function(x){ h+='<div class="slgi" onclick="sfPulse(\''+t+'\','+x.n+')"><span class="slgn" style="color:'+cat[2]+'">'+x.n+'</span><span class="slgt">'+esc(x.name)+'</span></div>'; });
+    h+='</div>'; });
+  h+='</div>';
+  var wt=[]; SFCAT.forEach(function(cat){ (g[cat[0]]||[]).forEach(function(x){ if(!x.n&&x.tm)wt.push([x,cat[2]]); }); });
+  if(wt.length){
+    h+='<div class="slgh" style="color:#8f8697;border-top:1px solid #3A3346;padding-top:12px;margin-top:12px">WORTH THE TRIP</div>';
+    wt.forEach(function(p){ h+='<div class="slgi" style="cursor:default;align-items:center"><span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:'+p[1]+'"></span><span class="slgt" style="flex:1">'+esc(p[0].name)+'</span>'+(p[0].tm==='w'?sfWalkIc():sfTruckIc())+'<span style="font-size:10.5px;color:#8f8697;white-space:nowrap">'+p[0].tmin+' min</span></div>'; });
+  }
+  return h; }
+function sfSetTown(t){ if(t!==SCENE_TOWN)setSceneTown(t);
+  var sc=(D.scene||{})[t]; if(!sc)return;
+  $('smappan').innerHTML=sc.svg.replace(/id="sc/g,'id="fsc');
+  $('sdtitle').textContent=((stopById(t)||{}).name||t)+' \u2014 tap a name to find it';
+  $('sbody').innerHTML=sfLegendHtml(t);
+  $('sbody').scrollTop=0;
+  sfChips(); sfResetZoom(); scYou(); }
+function sfOpen(){ var sc=(D.scene||{})[SCENE_TOWN]; if(!sc)return;
+  SOPEN=true; SSHUT=false;
+  $('sov').classList.add('on'); $('sov').setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  if(!SPUSHED){ try{ history.pushState({sov:1},''); SPUSHED=true; }catch(e){} }
+  sfBindZoom(); sfSetTown(SCENE_TOWN);
+  requestAnimationFrame(function(){ sfSizeDrawer(); scGeoStart(); scYou(); }); }
+function sfClose(fromPop){ SOPEN=false; sfResetZoom();
+  $('sov').classList.remove('on'); $('sov').setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+  if(fromPop!==true&&SPUSHED){ SPUSHED=false; try{ history.back(); }catch(e){} } }
+window.addEventListener('popstate',function(){ if(SOPEN){ SPUSHED=false; sfClose(true); } });
+function sfPulse(t,key){
+  if(!SSHUT){ SSHUT=true; sfSizeDrawer(); }
+  setTimeout(function(){ var g=document.getElementById('fsc'+t+'-'+key); if(!g)return;
+    var tf=sfTf(),r=sfRect(),bb=null;
+    try{ bb=g.getBBox(); }catch(e){}
+    if(bb&&tf&&(bb.width||bb.height)){
+      var x=bb.x+bb.width/2,y=bb.y+bb.height/2,ns=Math.min(SMAX,Math.max(2.4,SS));
+      STX=r[4]/2-(r[0]+x/tf.W*r[2])*ns; STY=r[5]/2-(r[1]+y/tf.H*r[3])*ns; SS=ns; sfApplyZoom(); }
+    var ring=g.querySelector('.pring');
+    if(ring){ ring.classList.remove('pulsing'); void ring.getBoundingClientRect(); ring.classList.add('pulsing'); }
+  },330); }
+
 /* ---- test mode: getNow() drives all date logic ---- */
 function getNow(){var t=localStorage.getItem('testNow'); return t? new Date(t): new Date();}
 function inTest(){return !!localStorage.getItem('testNow');}
@@ -1218,13 +1411,26 @@ function addRun(){
 function scT(tf,lat,lng){ var X=(lng-tf.lo)*111320*tf.k, Y=(lat-tf.la)*110540; var rx=X*tf.ca-Y*tf.sa, ry=X*tf.sa+Y*tf.ca; return [tf.ox+(rx-tf.mx)*tf.s, tf.oy-(ry-tf.my)*tf.s]; }
 function scPulse(t,n){ var g=document.getElementById('sc'+t+'-'+n); if(!g)return; g.scrollIntoView({block:'center',behavior:'smooth'}); var r=g.querySelector('.pring'); if(!r)return; r.classList.remove('pulsing'); void r.getBoundingClientRect(); r.classList.add('pulsing'); }
 function scDistKm(tf,pos){ return Math.round(Math.sqrt(Math.pow((pos[0]-tf.la)*110.54,2)+Math.pow((pos[1]-tf.lo)*111.32*tf.k,2))); }
-function scYou(){ var t=SCENE_TOWN, sc=(D.scene||{})[t]; if(!sc)return; var you=document.getElementById('scyou-'+t), strip=$('scnothere');
-  if(!GEOPOS){ if(you)you.style.display='none'; if(strip)strip.innerHTML=''; return; }
+function scYou(){ var t=SCENE_TOWN, sc=(D.scene||{})[t]; if(!sc)return;
+  var you=document.getElementById('scyou-'+t), strip=$('scnothere');
+  var fy=document.getElementById('fscyou-'+t), fs=$('snothere2');
+  if(!GEOPOS){ if(you)you.style.display='none'; if(strip)strip.innerHTML=''; if(fy)fy.style.display='none'; if(fs){fs.style.display='none';fs.innerHTML='';} return; }
   var xy=scT(sc.tf,GEOPOS[0],GEOPOS[1]);
-  if(xy[0]>=0&&xy[0]<=sc.tf.W&&xy[1]>=0&&xy[1]<=sc.tf.H){ if(you){ you.setAttribute('transform','translate('+xy[0].toFixed(1)+','+xy[1].toFixed(1)+')'); you.style.display=''; } if(strip)strip.innerHTML=''; }
-  else { if(you)you.style.display='none'; if(strip){ var st=stopById(t); strip.innerHTML='<div style="border:1.5px solid var(--pr-border);border-radius:11px;padding:8px 12px;margin:0 0 10px"><div style="font-family:var(--pr-font-app-display);font-size:14px">You aren\u2019t here.</div><div class="xs muted" style="margin-top:2px">This is the '+esc(st?st.name:t)+' map \u2014 you\u2019re \u2248'+scDistKm(sc.tf,GEOPOS)+' km away. \u201cWhere am I?\u201d jumps you to the right one.</div></div>'; } } }
+  if(xy[0]>=0&&xy[0]<=sc.tf.W&&xy[1]>=0&&xy[1]<=sc.tf.H){
+    var tr='translate('+xy[0].toFixed(1)+','+xy[1].toFixed(1)+')';
+    if(you){ you.setAttribute('transform',tr); you.style.display=''; }
+    if(fy){ fy.setAttribute('transform',tr); fy.style.display=''; }
+    if(strip)strip.innerHTML='';
+    if(fs){ fs.style.display='none'; fs.innerHTML=''; }
+  } else {
+    if(you)you.style.display='none'; if(fy)fy.style.display='none';
+    var st=stopById(t), msg='This is the '+esc(st?st.name:t)+' map \u2014 you\u2019re \u2248'+scDistKm(sc.tf,GEOPOS)+' km away.';
+    if(strip){ strip.innerHTML='<div style="border:1.5px solid var(--pr-border);border-radius:11px;padding:8px 12px;margin:0 0 10px"><div style="font-family:var(--pr-font-app-display);font-size:14px">You aren\u2019t here.</div><div class="xs muted" style="margin-top:2px">'+msg+' \u201cWhere am I?\u201d jumps you to the right one.</div></div>'; }
+    if(fs){ if(SOPEN){ fs.innerHTML='<div style="background:var(--pr-ink);border:1px solid var(--pr-text-2);border-radius:11px;padding:7px 12px;color:var(--pr-cream)"><span style="font-weight:700">You aren\u2019t here.</span> <span style="opacity:.75;font-size:11.5px">'+msg+'</span></div>'; fs.style.display='block'; } else { fs.style.display='none'; fs.innerHTML=''; } }
+  } }
 function scGeoStart(){ if(GEOW!=null||!(navigator.geolocation))return; try{ GEOW=navigator.geolocation.watchPosition(function(p){ GEOPOS=[p.coords.latitude,p.coords.longitude]; if(CUR==='scene')scYou(); },function(){},{enableHighAccuracy:true,maximumAge:15000}); }catch(e){} }
 function scGeoStop(){ if(GEOW!=null&&navigator.geolocation){ try{navigator.geolocation.clearWatch(GEOW);}catch(e){} GEOW=null; } }
+function scAroundMe(){ var c=$('scmapcard'); if(c)c.scrollIntoView({behavior:'smooth',block:'start'}); scGeoStart(); setTimeout(scYou,700); }
 function whereAmI(){
   if(!navigator.geolocation){ toast('No GPS on this phone'); return; }
   function go(){ var best=null,bd=1e9; Object.keys(D.scene||{}).forEach(function(t){ var d=scDistKm(D.scene[t].tf,GEOPOS); if(d<bd){bd=d;best=t;} }); if(best){ SCENE_TOWN=best; sw('scene'); } }
@@ -1243,7 +1449,9 @@ function rScene(){
   if(sc){
     h+='<div class="between" style="margin:2px 0 8px"><div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted)">'+ic('map',13)+' Town nights map</div><button class="btn pri" onclick="whereAmI()" style="padding:6px 11px;font-size:12px">'+ic('compass',13)+' Where am I?</button></div>';
     h+='<div id="scnothere"></div>';
-    h+='<div class="card" style="background:#241E2C;border-color:#241E2C;padding:10px 8px">'+sc.svg;
+    h+='<div class="card" id="scmapcard" style="background:#241E2C;border-color:#241E2C;padding:10px 8px">'
+     +'<div style="cursor:pointer;line-height:0" onclick="sfOpen()">'+sc.svg+'</div>'
+     +'<button class="btn" onclick="sfOpen()" style="width:100%;justify-content:center;gap:7px;margin-top:8px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M4 4h6v2.2H6.2V10H4V4Zm10 0h6v6h-2.2V6.2H14V4ZM4 14h2.2v3.8H10V20H4v-6Zm13.8 0H20v6h-6v-2.2h3.8V14Z"/></svg>FULL SCREEN MAP</button>';
     h+='<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #3A3346;margin-top:8px;padding:8px 4px 2px">';
     h+='<div style="display:flex;gap:6px;align-items:center;cursor:pointer" onclick="scPulse(\''+SCENE_TOWN+'\',\'hq\')"><span style="width:15px;height:15px;border-radius:4px;background:#FBF6EC;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path fill-rule="evenodd" d="M12 2.2 22.5 21H1.5L12 2.2Zm0 7.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM9.9 21v-5.6h4.2V21H9.9Z"/></svg></span><span style="font-size:10px;font-weight:700;color:#FBF6EC;letter-spacing:.08em">OUR HOTEL'+(sc.combo?' + SHUTTLE':'')+' \u2014 '+esc(sc.hotel).toUpperCase()+'</span></div>';
     if(!sc.combo) h+='<div style="display:flex;gap:6px;align-items:center;cursor:pointer" onclick="scPulse(\''+SCENE_TOWN+'\',\'shut\')"><span style="width:15px;height:15px;border-radius:4px;background:#1FC9B7;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span><span style="font-size:10px;font-weight:700;color:#1FC9B7;letter-spacing:.08em">'+esc(sc.shut).toUpperCase()+'</span></div>';
@@ -1253,7 +1461,7 @@ function rScene(){
   var g=guideFor(SCENE_TOWN);
   if(!g){ setView('v-scene',h+'<div class="card sm muted">No guide for this town yet.</div>'); return; }
   if(g.heads_up)h+='<div class="tbann">'+ic('warning',14)+' '+esc(g.heads_up)+'</div>';
-  if(g.tonight)h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Tonight’s agenda</div><div class="sm" style="margin-top:5px;opacity:.95">'+esc(g.tonight)+'</div></div>';
+  if(g.tonight)h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Tonight’s agenda</div><div class="sm" style="margin-top:5px;opacity:.95">'+esc(g.tonight)+'</div>'+(sc?'<button class="btn" onclick="scAroundMe()" style="margin-top:9px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('pin',12)+' What’s around me</button>':'')+'</div>';
   [[ic('meeting',13)+' Business meetings',g.drink],[ic('food',13)+' Eat',g.eat],[ic('snowboarder',13)+' Stupid fun',g.do],[ic('map',13)+' See &amp; planner stuff',g.see],[ic('compass',13)+' Weird',g.weird]].forEach(function(pair,pi){ var arr=pair[1]; if(!arr||!arr.length)return; h+='<div class="card'+(pi===0?' meeting':'')+'"><h2>'+pair[0]+'</h2>'; var CATCOLS=['#C4116B','#7A5200','#0B6E66','#5E2CA5','#9C4A00']; var ccol=CATCOLS[pi]||'#C4116B';
     arr.forEach(function(x){ var num=(x.n?'<span onclick="scPulse(\''+SCENE_TOWN+'\','+x.n+')" style="cursor:pointer;flex:0 0 auto;min-width:20px;height:20px;border-radius:99px;background:'+ccol+';color:#fff;font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px">'+x.n+'</span>':(x.tm?'<span style="flex:0 0 auto;font-size:9.5px;color:var(--pr-text-2);margin-top:3px;white-space:nowrap">'+(x.tm==='w'?'walk':'drive')+' '+x.tmin+'m</span>':''));
       h+='<div style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">'+esc(x.name)+'</div>'+(x.note?'<div class="xs muted" style="margin-top:1px">'+esc(x.note)+'</div>':'')+(x.special?'<div class="xs" style="margin-top:3px;color:var(--pr-ok-text);font-weight:700">'+ic('cheers',12)+' '+esc(x.special)+'</div>':'')+'</div>'+num+(x.g?'<a href="'+x.g+'" target="_blank" style="flex:0 0 auto;font-size:11px;font-weight:600;white-space:nowrap;margin-top:2px">'+ic('pin',11)+' pin \u2197</a>':'')+'</div></div>'; }); h+='</div>'; });
