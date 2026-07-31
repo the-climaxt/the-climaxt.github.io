@@ -119,6 +119,24 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 @keyframes scpulse{0%{opacity:.95;r:8px}100%{opacity:0;r:26px}}.pring.pulsing{animation:scpulse 1.1s ease-out 2}@keyframes scyou{0%{r:8px;opacity:.9}70%{r:22px;opacity:0}100%{r:22px;opacity:0}}.youring{animation:scyou 1.8s ease-out infinite}
 @keyframes zring{0%{transform:scale(.4);opacity:0}20%{opacity:1}100%{transform:scale(2);opacity:0}}
 @keyframes zdot{0%{opacity:0}10%{opacity:1}75%{opacity:1}100%{opacity:0}}
+/* Access + egress routes are LINES, not points, so their pulse is an SVG
+   polyline laid over the crop in the same letterboxed rect the pins use.
+   Strokes carry vector-effect:non-scaling-stroke — a pinch magnifies the map
+   but never the line. The counter-scale trick .zpulse uses can't do that. */
+#zsvg{position:absolute;pointer-events:none;overflow:visible;z-index:3}
+#zsvg path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#zsvg .halo{stroke:var(--pr-ink);stroke-width:8;opacity:.30}
+#zsvg .core{stroke:var(--pr-pink);stroke-width:3.5}
+#zsvg g.go .core{stroke-dasharray:11 8;animation:zdash 1.05s linear infinite}
+#zsvg g.go .halo{animation:zhalo 1.2s ease-out 3}
+/* endpoint dot carries the KIND: hollow = way in, filled = way out.
+   (dashes are taken — they mean "this route is selected".) */
+#zsvg circle{fill:var(--pr-card);stroke:var(--pr-ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+#zsvg g.out circle{fill:var(--pr-pink)}
+@keyframes zdash{to{stroke-dashoffset:-38}}
+@keyframes zhalo{0%{opacity:.55}100%{opacity:.16}}
+.zrr.rtrow .zd{border-radius:2px;width:14px;height:5px;background:var(--pr-card);border:1px solid var(--pr-ink)}
+.zrr.rtrow.out .zd{background:var(--pr-pink)}
 #ztop{position:absolute;top:0;left:0;right:0;z-index:4;display:flex;gap:8px;align-items:center;
  padding:9px 12px;padding-top:calc(9px + env(safe-area-inset-top));
  background:var(--pr-ink);border-bottom:3px solid var(--pr-teal)}
@@ -183,6 +201,45 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .k-cruiser .zd{background:var(--pr-lime)}
 .k-stop .zd{background:var(--pr-teal)}
 .k-view .zd{background:var(--pr-teal)}
+/* ---- picks UI (v.69.10) ---------------------------------------------
+   The drawer is now three blocks: the ranked picks, the cruiser itinerary,
+   and everything else behind a disclosure. Unpinned runs render too — they
+   just get a dashed dot and don't try to flash. */
+.zrr.pk{border-color:var(--pr-yellow);background:var(--pr-yellow-tint);align-items:flex-start}
+.zrr.pk.on{border:1.5px solid var(--pr-btn-primary-bg)}
+.zrk{flex:0 0 auto;min-width:21px;height:21px;border-radius:999px;background:var(--pr-ink);
+ color:var(--pr-cream);font-size:11px;font-weight:700;display:flex;align-items:center;
+ justify-content:center;padding:0 5px;margin-top:1px}
+.znum{flex:0 0 auto;min-width:23px;height:19px;border-radius:5px;border:1px solid var(--pr-ink);
+ background:var(--pr-card);color:var(--pr-ink);font-size:10.5px;font-weight:700;
+ display:flex;align-items:center;justify-content:center;padding:0 4px;margin-top:1px}
+.zchip{font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+ border-radius:999px;padding:2px 7px;flex:0 0 auto}
+.zchip.cat{background:var(--pr-lime-tint);color:var(--pr-lime-text)}
+.zchip.gated{background:var(--pr-warn-bg);color:var(--pr-warn-text)}
+.zchip.air{background:var(--pr-danger-bg);color:var(--pr-danger-text)}
+.zchip.hike{background:var(--pr-purple-tint);color:var(--pr-purple-text)}
+.zchip.obsc{background:var(--pr-teal-tint);color:var(--pr-teal-text)}
+.zchip.flat{background:#F1EBE0;color:var(--pr-text-2)}
+.zmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.zrr .zwhy{font-size:11.5px;color:var(--pr-ink);margin-top:4px;line-height:1.45;font-weight:400}
+.zrr .zent{font-size:11px;color:var(--pr-text-2);margin-top:5px;line-height:1.45;font-weight:400;
+ border-left:2px solid var(--pr-border);padding-left:8px}
+.zrr .zent.warn{border-left-color:var(--pr-orange);color:var(--pr-danger-text)}
+.zrr .zsto{font-size:11px;color:var(--pr-purple-text);margin-top:5px;line-height:1.45;font-weight:400}
+.zrr.nopin{cursor:default}
+.zrr.nopin .zd{background:var(--pr-card);border-style:dashed}
+.zsorts{display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px 0}
+.zsl{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+ color:var(--pr-text-2);width:100%;margin-bottom:2px}
+.zsc{font-size:11.5px;font-weight:600;border-radius:999px;padding:5px 11px;
+ border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-text-2);cursor:pointer}
+.zsc.on{background:var(--pr-pink-text);color:#FFFFFF;border-color:var(--pr-pink-text)}
+.zsc .zso{font-size:9.5px;margin-left:5px}
+.zmore{width:100%;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+ border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-text-2);
+ border-radius:11px;padding:11px;margin:10px 0 6px;cursor:pointer;text-align:center;font-family:inherit}
+.zmore:active{opacity:.7}
 .zrun{cursor:pointer}
 .zrun:active{opacity:.6}
 .zrun .zmi{color:var(--pr-link);display:flex;flex:0 0 auto}
@@ -389,11 +446,11 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 <div id="v-more" class="view"></div>
 
 <div id="zov" aria-hidden="true">
-  <div id="zstage"><div id="zpan"><img id="zimg" alt=""></div></div>
+  <div id="zstage"><div id="zpan"><img id="zimg" alt=""><svg id="zsvg" viewBox="0 0 1 1" preserveAspectRatio="none"></svg></div></div>
   <button id="zzoom" onclick="zResetZoom()"></button>
   <div id="zbtns"><button onclick="zZoomBy(1.5)" aria-label="Zoom in">&#65291;</button><button onclick="zZoomBy(1/1.5)" aria-label="Zoom out">&#8722;</button></div>
   <div id="ztop"><button class="zx" onclick="zClose()" aria-label="Close map">&#10005;</button><div id="zchips"></div></div>
-  <button id="zreflash" onclick="zReflash()"><span class="zrd"></span><span class="zrn" id="zreflashname"></span></button>
+  <button id="zreflash" onclick="zReflashAny()"><span class="zrd"></span><span class="zrn" id="zreflashname"></span></button>
   <div id="zdrawer">
     <span class="zgrab">&#9662;</span>
     <div id="zbar" onclick="zToggleDrawer()"><span class="zdt" id="zdtitle"></span><span class="zdg" id="zdgate"></span></div>
@@ -426,6 +483,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 <div class="toast" id="toast"></div>
 
 <script>
+var ZRT=-1;
 var D=null, EMB=null, GATEKEY=null, CUR='home', SCENE_TOWN=null, TMODE={}, PAST_OPEN={}, DS_N=0, GEOW=null, GEOPOS=null;
 function b64d(x){var b=atob(x),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
 function b64e(buf){ var a=new Uint8Array(buf),x=''; for(var i=0;i<a.length;i++)x+=String.fromCharCode(a[i]); return btoa(x); }
@@ -678,57 +736,256 @@ function zSetZone(i){
     ((cruisersOn(ZR)&&!zItems((D.terrain||{})[ZR],zs[j]).some(isMellowRun))?'dim':''));
   /* keep the active chip visible — zones 4 and 5 sit off the right edge */
   if(kids[i])box.scrollLeft=Math.max(0,kids[i].offsetLeft-(box.clientWidth-kids[i].offsetWidth)/2);
-  zRenderRuns();
+  ZRT=-1; zDrawRoutes(); zRenderRuns();
 }
-function zRunRow(z,zi,r,ri,showZone){
-  var d=document.createElement('div');
-  d.className='zrr '+(r.kind?('k-'+r.kind):('lv-'+(r.level||'info')))+((zi===ZI&&ri===ZRUN)?' on':'');
-  d.innerHTML='<span class="zd"></span><span class="znm">'+esc(r.name)+(r.huck?' <span style="color:var(--pr-danger-text)" title="mandatory air / cliff drop">'+ic('huck',11)+'</span>':'')+
-    (r.where?'<div class="zsb">'+esc(r.where)+'</div>':'')+'</span>'+
-    (r.kind?'<span class="kind '+r.kind+'">'+r.kind+'</span>':'')+
-    (r.approx?'<span class="pill muted" style="font-size:9px;padding:1px 6px">approx</span>':'')+
-    (showZone?'<span class="zzt">'+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+'</span>':'');
-  d.onclick=function(){ if(zi!==ZI)zSetZone(zi); zFlash(ri); };
+/* ================= the drawer list =================
+   Three blocks: the ranked picks, the cruiser itinerary, then everything
+   else behind a disclosure. `ri` is always the index into zItems() — that
+   is what zFlash takes — so it is carried, never recomputed from a
+   filtered array. Runs with no pin still render; they just cannot flash. */
+var ZSORT=[], ZSPICY=false, ZALL=false;
+var ZSORTKEYS=[['num','#'],['lift','Lift'],['level','Level'],['cat','Type'],
+               ['vert','Vertical'],['name','A-Z']];
+
+function zHasNums(k){ var t=(D.terrain||{})[k]||{};
+  return (t.zones||[]).some(function(z){ return (z.runs||[]).some(function(r){ return r.num; }); }); }
+function zIsPick(r){ return typeof r.pick==='number'; }
+function zIsCruiser(r){ return r.cruiser===true||r.kind==='cruiser'; }
+function zSpicyOK(r){ return !ZSPICY||(r.air||0)>=2; }
+
+function zSortToggle(k){ var i=ZSORT.indexOf(k);
+  if(i<0)ZSORT.push(k); else ZSORT.splice(i,1);
+  zRenderRuns(); }
+
+function zSortVal(r,k){
+  if(k==='num'){ var m=String(r.num||'').match(/^(\d+)([a-z]*)$/i);
+    return m?[parseInt(m[1],10),m[2]||'']:[9e9,String(r.num||'')]; }
+  if(k==='lift')  return [0,(r.lifts&&r.lifts[0])||r.lift||'￿'];
+  if(k==='level') return [({beginner:0,int:1,adv:2,expert:3,extreme:4})[r.level]!=null
+                          ?({beginner:0,int:1,adv:2,expert:3,extreme:4})[r.level]:9,''];
+  if(k==='cat')   return [0,r.cat||'￿'];
+  if(k==='vert')  return [-(((r.meas||{}).vert)||0),''];
+  return [0,(r.name||'').toLowerCase()];
+}
+/* Stackable: every active key is applied in the order it was tapped, so
+   "Lift" then "#" really does sort by lift AND number, not one or other. */
+function zCmp(a,b){
+  for(var i=0;i<ZSORT.length;i++){
+    var x=zSortVal(a,ZSORT[i]), y=zSortVal(b,ZSORT[i]);
+    if(x[0]!==y[0])return x[0]<y[0]?-1:1;
+    if(x[1]!==y[1])return x[1]<y[1]?-1:1;
+  }
+  return 0;
+}
+
+function zChip(cls,txt,title){
+  return '<span class="zchip '+cls+'"'+(title?' title="'+esc(title)+'"':'')+'>'+esc(txt)+'</span>';
+}
+function zRunChips(r,rich){
+  var out='';
+  if(r.cat)                 out+=zChip('cat',r.cat);
+  if(r.gate)                out+=zChip('gated','gated','Access is through a gate — check it before you commit');
+  if((r.air||0)>=2)         out+=zChip('air','air '+r.air,'Mandatory air / cliff drop');
+  /* ski-in is the default — only say something when there IS a cost, or when
+     we genuinely don't know (blank hike is not the same claim as 0). */
+  if(r.hike)                out+=zChip('hike',r.hike+' min hike');
+  else if(r.hike==null&&r.traits&&r.traits.indexOf('bootpack')>=0)
+                            out+=zChip('hike','bootpack','Length unverified');
+  if((r.obscurity||0)>=2)   out+=zChip('obsc','obscurity '+r.obscurity,'0 obvious … 3 undocumented');
+  if(r.x==null)             out+=zChip('flat','not on the map');
+  if(r.approx)              out+=zChip('flat','approx','Pin is an estimate');
+  return out?'<div class="zmeta">'+out+'</div>':'';
+}
+
+function zRunRow(z,zi,r,ri,showZone,rich){
+  var d=document.createElement('div'), nopin=(r.x==null);
+  d.className='zrr '+(r.kind?('k-'+r.kind):('lv-'+(r.level||'info')))
+    +(rich?' pk':'')+(nopin?' nopin':'')+((zi===ZI&&ri===ZRUN)?' on':'');
+  var head='';
+  if(rich&&zIsPick(r)) head+='<span class="zrk">'+r.pick+'</span>';
+  else                 head+='<span class="zd"></span>';
+  if(r.num)            head+='<span class="znum">'+esc(String(r.num))+'</span>';
+  var body='<span class="znm">'+esc(r.name)
+    +(r.where?'<div class="zsb">'+esc(r.where)+'</div>':'')
+    +zRunChips(r,rich);
+  if(rich){
+    if(r.why)   body+='<div class="zwhy">'+esc(r.why)+'</div>';
+    if(r.entry) body+='<div class="zent'+(/^WARNING|^⚠/.test(r.entry)?' warn':'')+'">'
+                      +ic('tip',11)+' '+esc(r.entry)+'</div>';
+    if(r.story) body+='<div class="zsto">'+ic('tip',11)+' '+esc(r.story)+'</div>';
+  }
+  body+='</span>';
+  d.innerHTML=head+body
+    +(r.kind?'<span class="kind '+r.kind+'">'+r.kind+'</span>':'')
+    +(showZone?'<span class="zzt">'+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+'</span>':'');
+  if(!nopin) d.onclick=function(){ if(zi!==ZI)zSetZone(zi); zFlash(ri); };
   return d;
 }
+
+function zLabel(box,icon,txt,count){
+  var l=document.createElement('div'); l.className='zlab';
+  l.innerHTML=ic(icon,14)+esc(txt)+(count!=null?'<span class="zct">'+count+'</span>':'');
+  box.appendChild(l); return l;
+}
+
+function zSortBar(box){
+  var bar=document.createElement('div'); bar.className='zsorts';
+  var html='<span class="zsl">Sort — tap more than one to stack</span>';
+  ZSORTKEYS.forEach(function(kv){
+    if(kv[0]==='num'&&!zHasNums(ZR))return;          // no legend, no sort option
+    var i=ZSORT.indexOf(kv[0]);
+    html+='<button class="zsc'+(i>=0?' on':'')+'" onclick="zSortToggle(\''+kv[0]+'\')">'
+        + esc(kv[1])+(i>=0?'<span class="zso">'+(i+1)+'</span>':'')+'</button>';
+  });
+  html+='<button class="zsc'+(ZSPICY?' on':'')+'" onclick="zSpicy(!ZSPICY)">Feeling spicy</button>';
+  bar.innerHTML=html; box.appendChild(bar);
+}
+function zSpicy(v){ ZSPICY=v; zRenderRuns(); }
+function zShowAll(v){ ZALL=v; zRenderRuns(); }
+
 function zRenderRuns(){
-  var box=$('zruns'); box.innerHTML=''; var zs=zMapZones(ZR);
+  var box=$('zruns'); box.innerHTML=''; var zs=zMapZones(ZR), t=(D.terrain||{})[ZR];
+  zRenderRoutes(box);
+  zSortBar(box);
+
+  /* gather (zone, zoneIndex, run, itemIndex) across one zone or all zones */
+  var rows=[];
   if(!ZBYLIFT&&!ZBYBOWL){
     var z=zs[ZI]; if(!z)return;
-    var l=document.createElement('div'); l.className='zlab';
-    l.innerHTML=ic('skier',14)+(cruisersOn(ZR)?'Cruisers in this zone':'Runs in this zone'); box.appendChild(l);
-    var n=0;
-    zItems((D.terrain||{})[ZR],z).forEach(function(r,ri){ if(r.x!=null&&zKeep(r)){ n++; box.appendChild(zRunRow(z,ZI,r,ri,false)); } });
-    if(!n)box.insertAdjacentHTML('beforeend','<div class="zempty">'+ic('closed',13)+
-      '<span>Nothing mellow in '+esc(z.name)+'. Try another zone — the dimmed chips have none either.</span></div>');
+    zItems(t,z).forEach(function(r,ri){ rows.push([z,ZI,r,ri]); });
   } else {
-    var byBowl=ZBYBOWL, groups={}, order=[];
-    zs.forEach(function(z,zi){ zItems((D.terrain||{})[ZR],z).forEach(function(r,ri){
-      if(r.x==null||!zKeep(r))return;
-      var gk=byBowl ? z.name.replace(/\s*\((gated|mellow|hike)\)\s*$/,'') : (r.lift||'Other');
-      if(!groups[gk]){groups[gk]=[];order.push(gk);}
-      groups[gk].push([z,zi,r,ri]);
-    });});
-    order.forEach(function(gk){
-      var l=document.createElement('div'); l.className='zlab';
-      l.innerHTML=ic(byBowl?'mountain':'gondola',14)+esc(gk)+'<span class="zct">'+groups[gk].length+'</span>';
-      box.appendChild(l);
-      groups[gk].forEach(function(t){ box.appendChild(zRunRow(t[0],t[1],t[2],t[3],true)); });
-    });
+    zs.forEach(function(z,zi){ zItems(t,z).forEach(function(r,ri){ rows.push([z,zi,r,ri]); }); });
   }
+  var showZone=(ZBYLIFT||ZBYBOWL);
+  rows=rows.filter(function(t4){ return zKeep(t4[2])&&zSpicyOK(t4[2]); });
+
+  var picks    = rows.filter(function(t4){ return zIsPick(t4[2])&&!t4[2].mapOnly; })
+                     .sort(function(a,b){ return a[2].pick-b[2].pick; });
+  var cruisers = rows.filter(function(t4){ return !zIsPick(t4[2])&&zIsCruiser(t4[2]); });
+  var feats    = rows.filter(function(t4){ return t4[2].mapOnly; });
+  var rest     = rows.filter(function(t4){ return !zIsPick(t4[2])&&!zIsCruiser(t4[2])&&!t4[2].mapOnly; });
+  if(ZSORT.length){ var c=function(a,b){ return zCmp(a[2],b[2]); }; rest.sort(c); cruisers.sort(c); }
+
+  if(picks.length){
+    zLabel(box,'mountain',cruisersOn(ZR)?'Mellow picks':'The picks',picks.length);
+    picks.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,true)); });
+  }
+  if(cruisers.length){
+    zLabel(box,'skier','Cruisers',cruisers.length);
+    cruisers.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,true)); });
+  }
+
+  var hidden=rest.length+feats.length;
+  if(!picks.length&&!cruisers.length){ ZALL=true; }      /* nothing to collapse behind */
+  if(hidden){
+    if(!ZALL){
+      var b=document.createElement('button'); b.className='zmore';
+      b.textContent='Show all runs ('+hidden+')';
+      b.onclick=function(){ zShowAll(true); };
+      box.appendChild(b);
+    } else {
+      if(rest.length){
+        zLabel(box,'skier',picks.length||cruisers.length?'Everything else':'Runs in this zone',rest.length);
+        if(ZSORT.length&&(ZSORT[0]==='lift'||ZSORT[0]==='cat')){
+          var gk=null;
+          rest.forEach(function(t4){
+            var k=ZSORT[0]==='lift'?((t4[2].lifts&&t4[2].lifts[0])||t4[2].lift||'Other')
+                                   :(t4[2].cat||'Uncategorised');
+            if(k!==gk){ gk=k; zLabel(box,ZSORT[0]==='lift'?'gondola':'trees',k); }
+            box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,false));
+          });
+        } else {
+          rest.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,false)); });
+        }
+      }
+      if(feats.length){
+        zLabel(box,'pin','Map features',feats.length);
+        feats.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,false)); });
+      }
+      if(picks.length||cruisers.length){
+        var h=document.createElement('button'); h.className='zmore';
+        h.textContent='Hide the full list'; h.onclick=function(){ zShowAll(false); };
+        box.appendChild(h);
+      }
+    }
+  }
+  if(!rows.length) box.insertAdjacentHTML('beforeend','<div class="zempty">'+ic('closed',13)+
+    '<span>'+(ZSPICY?'Nothing with mandatory air in here. Tap “Feeling spicy” again to see everything.'
+                    :'Nothing mellow in '+esc((zs[ZI]||{}).name||'this zone')+
+                     '. Try another zone — the dimmed chips have none either.')+'</span></div>');
 }
 function zByLift(v){ ZBYLIFT=v; if(v){ ZBYBOWL=false; var b=$('zbybowl'); if(b)b.checked=false; } zRenderRuns(); }
 function zByBowl(v){ ZBYBOWL=v; if(v){ ZBYLIFT=false; var b=$('zbylift'); if(b)b.checked=false; } zRenderRuns(); }
 
 /* the crop is object-fit:contain, so a percentage pin lands in the letterbox.
    Work out the rendered image rect first and place the pulse in px. */
-function zPinXY(x,y){
+function zRect(){
   var st=$('zstage'), W=st.clientWidth, H=st.clientHeight, a=(zZone()||{}).zmap.asp||1, rw,rh,ox,oy;
   if(W/H>a){ rh=H; rw=H*a; ox=(W-rw)/2; oy=0; } else { rw=W; rh=W/a; ox=0; oy=(H-rh)/2; }
-  return [(ox+x*rw)+'px',(oy+y*rh)+'px'];
+  return {ox:ox,oy:oy,rw:rw,rh:rh};
+}
+function zPinXY(x,y){ var r=zRect(); return [(r.ox+x*r.rw)+'px',(r.oy+y*r.rh)+'px']; }
+
+/* ================= routes =================
+   An access route (in) or an egress (out) is a LINE. It lives in
+   terrain[rid].routes[] — same shape as gates[] — and runs point at it by id,
+   so the access cost is stated once and inherited rather than repeated.
+   Drawn into #zsvg, which is laid over the crop in the same letterboxed rect
+   the pins use, with a 0..1 viewBox so normalised coords go straight in. */
+function zRoutesFor(z){
+  var t=(D.terrain||{})[ZR]||{}, out=[];
+  (t.routes||[]).forEach(function(rt,i){ if(rt.path&&rt.path.length>1&&(!rt.zone||rt.zone===z.name))out.push([rt,i]); });
+  return out;
+}
+function zPlaceSvg(){
+  var s=$('zsvg'); if(!s)return; var r=zRect();
+  s.style.left=r.ox+'px'; s.style.top=r.oy+'px'; s.style.width=r.rw+'px'; s.style.height=r.rh+'px';
+}
+function zDrawRoutes(){
+  var s=$('zsvg'); if(!s)return; s.innerHTML=''; var z=zZone(); if(!z)return;
+  zPlaceSvg();
+  zRoutesFor(z).forEach(function(p){
+    var rt=p[0], i=p[1], d='M'+rt.path.map(function(q){return q[0]+' '+q[1];}).join('L');
+    var g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class',(rt.kind==='out'?'out ':'')+(i===ZRT?'go':''));
+    g.setAttribute('opacity',ZRT<0?'0.55':(i===ZRT?'1':'0.18'));
+    g.innerHTML='<path class="halo" d="'+d+'"/><path class="core" d="'+d+'"/>'+
+      '<circle cx="'+rt.path[0][0]+'" cy="'+rt.path[0][1]+'" r="0.008"/>'+
+      '<circle cx="'+rt.path[rt.path.length-1][0]+'" cy="'+rt.path[rt.path.length-1][1]+'" r="0.008"/>';
+    s.appendChild(g);
+  });
+}
+function zFlashRoute(i){
+  var z=zZone(); if(!z)return;
+  var t=(D.terrain||{})[ZR]||{}, rt=(t.routes||[])[i]; if(!rt||!rt.path)return;
+  zClearPulse(); ZRT=i; ZRUN=-1; zDrawRoutes(); zRenderRuns();
+  var mid=rt.path[Math.floor(rt.path.length/2)];
+  zCenterOn(mid[0],mid[1]);
+  zUpdateReflash();
+}
+function zRouteRow(rt,i){
+  var d=document.createElement('div');
+  d.className='zrr rtrow '+(rt.kind==='out'?'out ':'')+(i===ZRT?'on':'');
+  var meta=[]; if(rt.hike!=null)meta.push(rt.hike?rt.hike+' min hike':'ski-in');
+  if(rt.vert!=null)meta.push(rt.vert+' m climb');
+  if(rt.serves)meta.push('opens '+rt.serves+' run'+(rt.serves===1?'':'s'));
+  d.innerHTML='<span class="zd"></span><span class="znm">'+esc(rt.name)+
+    (meta.length?'<div class="zsb">'+esc(meta.join(' · '))+'</div>':'')+
+    (rt.entry?'<div class="zsb">'+ic('tip',11)+' '+esc(rt.entry)+'</div>':'')+'</span>'+
+    '<span class="kind '+(rt.kind==='out'?'stop':'view')+'">'+(rt.kind==='out'?'way out':'way in')+'</span>';
+  d.onclick=function(){ zFlashRoute(i); };
+  return d;
+}
+function zRenderRoutes(box){
+  var z=zZone(); if(!z)return; var rs=zRoutesFor(z); if(!rs.length)return;
+  var l=document.createElement('div'); l.className='zlab';
+  l.innerHTML=ic('compass',14)+'Getting in and out<span class="zct">'+rs.length+'</span>';
+  box.appendChild(l);
+  rs.forEach(function(p){ box.appendChild(zRouteRow(p[0],p[1])); });
 }
 function zClearPulse(){
   if(ZPULSE){ ZPULSE.parentNode&&ZPULSE.parentNode.removeChild(ZPULSE); ZPULSE=null; }
+  ZRT=-1;
   var rr=document.querySelectorAll('#zruns .zrr');
   for(var i=0;i<rr.length;i++)rr[i].classList.remove('on');
   zUpdateReflash();
@@ -744,10 +1001,11 @@ function zFlashAt(x,y){
 }
 function zFlash(ri){
   var r=zList()[ri]; if(!r||r.x==null)return;
-  ZRUN=ri; zFlashAt(r.x,r.y); zRenderRuns(); zUpdateReflash();
+  ZRUN=ri; ZRT=-1; zDrawRoutes(); zFlashAt(r.x,r.y); zRenderRuns(); zUpdateReflash();
 }
 function zReflash(){ if(ZRUN>=0)zFlash(ZRUN); }
 function zPlace(){
+  zPlaceSvg();
   if(ZRUN<0||!ZPULSE)return; var r=zList()[ZRUN]; if(!r)return;
   var xy=zPinXY(r.x,r.y); ZPULSE.style.left=xy[0]; ZPULSE.style.top=xy[1];
   ZPULSE.style.transform='scale('+(1/ZS)+')';
@@ -870,10 +1128,12 @@ function zSizeDrawer(){
 }
 function zToggleDrawer(){ ZSHUT=!ZSHUT; zSizeDrawer(); }
 function zUpdateReflash(){
-  var it=zList()[ZRUN], show=ZSHUT&&ZRUN>=0&&!!it;
+  var t=(D.terrain||{})[ZR]||{}, rt=(ZRT>=0?(t.routes||[])[ZRT]:null);
+  var it=rt||zList()[ZRUN], show=ZSHUT&&!!it&&(ZRT>=0||ZRUN>=0);
   $('zreflash').className=show?'on':'';
   if(show)$('zreflashname').textContent='Show '+it.name;
 }
+function zReflashAny(){ if(ZRT>=0)zFlashRoute(ZRT); else if(ZRUN>=0)zFlash(ZRUN); }
 window.addEventListener('resize',zSizeDrawer);
 
 /* ================= TOWN MAP FULL-SCREEN =================
