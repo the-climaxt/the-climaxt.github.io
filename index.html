@@ -484,7 +484,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 
 <script>
 var ZRT=-1;
-var D=null, EMB=null, GATEKEY=null, CUR='home', SCENE_TOWN=null, TMODE={}, PAST_OPEN={}, DS_N=0, GEOW=null, GEOPOS=null;
+var D=null, EMB=null, GATEKEY=null, DATAKEY=null, LEGACYKEY=null, CUR='home', SCENE_TOWN=null, TMODE={}, PAST_OPEN={}, DS_N=0, GEOW=null, GEOPOS=null;
 function b64d(x){var b=atob(x),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
 function b64e(buf){ var a=new Uint8Array(buf),x=''; for(var i=0;i<a.length;i++)x+=String.fromCharCode(a[i]); return btoa(x); }
 function normName(x){return (x||'').toLowerCase().split(/\s+/).filter(Boolean).join(' ');}
@@ -492,7 +492,25 @@ async function gateTry(name,pw){ if(!(window.crypto&&crypto.subtle))throw new Er
   var km=await crypto.subtle.importKey('raw',new TextEncoder().encode(normName(name)+'|'+pw),'PBKDF2',false,['deriveKey']);
   var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(g.salt),iterations:150000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt','encrypt']);
   var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(g.iv)},key,b64d(g.ct));
-  D=JSON.parse(new TextDecoder().decode(pt)); GATEKEY=key; return true; }
+  D=JSON.parse(new TextDecoder().decode(pt)); GATEKEY=key; await initDataKey(); return true; }
+
+/* ---- data key: crew-submitted stuff, decoupled from the gate password ----
+   Emergency records and shared files USED to be encrypted with the key derived
+   from the gate password, which meant changing that password silently orphaned
+   every one of them. They are now encrypted with a random key that lives INSIDE
+   the encrypted trip data, so the gate password can be rotated freely.
+   LEGACYKEY keeps anything submitted before this change readable, so nothing is
+   lost on the way over. */
+async function initDataKey(){
+  LEGACYKEY=GATEKEY; DATAKEY=null;
+  var raw=D&&D.dataKey;
+  if(raw){ try{ DATAKEY=await crypto.subtle.importKey('raw',b64d(raw),{name:'AES-GCM'},false,['encrypt','decrypt']); }catch(e){ DATAKEY=null; } }
+  if(!DATAKEY) DATAKEY=GATEKEY;   /* older data file with no dataKey: behave exactly as before */
+}
+async function dkDecrypt(ivb,datab){
+  try{ return await crypto.subtle.decrypt({name:'AES-GCM',iv:ivb},DATAKEY,datab); }
+  catch(e){ if(LEGACYKEY&&LEGACYKEY!==DATAKEY) return await crypto.subtle.decrypt({name:'AES-GCM',iv:ivb},LEGACYKEY,datab); throw e; }
+}
 function showGate(err){ var nav=document.querySelector('.bnav'); if(nav)nav.style.display='none';
   var o=(EMB&&EMB.open)||{}, h='<div class="hh" style="margin-top:26px"><h1>'+esc(o.title||'Trip')+' '+esc(o.year||'')+'</h1><div class="sub">Crew only — the trip name &amp; password came from the group chat</div></div>';
   h+='<div class="card"><h2>Sign in once on this phone</h2>';
@@ -565,7 +583,7 @@ function hurtHtml(){
 function emgUrl(){ return D.docsUrl||D.runsUrl||''; }
 async function applyEmg(arr){ var ch=false;
   for(var i=0;i<arr.length;i++){ var sb=arr[i]; if(!sb||!sb.who||!sb.data||!sb.iv)continue;
-    try{ var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(sb.iv)},GATEKEY,b64d(sb.data)); var em=JSON.parse(new TextDecoder().decode(pt));
+    try{ var pt=await dkDecrypt(b64d(sb.iv),b64d(sb.data)); var em=JSON.parse(new TextDecoder().decode(pt));
       (D.crew||[]).forEach(function(c){ if(normName(c.name)===normName(sb.who)){ em.submitted=sb.ts||em.submitted; c.emergency=em; ch=true; } });
     }catch(e){}
   } return ch; }
@@ -582,7 +600,7 @@ async function submitEmg(){
   var em={ice:{name:v('emIn'),phone:v('emIp')},coverages:covs,submitted:Date.now()};
   if(med.allergies||med.meds||med.blood||med.notes)em.medical=med;
   localStorage.setItem('me',who);
-  try{ var iv=sdocIv(); var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},GATEKEY,new TextEncoder().encode(JSON.stringify(em)));
+  try{ var iv=sdocIv(); var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},DATAKEY,new TextEncoder().encode(JSON.stringify(em)));
     var sub={who:who,iv:b64e(iv.buffer),data:b64e(ct),ts:Date.now()};
     var cache=[]; try{ cache=JSON.parse(localStorage.getItem('emgCache')||'[]')||[]; }catch(e){}
     cache=cache.filter(function(sb){return normName(sb.who)!==normName(who);}); cache.push(sub);
@@ -622,10 +640,10 @@ function listSharedDocs(){ var el=$('sdoclist'); if(!el)return;
 function addSharedDoc(inp){ var f=inp.files[0]; if(!f)return;
   if(!D.docsUrl){ toast('Shared vault isn\u2019t switched on yet'); return; }
   if(f.size>8*1024*1024){ toast('Keep shared files under ~8MB'); return; }
-  var rd=new FileReader(); rd.onload=async function(){ try{ var iv=sdocIv(); var ctb=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},GATEKEY,rd.result);
+  var rd=new FileReader(); rd.onload=async function(){ try{ var iv=sdocIv(); var ctb=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},DATAKEY,rd.result);
     toast('Encrypting & uploading\u2026');
     fetch(D.docsUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'putdoc',name:f.name,type:f.type,by:localStorage.getItem('me')||'',iv:b64e(iv.buffer),data:b64e(ctb)})}).then(function(){ setTimeout(listSharedDocs,1800); toast('Shared with the crew'); }); }catch(e){ toast('Encrypt failed'); } }; rd.readAsArrayBuffer(f); }
-function openSharedDoc(id,name,type,iv){ fetch(D.docsUrl+'?doc='+encodeURIComponent(id)).then(function(x){return x.json();}).then(async function(dd){ var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(iv)},GATEKEY,b64d(dd.data)); var url=URL.createObjectURL(new Blob([pt],{type:type||'application/octet-stream'})); window.open(url,'_blank'); }).catch(function(){ toast('Couldn\u2019t open — offline?'); }); }
+function openSharedDoc(id,name,type,iv){ fetch(D.docsUrl+'?doc='+encodeURIComponent(id)).then(function(x){return x.json();}).then(async function(dd){ var pt=await dkDecrypt(b64d(iv),b64d(dd.data)); var url=URL.createObjectURL(new Blob([pt],{type:type||'application/octet-stream'})); window.open(url,'_blank'); }).catch(function(){ toast('Couldn\u2019t open — offline, or saved before a password change'); }); }
 function $(id){return document.getElementById(id);}
 /* ---- Powder Run icon set (design-system glyphs, currentColor) ---- */
 var IC={huck:'<path d="M3 21V10h5V3h4v18H3Z"/><path d="M16.5 4h3v8.8l2-2 1.5 1.6-5 5-5-5 1.5-1.6 2 2V4Z"/>',mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',calendar:'<path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/>',snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',checklist:'<path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/>',cheers:'<g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g>',more:'<circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/>',warning:'<path fill-rule="evenodd" d="M12 2.4a1.6 1.6 0 0 1 1.4.8l8.8 15.2a1.6 1.6 0 0 1-1.4 2.4H3.2a1.6 1.6 0 0 1-1.4-2.4L10.6 3.2A1.6 1.6 0 0 1 12 2.4Zm-1.1 6.2h2.2l-.4 5.6h-1.4l-.4-5.6ZM12 15.6a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',alert:'<path fill-rule="evenodd" d="M8.1 2.5h7.8l5.6 5.6v7.8l-5.6 5.6H8.1l-5.6-5.6V8.1l5.6-5.6ZM10.9 7h2.2l-.4 6h-1.4l-.4-6ZM12 15.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',closed:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.6a7.2 7.2 0 0 0-5.6 11.8L16.6 6.4A7.15 7.15 0 0 0 12 4.8Zm5.6 3L7.4 17.9A7.2 7.2 0 0 0 17.6 7.8Z"/>',check:'<path d="M9.55 15.15 19.1 5.6l1.9 1.9L9.55 19 3 12.45l1.9-1.9 4.65 4.6Z"/>',tip:'<path d="M12 6.2a4.8 4.8 0 0 1 2.7 8.8c-.4.3-.6.7-.7 1.2l-.1.6H10l-.1-.6c-.1-.5-.3-.9-.7-1.2A4.8 4.8 0 0 1 12 6.2Z"/><path d="M10 18.4h4v1a1.5 1.5 0 0 1-1.5 1.4h-1a1.5 1.5 0 0 1-1.5-1.4v-1Z"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 1.4v2.3M4.9 4.1l1.6 1.6M19.1 4.1l-1.6 1.6M2.4 10.8h2.3M19.3 10.8h2.3"/></g>',pin:'<path fill-rule="evenodd" d="M12 2.2a7.2 7.2 0 0 1 7.2 7.2c0 4.8-5.4 10.8-6.7 12.2a.7.7 0 0 1-1 0C10.2 20.2 4.8 14.2 4.8 9.4A7.2 7.2 0 0 1 12 2.2Zm0 4.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/>',map:'<path fill-rule="evenodd" d="M8.6 3 3.6 4.9a1 1 0 0 0-.6.9v14.4a.6.6 0 0 0 .8.6l4.8-1.9 6.8 2.1 5-1.9a1 1 0 0 0 .6-.9V3.8a.6.6 0 0 0-.8-.6l-4.8 1.9L8.6 3Zm.7 2.3 5.4 1.7v12.6L9.3 17.9V5.3Z"/>',ticket:'<path fill-rule="evenodd" d="M3 5.8h18a1 1 0 0 1 1 1v10.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.8a1 1 0 0 1 1-1ZM2 10.2a1.9 1.9 0 0 1 0 3.6v-3.6Zm20 0v3.6a1.9 1.9 0 0 1 0-3.6ZM7.9 10.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm3.5-3.4h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Z"/>',phone:'<path d="M6.6 3c.5 0 2.9 2.4 2.9 3s-1.5 1.9-1.5 2.6 1.2 2.3 2.7 3.8 3.1 2.7 3.8 2.7 2-1.5 2.6-1.5S21 16 21 16.5 19.6 21 17.5 21C12 21 3 12 3 6.5 3 4.4 6.1 3 6.6 3Z"/>',bed:'<path d="M2.4 5.4h2v8.2h7.2V7.9h6.2a3.8 3.8 0 0 1 3.8 3.8v6.9h-2v-2.2H4.4v2.2h-2V5.4Z"/><circle cx="7.5" cy="10.4" r="2"/>',compass:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.4A7.4 7.4 0 1 0 19.4 12 7.4 7.4 0 0 0 12 4.6Z"/><path d="M12 5.6 14.2 12 12 18.4 9.8 12 12 5.6Z"/>',trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',skier:'<circle cx="14.4" cy="3" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 5.2 10.7 9.4l2.2 3.3-.6 3.2M13 6.6l3.7 2.6"/></g><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M16.9 9.4l2.7 6.4"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.8 16.2h13.6c1.1 0 1.9-.4 2.5-1.3M4.6 18.8h13.6c1.1 0 1.9-.4 2.5-1.3"/></g>',snowboarder:'<circle cx="14.9" cy="3.4" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 5.8 11.8 9.9l-2.5 5.2M11.8 9.9l2.1 5.3M14.1 6.3l3.3 2.3"/></g><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.6 15.2c.5 1.3 1.4 2 2.8 2h11.2c1.4 0 2.3-.7 2.8-2"/>',gondola:'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 3.4h20"/><rect x="11.2" y="3.4" width="1.6" height="4.4"/><path fill-rule="evenodd" d="M6.8 7.4h10.4a2 2 0 0 1 2 2.2l-.8 8.4a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-.8-8.4a2 2 0 0 1 2-2.2Zm.6 3 .3 3.4h8.6l.3-3.4H7.4Z"/>',food:'<path d="M5.4 2.6h1.4v4.6h.8V2.6H9v4.6h.8V2.6h1.4v6a2.6 2.6 0 0 1-2 2.5v10.3H7.4V11.1a2.6 2.6 0 0 1-2-2.5v-6Z"/><path d="M15.4 2.6c2.4 1.6 3.4 5.4 3.4 8 0 1.6-1 2.6-2 3v7.8h-1.4V2.6Z"/>',meeting:'<path fill-rule="evenodd" d="M9.4 6.6A1.6 1.6 0 0 1 11 5h2a1.6 1.6 0 0 1 1.6 1.6v.8h3.8A1.6 1.6 0 0 1 20 9v9.6a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.6V9a1.6 1.6 0 0 1 1.6-1.6h3.8v-.8Zm1.7.2v.6h1.8v-.6h-1.8Zm-.5 5.6h2.8v2h-2.8v-2Z"/><circle cx="17.8" cy="3.6" r="1.2"/><circle cx="20.2" cy="1.9" r=".9"/><circle cx="15.9" cy="1.7" r=".7"/>',laundry:'<path fill-rule="evenodd" d="M5 2.5h14A1.5 1.5 0 0 1 20.5 4v16a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 20V4A1.5 1.5 0 0 1 5 2.5Zm1.2 2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Zm3.4 0a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2ZM12 8.2a5.6 5.6 0 1 0 0 11.2 5.6 5.6 0 0 0 0-11.2Zm0 2a3.6 3.6 0 0 1 3.43 2.5c-1.2.9-2.3.2-3.43-.35-1.05-.5-2.15-.9-3.4.1A3.6 3.6 0 0 1 12 10.2Z"/>',coffee:'<path fill-rule="evenodd" d="M4 7h13v2h2.2a2.3 2.3 0 0 1 0 4.6H17.6A6.5 6.5 0 0 1 4.4 13L4 7Zm13.4 4.6h1.6a.8.8 0 0 0 0-1.6h-1.5l-.1 1.6ZM5 19h13v2H5v-2Z"/>',pool:'<path fill-rule="evenodd" d="M2.5 17.2c1.6 0 1.6 1 3.2 1s1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1v2.2c-1.6 0-1.6 1-3.2 1s-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1v-2.2Zm6-12A2.7 2.7 0 0 1 11.2 8v6.1c-.6.2-1 .5-1.6.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Zm7 0A2.7 2.7 0 0 1 18.2 8v6.6c-.7-.1-1-.4-1.6-.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Z"/>',parking:'<path fill-rule="evenodd" d="M4.5 3h15v18h-15V3ZM9 6.5v11h2.4v-3.4h1.8a3.8 3.8 0 1 0 0-7.6H9Zm2.4 2.2h1.7a1.6 1.6 0 0 1 0 3.2h-1.7V8.7Z"/>',kitchen:'<path fill-rule="evenodd" d="M5.5 2.5h2v7.1a2.6 2.6 0 0 1-1 2v9.9h-2v-9.9a2.6 2.6 0 0 1-1-2V2.5h2Zm12 0c1.9.6 3 2.7 3 5.2 0 2.2-.9 4-2.3 4.8v9h-2v-9c-1.4-.8-2.3-2.6-2.3-4.8 0-2.5 1.1-4.6 3-5.2h.6Zm-6.9 0h1.8l.5 7.3a2.3 2.3 0 0 1-1.4 2.3v9.4h-2v-9.4a2.3 2.3 0 0 1-1.4-2.3l.5-7.3h2Z"/>'};
@@ -647,7 +665,7 @@ var ZR=null, ZI=0, ZRUN=-1, ZSHUT=false, ZBYLIFT=false, ZBYBOWL=false, ZPULSE=nu
    checkbox and the drawer checkbox — tick either and both follow. For runs,
    level is the only trustworthy signal: r.type is free text with 130+ distinct
    values. POIs carry an explicit kind and are mellow by definition. */
-function isMellowRun(r){ return r.kind==='cruiser'||r.kind==='stop'||r.kind==='view'
+function isMellowRun(r){ return r.cruiser===true||r.kind==='cruiser'||r.kind==='stop'||r.kind==='view'
   ||r.level==='int'||r.level==='beginner'; }
 function cruisersOn(k){ return TMODE[k]==='mellow'; }
 function zKeep(r){ return !cruisersOn(ZR)||isMellowRun(r); }
@@ -750,7 +768,6 @@ var ZSORTKEYS=[['num','#'],['lift','Lift'],['level','Level'],['cat','Type'],
 function zHasNums(k){ var t=(D.terrain||{})[k]||{};
   return (t.zones||[]).some(function(z){ return (z.runs||[]).some(function(r){ return r.num; }); }); }
 function zIsPick(r){ return typeof r.pick==='number'; }
-function zIsCruiser(r){ return r.cruiser===true||r.kind==='cruiser'; }
 function zSpicyOK(r){ return !ZSPICY||(r.air||0)>=2; }
 
 function zSortToggle(k){ var i=ZSORT.indexOf(k);
@@ -758,7 +775,7 @@ function zSortToggle(k){ var i=ZSORT.indexOf(k);
   zRenderRuns(); }
 
 function zSortVal(r,k){
-  if(k==='num'){ var m=String(r.num||'').match(/^(\d+)([a-z]*)$/i);
+  if(k==='num'){ var m=String(r.num||'').match(/^(\d+)(.*)$/);
     return m?[parseInt(m[1],10),m[2]||'']:[9e9,String(r.num||'')]; }
   if(k==='lift')  return [0,(r.lifts&&r.lifts[0])||r.lift||'￿'];
   if(k==='level') return [({beginner:0,int:1,adv:2,expert:3,extreme:4})[r.level]!=null
@@ -861,22 +878,17 @@ function zRenderRuns(){
 
   var picks    = rows.filter(function(t4){ return zIsPick(t4[2])&&!t4[2].mapOnly; })
                      .sort(function(a,b){ return a[2].pick-b[2].pick; });
-  var cruisers = rows.filter(function(t4){ return !zIsPick(t4[2])&&zIsCruiser(t4[2]); });
   var feats    = rows.filter(function(t4){ return t4[2].mapOnly; });
-  var rest     = rows.filter(function(t4){ return !zIsPick(t4[2])&&!zIsCruiser(t4[2])&&!t4[2].mapOnly; });
-  if(ZSORT.length){ var c=function(a,b){ return zCmp(a[2],b[2]); }; rest.sort(c); cruisers.sort(c); }
+  var rest     = rows.filter(function(t4){ return !zIsPick(t4[2])&&!t4[2].mapOnly; });
+  if(ZSORT.length){ rest.sort(function(a,b){ return zCmp(a[2],b[2]); }); }
 
   if(picks.length){
     zLabel(box,'mountain',cruisersOn(ZR)?'Mellow picks':'The picks',picks.length);
     picks.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,true)); });
   }
-  if(cruisers.length){
-    zLabel(box,'skier','Cruisers',cruisers.length);
-    cruisers.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,true)); });
-  }
 
   var hidden=rest.length+feats.length;
-  if(!picks.length&&!cruisers.length){ ZALL=true; }      /* nothing to collapse behind */
+  if(!picks.length){ ZALL=true; }      /* nothing to collapse behind */
   if(hidden){
     if(!ZALL){
       var b=document.createElement('button'); b.className='zmore';
@@ -885,7 +897,7 @@ function zRenderRuns(){
       box.appendChild(b);
     } else {
       if(rest.length){
-        zLabel(box,'skier',picks.length||cruisers.length?'Everything else':'Runs in this zone',rest.length);
+        zLabel(box,'skier',picks.length?'All other runs':'Runs in this zone',rest.length);
         if(ZSORT.length&&(ZSORT[0]==='lift'||ZSORT[0]==='cat')){
           var gk=null;
           rest.forEach(function(t4){
@@ -902,7 +914,7 @@ function zRenderRuns(){
         zLabel(box,'pin','Map features',feats.length);
         feats.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,false)); });
       }
-      if(picks.length||cruisers.length){
+      if(picks.length){
         var h=document.createElement('button'); h.className='zmore';
         h.textContent='Hide the full list'; h.onclick=function(){ zShowAll(false); };
         box.appendChild(h);
