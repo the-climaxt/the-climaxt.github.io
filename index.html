@@ -221,6 +221,50 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .zchip.hike{background:var(--pr-purple-tint);color:var(--pr-purple-text)}
 .zchip.obsc{background:var(--pr-teal-tint);color:var(--pr-teal-text)}
 .zchip.flat{background:#F1EBE0;color:var(--pr-text-2)}
+/* ---- access chips (v.69.29 shell; data shipped v.69.25) ----------------
+   Zone drawer "Getting here" row + resort-card lift index. Chips are the
+   summary; tap a lift chip for the lift sheet, tap a walk/bootpack/hike/cat
+   chip with a note to expand its one-liner. Colours are the job-coded
+   tints from the design system (status red is retired -> hike uses the
+   sunset-orange danger pair). */
+.zacclab{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+ color:var(--pr-text-2);margin-bottom:6px}
+.zacc{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.achip{font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+ border-radius:999px;padding:4px 9px;border:0;font-family:inherit;
+ display:inline-flex;align-items:center;gap:4px}
+button.achip{cursor:pointer}
+button.achip:active{opacity:.7}
+.achip.lift{background:var(--pr-blue-tint);color:var(--pr-blue-text)}
+.achip.walk{background:#F1EBE0;color:var(--pr-text-2)}
+.achip.bootpack{background:var(--pr-warn-bg);color:var(--pr-warn-text)}
+.achip.hike{background:var(--pr-danger-bg);color:var(--pr-danger-text)}
+.achip.cat{background:var(--pr-purple-tint);color:var(--pr-purple-text)}
+#zaccess{padding:0 16px 10px}
+#zaccess .zaccnote{font-size:11px;color:var(--pr-text-2);line-height:1.45;margin-top:7px;
+ border-left:2px solid var(--pr-border);padding-left:8px;display:none}
+#zaccess .zaccnote.on{display:block}
+/* the lift sheet: solid bottom sheet (no scrim, no blur — chairlift rule) */
+#lclose{position:fixed;inset:0;z-index:390;display:none}
+#lclose.on{display:block}
+#lsheet{position:fixed;left:0;right:0;bottom:0;z-index:395;background:var(--pr-card);
+ border-top:1.5px solid var(--pr-border);border-radius:14px 14px 0 0;
+ padding:15px 16px calc(16px + env(safe-area-inset-bottom));max-height:62%;overflow-y:auto;
+ transform:translateY(102%);transition:transform .28s ease}
+#lsheet.on{transform:none}
+.lshead{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;margin-bottom:4px}
+.lshead .lsx{flex:0 0 auto;margin-left:auto;width:30px;height:30px;border-radius:999px;
+ background:var(--pr-paper);border:1px solid var(--pr-border);color:var(--pr-ink);
+ font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lshead .lsx:active{opacity:.7}
+.lssub{font-size:11px;color:var(--pr-text-2);margin-bottom:10px}
+.lsrow{display:flex;align-items:center;gap:10px;border:1px solid var(--pr-border);
+ background:var(--pr-card);border-radius:11px;padding:9px 11px;margin-bottom:6px}
+.lsrow.go{cursor:pointer}
+.lsrow.go:active{opacity:.7}
+.lsrow .lsn{font-size:13px;font-weight:600;flex:1}
+.lsrow.pk{border-color:var(--pr-yellow);background:var(--pr-yellow-tint)}
+.snlifts{margin-top:9px}
 .zmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .zrr .zwhy{font-size:11.5px;color:var(--pr-ink);margin-top:4px;line-height:1.45;font-weight:400}
 .zrr .zent{font-size:11px;color:var(--pr-text-2);margin-top:5px;line-height:1.45;font-weight:400;
@@ -455,6 +499,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
     <span class="zgrab">&#9662;</span>
     <div id="zbar" onclick="zToggleDrawer()"><span class="zdt" id="zdtitle"></span><span class="zdg" id="zdgate"></span></div>
     <div id="zbody">
+      <div id="zaccess" style="display:none"></div>
       <div class="zrow">
         <div class="znote"><div class="zsub" id="zsub"></div><div id="zopen" style="margin-top:10px"></div></div>
         <div class="zkey"><img id="zkeyimg" alt=""></div>
@@ -478,6 +523,13 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
     <div id="sbar" onclick="sfToggleDrawer()"><span class="zdt" id="sdtitle"></span></div>
     <div id="sbody"></div>
   </div>
+</div>
+
+<div id="lclose" onclick="liftClose()"></div>
+<div id="lsheet" aria-hidden="true">
+  <div class="lshead"><span id="lsname"></span><button class="lsx" onclick="liftClose()" aria-label="Close lift sheet">&#10005;</button></div>
+  <div class="lssub">Everywhere this lift takes you — tap a zone to open its map</div>
+  <div id="lszones"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -739,8 +791,8 @@ function zSetZone(i){
   $('zdtitle').textContent=z.name;
   $('zdgate').innerHTML=ic('warning',12)+' Gated';
   $('zdgate').className='zdg'+(z.zmap.gated?' on':'');
+  zAccRender(z);
   var bits=[];
-  if(z.access)bits.push(esc(z.access));
   if(z.aspect)bits.push(esc(z.aspect));
   if(z.timing)bits.push(esc(z.timing));
   var sub=bits.join(' \u00b7 ');
@@ -1625,6 +1677,131 @@ function fillHomeSnow(id,rid,dt){ var r=D.resorts[rid]; if(!r)return;
 function resortSkiDate(rid){ for(var i=0;i<D.days.length;i++){ if(D.days[i].rid===rid) return D.days[i].dt; } return D.meta.start; }
 function saveMapsOffline(){ var u=[]; Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k]; if(r.map)u.push(r.map); if(r.map2)u.push(r.map2); if(r.map3)u.push(r.map3); if(r.basemap)u.push(r.basemap); }); Object.keys(D.terrain||{}).forEach(function(k){ ((D.terrain[k]||{}).zones||[]).forEach(function(z){ if(z.zmap&&z.zmap.img){u.push(z.zmap.img); if(z.zmap.key)u.push(z.zmap.key);} }); }); if(!u.length)return; toast('Saving '+u.length+' maps for offline…'); var done=0; Promise.all(u.map(function(x){ return fetch(x,{cache:'reload'}).then(function(){done++;}).catch(function(){}); })).then(function(){ toast(done+'/'+u.length+' maps saved — available offline'); }); }
 function climoHtml(k){ var n=(D.normals||{})[k]; if(!n) return '<span class="muted">No climatology yet.</span>'; var sd=fmtShort(resortSkiDate(k)); return '<div><b>~'+n.snowIn+'″</b> snow in the 2 weeks before '+sd+' <span class="muted">(ranged '+n.minIn+'–'+n.maxIn+'″ · '+n.yrs+'-yr avg)</span><br><span class="muted">typical hi '+cF(n.hiC)+'° / lo '+cF(n.loC)+'°F on '+sd+'</span></div>'; }
+/* ================= zone access + the lift sheet (v.69.29) =================
+   Data shipped v.69.25: z.access = ordered [{via,name?,min?,note?}] (the real
+   approach, reads like directions) + derived z.lifts. The chips are the
+   summary. Tap a lift chip -> the lift sheet: every zone that lift serves
+   (inverse index, computed once per resort, never maintained twice), each
+   row tappable when the zone has a map. Walk/bootpack/hike/cat chips with a
+   note expand their one-liner in place. Lift names carry apostrophes, so
+   everything crosses onclick as INDICES, never as quoted strings. */
+var LIDX={}, ANOTE=-1;
+function accEntries(z){ return (z&&Array.isArray(z.access))?z.access:[]; }
+function accLabel(a){
+  if(a.via==='lift')return a.name||'lift';
+  if(a.via==='cat')return a.name||'cat';
+  return a.via+(a.min?' ~'+a.min+' min':'');
+}
+/* text fallback for the Snow-tab zone meta line (the old string z.access) */
+function accSummary(z){ var es=accEntries(z);
+  return es.map(function(a){ return (a.via==='cat'&&a.name)?('cat: '+a.name):accLabel(a); }).join(' → '); }
+function liftIdx(k){ if(LIDX[k])return LIDX[k];
+  /* index = zone-access rides (lift + cat) in zone order, then any lift a run
+     records that access summarized away (Champagne, Angel, Grizzly...). A name
+     that appears as cat anywhere renders as the cat chip everywhere. */
+  var t=(D.terrain||{})[k]||{}, names=[], map={};
+  function add(n,zi,via){
+    if(!map[n]){ map[n]={zones:[],via:via}; names.push(n); }
+    if(map[n].zones.indexOf(zi)<0)map[n].zones.push(zi);
+    if(via==='cat')map[n].via='cat';
+  }
+  (t.zones||[]).forEach(function(z,zi){
+    accEntries(z).forEach(function(a){ if((a.via==='lift'||a.via==='cat')&&a.name)add(a.name,zi,a.via); });
+  });
+  (t.zones||[]).forEach(function(z,zi){
+    (z.runs||[]).forEach(function(r){ (r.lifts||(r.lift?[r.lift]:[])).forEach(function(n){ add(n,zi,'lift'); }); });
+  });
+  return LIDX[k]={names:names,map:map};
+}
+function accChip(a,i,k){
+  var lab=esc(accLabel(a));
+  if((a.via==='lift'||a.via==='cat')&&a.name)
+    return '<button class="achip '+a.via+'" onclick="zAccLift('+i+')">'
+      +(a.via==='cat'?ic('car',11):ic('gondola',11))+lab+'</button>';
+  if(a.note)
+    return '<button class="achip '+a.via+'" onclick="zAccNote('+i+')">'+lab+' ▾</button>';
+  return '<span class="achip '+a.via+'">'+lab+'</span>';
+}
+function zAccRender(z){
+  var box=$('zaccess'); ANOTE=-1; var es=accEntries(z);
+  if(!es.length){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='';
+  box.innerHTML='<div class="zacclab">Getting here</div><div class="zacc">'
+    +es.map(function(a,i){ return accChip(a,i); }).join('')
+    +'</div><div class="zaccnote" id="zaccnote"></div>';
+}
+function zAccLift(i){ var a=accEntries(zZone())[i]; if(a&&a.name)liftOpen(ZR,a.name); }
+function zAccNote(i){ var n=$('zaccnote'); if(!n)return;
+  if(ANOTE===i){ ANOTE=-1; n.className='zaccnote'; return; }
+  var a=accEntries(zZone())[i]; if(!a)return;
+  ANOTE=i; n.innerHTML=ic('tip',11)+' '+esc(a.note||''); n.className='zaccnote on';
+}
+function liftOpen(k,name){
+  var t=(D.terrain||{})[k]||{}, mz=zMapZones(k), e=liftIdx(k).map[name]||{zones:[],via:'lift'};
+  LIFTK=k;
+  $('lsname').innerHTML=(e.via==='cat'?ic('car',16):ic('gondola',16))+' '+esc(name);
+  /* the picks: what you'd actually lap off this ride, ranked. Exact run-level
+     matches first; then ranked runs with no lift data in a zone this ride
+     serves (kept honest with their zone tag until the pin sprint fills them). */
+  var picks=[];
+  (t.zones||[]).forEach(function(z,zi){
+    var zmi=mz.indexOf(z), served=e.zones.indexOf(zi)>=0;
+    (z.runs||[]).forEach(function(r,ri){
+      if(typeof r.pick!=='number')return;
+      var ls=r.lifts||(r.lift?[r.lift]:[]);
+      var exact=ls.indexOf(name)>=0;
+      if(exact||(served&&!ls.length))picks.push({r:r,z:z,zmi:zmi,ri:ri,exact:exact});
+    });
+  });
+  picks.sort(function(a,b){ return (b.exact-a.exact)||(a.r.pick-b.r.pick); });
+  var h='';
+  if(picks.length){
+    h+='<div class="zacclab">Lap these</div>';
+    picks.forEach(function(p){
+      var can=(p.zmi>=0), ri=(p.r.x!=null)?p.ri:-1;
+      h+='<div class="lsrow pk'+(can?' go':'')+'"'+(can?' onclick="liftPick(\''+k+'\','+p.zmi+','+ri+')"':'')+'>'
+        +'<span class="zrk">'+p.r.pick+'</span>'
+        +'<span class="lsn">'+esc(p.r.name)
+        +((!p.exact)?'<div class="zsb">'+esc(p.z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+' · lift unconfirmed</div>':'')
+        +'</span>'
+        +(can?'<span class="zmi" style="color:var(--pr-link);display:flex;flex:0 0 auto">'+ic('map',14)+'</span>':'')
+        +'</div>';
+    });
+    h+='<div class="zacclab" style="margin-top:11px">Zones it serves</div>';
+  }
+  e.zones.forEach(function(zi){
+    var z=(t.zones||[])[zi]; if(!z)return;
+    var zmi=mz.indexOf(z), note='';
+    accEntries(z).some(function(a){ if(a.name===name&&a.note){ note=a.note; return true; } });
+    h+='<div class="lsrow'+(zmi>=0?' go':'')+'"'+(zmi>=0?' onclick="liftGo(\''+k+'\','+zmi+')"':'')+'>'
+      +'<span class="lsn">'+esc(z.name)+(note?'<div class="zsb">'+esc(note)+'</div>':'')+'</span>'
+      +(zmi>=0?'<span class="zmi" style="color:var(--pr-link);display:flex;flex:0 0 auto">'+ic('map',14)+'</span>':'')
+      +'</div>';
+  });
+  $('lszones').innerHTML=h||'<div class="xs muted">No zones recorded for this lift.</div>';
+  $('lsheet').classList.add('on'); $('lsheet').setAttribute('aria-hidden','false'); $('lclose').classList.add('on');
+}
+function liftOpenN(k,i){ liftOpen(k,liftIdx(k).names[i]); }
+function liftGo(k,zmi){ liftClose();
+  if(ZOPEN&&ZR===k){ zSetZone(zmi); ZRUN=-1; zClearPulse(); }
+  else zOpen(k,zmi,-1);
+}
+function liftPick(k,zmi,ri){ liftClose();
+  if(ZOPEN&&ZR===k){ zSetZone(zmi); ZRUN=-1; zClearPulse(); if(ri>=0)zFlash(ri); }
+  else zOpen(k,zmi,ri);
+}
+function liftClose(){ $('lsheet').classList.remove('on'); $('lsheet').setAttribute('aria-hidden','true'); $('lclose').classList.remove('on'); }
+/* the resort-card lift index: one small chip row, the lift-first entry point */
+function liftRowHtml(k){
+  if(!(D.terrain&&D.terrain[k]))return '';
+  var lx=liftIdx(k); if(!lx.names.length)return '';
+  return '<div class="snlifts"><div class="zacclab">Lifts</div><div class="zacc">'
+    +lx.names.map(function(n,i){ var v=lx.map[n].via;
+      return '<button class="achip '+v+'" onclick="liftOpenN(\''+k+'\','+i+')">'
+        +(v==='cat'?ic('car',11):ic('gondola',11))+esc(n)+'</button>'; }).join('')
+    +'</div></div>';
+}
+
 function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
   var cru=(mode==='mellow'), h='<div class="terr">', nMel=0;
   (t.zones||[]).forEach(function(z){ zItems(t,z).forEach(function(r){ if(isMellowRun(r))nMel++; }); });
@@ -1640,7 +1817,7 @@ function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
     var gated=/\(gated\)/i.test(z.name)||!!(z.zmap&&z.zmap.gated);
     var jump=(zmi>=0?' onclick="zOpen(\''+k+'\','+zmi+',-1)"':'');
     h+='<div class="zblk'+(shown.length?'':' zoff')+'"><div class="zhead"'+jump+'><span class="zn">'+esc(z.name)+'</span>'+(gated?'<span class="zg">'+ic('warning',12)+' Gated</span>':'')+(zmi>=0?'<span class="zv">View map ↗</span>':'')+'</div>';
-    var meta=[]; if(z.access)meta.push(esc(z.access)); if(z.aspect)meta.push(esc(z.aspect)); if(z.timing)meta.push(esc(z.timing));
+    var meta=[]; var acs=accSummary(z); if(acs)meta.push(esc(acs)); if(z.aspect)meta.push(esc(z.aspect)); if(z.timing)meta.push(esc(z.timing));
     if(meta.length)h+='<div class="za">'+ic('gondola',13)+'<span>'+meta.join(' · ')+'</span></div>';
     if(z.closure)h+='<div class="za" style="color:var(--pr-warn-text);font-weight:700">'+ic('closed',13)+'<span>'+esc(z.closure)+'</span></div>';
     if(!shown.length)h+='<div class="zempty">'+ic('closed',13)+'<span>Nothing mellow here'+(gated?' — gated expert terrain only.':' — steeps and chutes only.')+'</span></div>';
@@ -1676,7 +1853,7 @@ function rSnow(){
   var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1><div class="sub">'+(isDemo()?'🧪 Example storm conditions — set the test date off Jul 4 to exit':'Forecast when it’s close · typical averages until then')+'</div></div><div class="xs muted" style="margin:0 0 8px">Tap a map to download it — on wifi it’ll open offline from your Files/Photos.</div><button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button><div id="snowwrap"></div>';
   setView('v-snow',h); var w=$('snowwrap');
   Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k];
-    w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(r.map?'<a class="btn" href="'+r.map+'" download>'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+r.map2+'" download>'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+r.map3+'" download>'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+r.basemap+'" download>'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
+    w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(r.map?'<a class="btn" href="'+r.map+'" download>'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+r.map2+'" download>'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+r.map3+'" download>'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+r.basemap+'" download>'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
     fetchSnow(k);
   });
 }
