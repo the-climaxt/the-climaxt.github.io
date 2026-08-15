@@ -1331,6 +1331,12 @@ function sfSetTown(t){ SMODE='town'; SDAY=-1;
   $('sbody').scrollTop=0;
   sfChips(); sfResetZoom(); if(SOPEN){ SSHUT=false; sfSizeDrawer(); } scYou(); }
 function sfOpen(){ var sc=(D.scene||{})[SCENE_TOWN]; if(!sc)return; sfShell(); sfSetTown(SCENE_TOWN); }
+/* Scene "village nights" block -> the day sheet for the first day at that resort
+   (full-screen base map + that day's plan). During the trip, prefer today. */
+function scBaseDay(rid){ var days=D.days||[], i=tripDayIdx(), t=-1;
+  if(i>=0&&days[i]&&days[i].rid===rid)t=i;
+  if(t<0)for(var j=0;j<days.length;j++){ if(days[j].rid===rid){ t=j; break; } }
+  if(t>=0)dsOpen(t); }
 /* ---- DAY SHEETS (same overlay, 'day' mode): base panel + beta + tonight.
    Date chips in the top bar = the date browser (any day, any time). ---- */
 var DSBADGE='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:4px;background:#35B5E8;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span>';
@@ -1986,8 +1992,28 @@ function rScene(){
     h+='<button class="btn" onclick="setSceneTown(\''+s.id+'\')" style="flex:0 0 auto'+(on?(a?';background:'+a[0]+';color:var(--pr-ink);border-color:var(--pr-ink);font-weight:700':';background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)'):'')+'">'+((a&&!on)?'<span style="width:9px;height:9px;border-radius:99px;background:'+a[0]+'"></span>':'')+esc(s.name)+'</button>'; });
   h+='</div>';
   var sc=(D.scene||{})[SCENE_TOWN];
+  /* village base-area block (v.69.35): when the stop sleeps AT a resort base,
+     scene.<town>.baseRid points at D.base[rid] — the day-sheet base map +
+     its numbered venue rows lead the Scene page; the town map stays below. */
+  var bs=(sc&&sc.baseRid)?(D.base||{})[sc.baseRid]:null;
+  if(bs){
+    h+='<div class="between" style="margin:2px 0 8px"><div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted)">'+ic('mountain',13)+' Village nights — at the base</div></div>';
+    h+='<div class="card" style="background:#241E2C;border-color:#241E2C;padding:10px 8px">'
+      +'<div style="cursor:pointer;line-height:0" onclick="scBaseDay(\''+sc.baseRid+'\')">'+bs.svg+'</div>'
+      +'<button class="btn" onclick="scBaseDay(\''+sc.baseRid+'\')" style="width:100%;justify-content:center;gap:7px;margin-top:8px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('map',12)+'FULL MAP + DAY SHEET</button>'
+      +'<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #3A3346;margin-top:8px;padding:8px 4px 2px">';
+    (bs.rows||[]).forEach(function(r){
+      h+='<div style="display:flex;gap:7px;align-items:flex-start"><span style="flex:0 0 auto;min-width:17px;height:17px;border-radius:99px;background:#FBF6EC;color:#241E2C;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px">'+r.n+'</span>'
+        +'<span style="font-size:11px;color:#CFC8D6;line-height:1.4"><b style="color:#FBF6EC">'+esc(r.name)+'</b>'+(r.note?' — '+esc(r.note):'')+'</span></div>';
+    });
+    if(bs.shut)h+='<div style="font-size:10px;font-weight:700;color:#35B5E8;letter-spacing:.06em;margin-top:4px">'+esc(bs.shut).toUpperCase()+'</div>';
+    (bs.far||[]).forEach(function(f){
+      h+='<div style="font-size:11px;color:#CFC8D6;line-height:1.4;margin-top:3px">'+ic('tip',11)+' <b style="color:#FBF6EC">'+esc(f.name)+'</b> — '+esc(f.note)+'</div>';
+    });
+    h+='</div></div>';
+  }
   if(sc){
-    h+='<div class="between" style="margin:2px 0 8px"><div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted)">'+ic('map',13)+' Town nights map</div><button class="btn pri" onclick="whereAmI()" style="padding:6px 11px;font-size:12px">'+ic('compass',13)+' Where am I?</button></div>';
+    h+='<div class="between" style="margin:2px 0 8px"><div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted)">'+ic('map',13)+(bs?' Invermere — 20 min down the hill':' Town nights map')+'</div><button class="btn pri" onclick="whereAmI()" style="padding:6px 11px;font-size:12px">'+ic('compass',13)+' Where am I?</button></div>';
     h+='<div id="scnothere"></div>';
     h+='<div class="card" id="scmapcard" style="background:#241E2C;border-color:#241E2C;padding:10px 8px">'
      +'<div style="cursor:pointer;line-height:0" onclick="sfOpen()">'+sc.svg+'</div>'
