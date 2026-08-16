@@ -1363,7 +1363,7 @@ function dsHtml(i){
     var K='b_'+day.rid;
     if(b.shut)h+='<div class="slgi" style="padding-top:12px;align-items:center" onclick="sfPulse(\''+K+'\',\'shut\')">'+DSBADGE+'<span style="font-size:10.5px;font-weight:700;color:#35B5E8;letter-spacing:.06em">'+esc(b.shut).toUpperCase()+'</span></div>';
     if(b.din)h+='<div class="slgi" style="align-items:center" onclick="sfPulse(\''+K+'\',\'din\')"><span style="flex:0 0 auto;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #8A4DEB"></span><span style="font-size:10.5px;font-weight:700;color:#8A4DEB;letter-spacing:.06em">'+esc(b.din).toUpperCase()+'</span></div>';
-    var CATL={apres:['APR\u00c8S','#FF4D9D'],fuel:['FUEL','#FFC53D'],tickets:['TICKETS','#8A4DEB'],patrol:['PATROL','#FF8A3C'],parking:['PARKING','#35B5E8'],tune:['TUNE','#1FC9B7']};
+    var CATL={apres:['APR\u00c8S','#FF8A3C'],fuel:['FUEL','#1FC9B7'],tickets:['TICKETS','#8A4DEB'],patrol:['PATROL','#8A4DEB'],parking:['PARKING','#8A4DEB'],tune:['TUNE','#FF4D9D']};
     h+='<div style="column-count:2;column-gap:16px;margin-top:4px">';
     ['apres','fuel','tickets','patrol','parking','tune'].forEach(function(c){
       var rows=(b.rows||[]).filter(function(x){return x.cat===c;}); if(!rows.length)return;
@@ -1933,7 +1933,9 @@ function addRun(){
   fetch(D.runsUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'add',ts:run.ts,by:run.by,resort:run.resort,kind:run.kind,text:run.text})}).then(function(){ setTimeout(loadRuns,1500); }).catch(function(){ toast('Saved — will sync when online'); });
 }
 function scT(tf,lat,lng){ var X=(lng-tf.lo)*111320*tf.k, Y=(lat-tf.la)*110540; var rx=X*tf.ca-Y*tf.sa, ry=X*tf.sa+Y*tf.ca; return [tf.ox+(rx-tf.mx)*tf.s, tf.oy-(ry-tf.my)*tf.s]; }
-function scPulse(t,n){ var g=document.getElementById('sc'+t+'-'+n); if(!g)return; g.scrollIntoView({block:'center',behavior:'smooth'}); var r=g.querySelector('.pring'); if(!r)return; r.classList.remove('pulsing'); void r.getBoundingClientRect(); r.classList.add('pulsing'); }
+function scPulse(t,n){ var g=document.getElementById('sc'+t+'-'+n);
+  if(!g){ var sc=(D.scene||{})[t]; if(sc&&sc.baseRid)g=document.getElementById('scb_'+sc.baseRid+'-'+n); }
+  if(!g)return; g.scrollIntoView({block:'center',behavior:'smooth'}); var r=g.querySelector('.pring'); if(!r)return; r.classList.remove('pulsing'); void r.getBoundingClientRect(); r.classList.add('pulsing'); }
 function scDistKm(tf,pos){ return Math.round(Math.sqrt(Math.pow((pos[0]-tf.la)*110.54,2)+Math.pow((pos[1]-tf.lo)*111.32*tf.k,2))); }
 function scYou(){ var t=SCENE_TOWN, sc=(D.scene||{})[t];
   if(sc){ var you=document.getElementById('scyou-'+t), strip=$('scnothere');
@@ -2002,14 +2004,8 @@ function rScene(){
       +'<div style="cursor:pointer;line-height:0" onclick="scBaseDay(\''+sc.baseRid+'\')">'+bs.svg+'</div>'
       +'<button class="btn" onclick="scBaseDay(\''+sc.baseRid+'\')" style="width:100%;justify-content:center;gap:7px;margin-top:8px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('map',12)+'FULL MAP + DAY SHEET</button>'
       +'<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #3A3346;margin-top:8px;padding:8px 4px 2px">';
-    (bs.rows||[]).forEach(function(r){
-      h+='<div style="display:flex;gap:7px;align-items:flex-start"><span style="flex:0 0 auto;min-width:17px;height:17px;border-radius:99px;background:#FBF6EC;color:#241E2C;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px">'+r.n+'</span>'
-        +'<span style="font-size:11px;color:#CFC8D6;line-height:1.4"><b style="color:#FBF6EC">'+esc(r.name)+'</b>'+(r.note?' — '+esc(r.note):'')+'</span></div>';
-    });
-    if(bs.shut)h+='<div style="font-size:10px;font-weight:700;color:#35B5E8;letter-spacing:.06em;margin-top:4px">'+esc(bs.shut).toUpperCase()+'</div>';
-    (bs.far||[]).forEach(function(f){
-      h+='<div style="font-size:11px;color:#CFC8D6;line-height:1.4;margin-top:3px">'+ic('tip',11)+' <b style="color:#FBF6EC">'+esc(f.name)+'</b> — '+esc(f.note)+'</div>';
-    });
+    if(bs.shut)h+='<div style="font-size:10px;font-weight:700;color:#35B5E8;letter-spacing:.06em">'+esc(bs.shut).toUpperCase()+'</div>';
+    h+='<div class="xs" style="color:#8f8697">Village spots are the numbered names in the guide below — tap one to find it here.</div>';
     h+='</div></div>';
   }
   if(sc){
