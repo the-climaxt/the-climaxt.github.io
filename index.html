@@ -1368,7 +1368,7 @@ function dsHtml(i){
     ['apres','fuel','tickets','patrol','parking','tune'].forEach(function(c){
       var rows=(b.rows||[]).filter(function(x){return x.cat===c;}); if(!rows.length)return;
       h+='<div class="slgsec"><div class="slgh" style="color:'+CATL[c][1]+'">'+CATL[c][0]+'</div>';
-      rows.forEach(function(x){ h+='<div class="slgi" onclick="sfPulse(\''+K+'\','+x.n+')"><span class="slgn" style="color:'+CATL[c][1]+'">'+x.n+'</span><span class="slgt">'+esc(x.name)+(x.note?'<div style="font-size:10px;font-weight:400;color:#8f8697;line-height:1.4;margin-top:1px">'+esc(x.note)+'</div>':'')+'</span></div>'; });
+      rows.forEach(function(x){ h+='<div class="slgi" onclick="sfPulse(\''+K+'\',\''+x.n+'\')"><span class="slgn" style="color:'+CATL[c][1]+'">'+x.n+'</span><span class="slgt">'+esc(x.name)+(x.note?'<div style="font-size:10px;font-weight:400;color:#8f8697;line-height:1.4;margin-top:1px">'+esc(x.note)+'</div>':'')+'</span></div>'; });
       h+='</div>'; });
     h+='</div>';
     if(b.far&&b.far.length){
