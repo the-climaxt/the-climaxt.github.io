@@ -2000,8 +2000,11 @@ function rScene(){
   var bs=(sc&&sc.baseRid)?(D.base||{})[sc.baseRid]:null;
   if(bs){
     h+='<div class="between" style="margin:2px 0 8px"><div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted)">'+ic('mountain',13)+' Village nights — at the base</div></div>';
+    /* rows flagged scene:false (patrol, parking…) stay on day sheets but hide here */
+    var vsvg=bs.svg;
+    (bs.rows||[]).forEach(function(r){ if(r.scene===false)vsvg=vsvg.replace('<g id="scb_'+sc.baseRid+'-'+r.n+'"','<g style="display:none" id="scb_'+sc.baseRid+'-'+r.n+'"'); });
     h+='<div class="card" style="background:#241E2C;border-color:#241E2C;padding:10px 8px">'
-      +'<div style="cursor:pointer;line-height:0" onclick="scBaseDay(\''+sc.baseRid+'\')">'+bs.svg+'</div>'
+      +'<div style="cursor:pointer;line-height:0" onclick="scBaseDay(\''+sc.baseRid+'\')">'+vsvg+'</div>'
       +'<button class="btn" onclick="scBaseDay(\''+sc.baseRid+'\')" style="width:100%;justify-content:center;gap:7px;margin-top:8px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('map',12)+'FULL MAP + DAY SHEET</button>'
       +'<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #3A3346;margin-top:8px;padding:8px 4px 2px">';
     if(bs.shut)h+='<div style="font-size:10px;font-weight:700;color:#35B5E8;letter-spacing:.06em">'+esc(bs.shut).toUpperCase()+'</div>';
