@@ -192,7 +192,8 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .lv-expert .zd,.lv-adv .zd{background:var(--pr-ink)}
 .lv-extreme .zd{background:var(--pr-orange)}
 .lv-int .zd{background:var(--pr-blue)}
-.lv-beginner .zd{background:var(--pr-lime)}
+.lv-beginner .zd,.lv-novice .zd{background:var(--pr-lime)}
+.lv-info .zd,.lv-n\/a .zd{background:var(--pr-card);border-style:dashed}
 .zrr .zsb{font-size:11px;font-weight:400;color:var(--pr-text-2);margin-top:2px;line-height:1.45}
 .kind{font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 8px;flex:0 0 auto}
 .kind.cruiser{background:var(--pr-lime-tint);color:var(--pr-lime-text)}
@@ -918,25 +919,31 @@ function zRenderRuns(){
   zSortBar(box);
 
   /* gather (zone, zoneIndex, run, itemIndex) across one zone or all zones */
-  var rows=[];
+  var all=[];
+  zs.forEach(function(z,zi){ zItems(t,z).forEach(function(r,ri){ all.push([z,zi,r,ri]); }); });
+  all=all.filter(function(t4){ return zKeep(t4[2])&&zSpicyOK(t4[2]); });
+  var rows;
   if(!ZBYLIFT&&!ZBYBOWL){
-    var z=zs[ZI]; if(!z)return;
-    zItems(t,z).forEach(function(r,ri){ rows.push([z,ZI,r,ri]); });
-  } else {
-    zs.forEach(function(z,zi){ zItems(t,z).forEach(function(r,ri){ rows.push([z,zi,r,ri]); }); });
-  }
+    if(!zs[ZI])return;
+    rows=all.filter(function(t4){ return t4[1]===ZI; });
+  } else { rows=all; }
   var showZone=(ZBYLIFT||ZBYBOWL);
-  rows=rows.filter(function(t4){ return zKeep(t4[2])&&zSpicyOK(t4[2]); });
 
-  var picks    = rows.filter(function(t4){ return zIsPick(t4[2])&&!t4[2].mapOnly; })
+  /* picks are resort-wide in every mode — the ranked list must not vanish
+     when the open zone happens to hold none of them */
+  var picks    = all.filter(function(t4){ return zIsPick(t4[2])&&!t4[2].mapOnly; })
                      .sort(function(a,b){ return a[2].pick-b[2].pick; });
   var feats    = rows.filter(function(t4){ return t4[2].mapOnly; });
   var rest     = rows.filter(function(t4){ return !zIsPick(t4[2])&&!t4[2].mapOnly; });
-  if(ZSORT.length){ rest.sort(function(a,b){ return zCmp(a[2],b[2]); }); }
+  function zLiftKey(t4){ return (t4[2].lifts&&t4[2].lifts[0])||t4[2].lift||'Other'; }
+  if(ZBYLIFT){ rest.sort(function(a,b){ var ka=zLiftKey(a),kb=zLiftKey(b);
+    if(ka!==kb) return ka<kb?-1:1;
+    return ZSORT.length?zCmp(a[2],b[2]):0; }); }
+  else if(ZSORT.length){ rest.sort(function(a,b){ return zCmp(a[2],b[2]); }); }
 
   if(picks.length){
     zLabel(box,'mountain',cruisersOn(ZR)?'Mellow picks':'The picks',picks.length);
-    picks.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,true)); });
+    picks.forEach(function(t4){ box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],true,true)); });
   }
 
   var hidden=rest.length+feats.length;
@@ -949,13 +956,14 @@ function zRenderRuns(){
       box.appendChild(b);
     } else {
       if(rest.length){
-        zLabel(box,'skier',picks.length?'All other runs':'Runs in this zone',rest.length);
-        if(ZSORT.length&&(ZSORT[0]==='lift'||ZSORT[0]==='cat')){
+        zLabel(box,'skier',(picks.length&&showZone)?'All other runs':'Runs in this zone',rest.length);
+        var gmode=ZBYLIFT?'lift':(ZSORT.length&&(ZSORT[0]==='lift'||ZSORT[0]==='cat')?ZSORT[0]:null);
+        if(gmode){
           var gk=null;
           rest.forEach(function(t4){
-            var k=ZSORT[0]==='lift'?((t4[2].lifts&&t4[2].lifts[0])||t4[2].lift||'Other')
+            var k=gmode==='lift'?((t4[2].lifts&&t4[2].lifts[0])||t4[2].lift||'Other')
                                    :(t4[2].cat||'Uncategorised');
-            if(k!==gk){ gk=k; zLabel(box,ZSORT[0]==='lift'?'gondola':'trees',k); }
+            if(k!==gk){ gk=k; zLabel(box,gmode==='lift'?'gondola':'trees',k); }
             box.appendChild(zRunRow(t4[0],t4[1],t4[2],t4[3],showZone,false));
           });
         } else {
@@ -973,7 +981,7 @@ function zRenderRuns(){
       }
     }
   }
-  if(!rows.length) box.insertAdjacentHTML('beforeend','<div class="zempty">'+ic('closed',13)+
+  if(!rows.length&&!picks.length) box.insertAdjacentHTML('beforeend','<div class="zempty">'+ic('closed',13)+
     '<span>'+(ZSPICY?'Nothing with mandatory air in here. Tap “Feeling spicy” again to see everything.'
                     :'Nothing mellow in '+esc((zs[ZI]||{}).name||'this zone')+
                      '. Try another zone — the dimmed chips have none either.')+'</span></div>');
@@ -1812,6 +1820,14 @@ function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
   var cru=(mode==='mellow'), h='<div class="terr">', nMel=0;
   (t.zones||[]).forEach(function(z){ zItems(t,z).forEach(function(r){ if(isMellowRun(r))nMel++; }); });
   h+='<div class="filt"><label><input type="checkbox"'+(cru?' checked':'')+' onchange="setCruisers(\''+k+'\',this.checked)"><span>Cruisers only<div class="hint">Groomers, greens &amp; stops — skip the gnar</div></span></label><span class="ct">'+nMel+' runs</span></div>';
+  /* v69.62: Tanner — all recommended (ranked-pick) runs up front, right below the filter */
+  var recs=[]; (t.zones||[]).forEach(function(z){ var zmi=zHasMap(z)?zMapZones(k).indexOf(z):-1; zItems(t,z).forEach(function(r,ii){ if(typeof r.pick==='number'&&!r.mapOnly&&(!cru||isMellowRun(r)))recs.push([r,zmi,ii,z.name]); }); });
+  recs.sort(function(a,b){ return a[0].pick-b[0].pick; });
+  if(recs.length){
+    h+='<div class="tsec" style="margin:2px 0 10px"><div class="tsl" style="color:var(--pr-card-terrain-fg)">'+ic('mountain',12)+' '+(cru?'Recommended — mellow picks':'Recommended runs')+'</div>';
+    recs.forEach(function(q){ h+=recRow(k,q[1],q[0],q[2],q[3]); });
+    h+='</div>';
+  }
   var nHk=0; (t.zones||[]).forEach(function(z){ (z.runs||[]).forEach(function(r){ if(r.huck)nHk++; }); });
   if(nHk)h+='<div class="xs" style="margin:2px 4px 8px;color:var(--pr-danger-text);font-weight:600">'+ic('huck',11)+' = mandatory air / cliff drop — check the line before you commit</div>';
   if(t.overview)h+='<div class="tov">'+esc(t.overview)+'</div>';
@@ -1840,6 +1856,15 @@ function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
 }
 /* One row, shared shape with the drawer: level/kind dot, name (+ a muted detail
    line), kind pill, then the map glyph when the item has a pin. */
+function recRow(k,zmi,r,ii,zn){
+  var pin=(zmi>=0&&r.x!=null);
+  var d1=((r.level||'')+(r.type?' '+r.type:''));
+  var sub=(d1?esc(d1):'')+(zn?((d1?' · ':'')+esc(zn)):'');
+  return '<div class="zrr'+(pin?' zrun':'')+' lv-'+(r.level||'info')+'"'
+    +(pin?' onclick="zOpen(\''+k+'\','+zmi+','+ii+')"':'')+'>'
+    +'<span class="zrk">'+r.pick+'</span><span class="znm">'+esc(r.name)+(r.huck?' <span style="color:var(--pr-danger-text)" title="mandatory air / cliff drop">'+ic('huck',12)+'</span>':'')+(sub?'<div class="zsb">'+sub+'</div>':'')+'</span>'
+    +(pin?'<span class="zmi">'+ic('map',14)+'</span>':'')+'</div>';
+}
 function terrRow(k,zmi,r,ii){
   var pin=(zmi>=0&&r.x!=null);
   var d1=r.kind?(r.where||''):((r.level||'')+(r.type?' '+r.type:''));
@@ -1854,12 +1879,39 @@ function terrRow(k,zmi,r,ii){
 
 function toggleLinks(k){ var el=$('lks-'+k), c=$('lkcar-'+k); if(!el)return; if(el.style.display==='none'){ el.style.display='flex'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
 function setTerrainMode(k,m){ TMODE[k]=m; var el=$('terr-'+k); if(el)el.innerHTML=terrainHtml((D.terrain||{})[k],m,k); }
+
+function sgRow(k,zmi,r,ii,zn){
+  var pin=(zmi>=0&&r.x!=null);
+  var sub=((r.level||'')+(zn?((r.level?' · ':'')+zn):''));
+  var body='<span class="znm">'+esc(r.name)+(r.huck?' <span style="color:var(--pr-danger-text)" title="mandatory air / cliff drop">'+ic('huck',12)+'</span>':'')
+    +(sub?'<div class="zsb">'+esc(sub)+'</div>':'');
+  if(r.why)   body+='<div class="zwhy">'+esc(r.why)+'</div>';
+  if(r.entry) body+='<div class="zent'+(/^WARNING|^⚠/.test(r.entry)?' warn':'')+'">'+ic('tip',11)+' '+esc(r.entry)+'</div>';
+  if(r.story) body+='<div class="zsto">'+ic('tip',11)+' '+esc(r.story)+'</div>';
+  body+='</span>';
+  return '<div class="zrr'+(pin?' zrun':'')+' lv-'+(r.level||'info')+'"'
+    +(pin?' onclick="zOpen(\''+k+'\','+zmi+','+ii+')"':'')+'>'
+    +'<span class="zrk">'+r.pick+'</span>'+body
+    +(pin?'<span class="zmi">'+ic('map',14)+'</span>':'')+'</div>';
+}
+function suggestedHtml(k){
+  var t=(D.terrain||{})[k]; if(!t)return '';
+  var recs=[];
+  (t.zones||[]).forEach(function(z){ var zmi=zHasMap(z)?zMapZones(k).indexOf(z):-1;
+    zItems(t,z).forEach(function(r,ii){ if(typeof r.pick==='number'&&!r.mapOnly)recs.push([r,zmi,ii,z.name]); }); });
+  recs.sort(function(a,b){ return a[0].pick-b[0].pick; });
+  if(!recs.length) return '<div class="xs muted" style="margin-top:6px">No ranked picks for this resort.</div>';
+  var h='<div style="margin-top:6px">';
+  recs.forEach(function(q){ h+=sgRow(k,q[1],q[0],q[2],q[3]); });
+  return h+'</div>';
+}
+function toggleSuggested(k){ var el=$('sg-'+k), c=$('sgcar-'+k); if(!el)return; if(!el.style.display||el.style.display==='none'){ el.innerHTML=suggestedHtml(k); el.style.display='block'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
 function toggleTerrain(k){ var el=$('terr-'+k), c=$('terrcar-'+k); if(!el)return; if(!el.style.display||el.style.display==='none'){ el.innerHTML=terrainHtml((D.terrain||{})[k],TMODE[k]||'all',k); el.style.display='block'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
 function rSnow(){
   var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1><div class="sub">'+(isDemo()?'🧪 Example storm conditions — set the test date off Jul 4 to exit':'Forecast when it’s close · typical averages until then')+'</div></div><div class="xs muted" style="margin:0 0 8px">Tap a map to download it — on wifi it’ll open offline from your Files/Photos.</div><button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button><div id="snowwrap"></div>';
   setView('v-snow',h); var w=$('snowwrap');
   Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k];
-    w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(r.map?'<a class="btn" href="'+r.map+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+r.map2+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+r.map3+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+r.basemap+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
+    w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(r.map?'<a class="btn" href="'+r.map+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+r.map2+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+r.map3+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+r.basemap+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+(r.cams?'<a class="btn" href="'+r.cams+'" target="_blank">'+ic('mountain',14)+' '+esc(r.camsLabel||'Webcams')+'</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleSuggested(\''+k+'\')"><span>'+ic('mountain',15)+' Suggested runs — the ranked picks</span><span id="sgcar-'+k+'">▾</span></div><div id="sg-'+k+'" style="display:none"></div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
     fetchSnow(k);
   });
 }
