@@ -787,7 +787,7 @@ window.addEventListener('message',function(ev){
   if(ev.origin!==location.origin||!ev.data||!ev.data.t||!ZOPEN)return; var d=ev.data;
   if(d.t==='ready'){ Z3D.ready=true; Z3D.names={}; (d.names||[]).forEach(function(n){ Z3D.names[n]=1; }); var q=Z3D.queue; Z3D.queue=[]; q.forEach(z3dPost); zRenderRuns(); }
   else if(d.t==='selected'){ /* a tap on the 3D map: light the matching row in the list (no flight — the map already moved) */
-    if(!d.name){ zClearPulse(); return; }
+    if(!d.name){ ZRUN=-1; ZRT=-1; zClearPulse(true); zRenderRuns(); zUpdateReflash(); return; }
     var want=d.name.toLowerCase(), list=zList(), hit=-1;
     list.forEach(function(r,i){ if(hit<0&&r.name&&r.name.toLowerCase()===want)hit=i; });
     if(hit<0)list.forEach(function(r,i){ if(hit<0&&r.name&&r.name.toLowerCase().split(/\s*[\/+]\s*/).indexOf(want)>=0)hit=i; });
@@ -936,7 +936,9 @@ function zRunRow(z,zi,r,ri,showZone,rich){
   d.innerHTML=head+body
     +(r.kind?'<span class="kind '+r.kind+'">'+r.kind+'</span>':'')
     +(showZone?'<span class="zzt">'+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+'</span>':'');
-  if(!nopin||(z3dOn()&&z3dHas(r.name))) d.onclick=function(){ if(zi!==ZI)zSetZone(zi); zFlash(ri); };
+  if(!nopin||(z3dOn()&&z3dHas(r.name))) d.onclick=function(){
+    if(zi===ZI&&ZRUN===ri){ ZRUN=-1; ZRT=-1; zClearPulse(); zRenderRuns(); zUpdateReflash(); return; }   /* tap the picked run again: un-pick it (3D and painted map alike) */
+    if(zi!==ZI)zSetZone(zi); zFlash(ri); };
   return d;
 }
 
@@ -1103,9 +1105,9 @@ function zRenderRoutes(box){
   box.appendChild(l);
   rs.forEach(function(p){ box.appendChild(zRouteRow(p[0],p[1])); });
 }
-function zClearPulse(){
+function zClearPulse(fromFrame){
   if(ZPULSE){ ZPULSE.parentNode&&ZPULSE.parentNode.removeChild(ZPULSE); ZPULSE=null; }
-  if(ZRUN<0&&z3dOn()&&Z3D.ready)z3dPost({t:'clear'});
+  if(!fromFrame&&ZRUN<0&&z3dOn()&&Z3D.ready)z3dPost({t:'clear'});   /* (not when the frame told US it cleared — that would ping-pong forever) */
   ZRT=-1;
   var rr=document.querySelectorAll('#zruns .zrr');
   for(var i=0;i<rr.length;i++)rr[i].classList.remove('on');

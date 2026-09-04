@@ -580,13 +580,13 @@ function reachHtml(rc){
   return h;
 }
 function select(ref,fly){
-  SEL=ref||null; var selArea=(SEL&&isCentreline(SEL)&&areaOfRun(SEL))||null;
+  var was=SEL; SEL=ref||null; var selArea=(SEL&&isCentreline(SEL)&&areaOfRun(SEL))||null;
   if(ribbons){ ribbons.setHighlight(isService(SEL)?null:(selArea||SEL)); var rc=reachFor(SEL); ribbons.setReach(rc?rc.byRef:{}); }
   if(map&&map.getLayer('areas-sel'))map.setFilter('areas-sel',['==',['get','zone_id'],selArea||'-']);
   if(SEL&&fly){ if(isService(SEL)) map.flyTo({center:SVC[SEL].at,zoom:16,pitch:55,duration:1200}); else zoomSel(); }
   if(SEL){ var n=NAMES.runs[SEL]; if(n&&n.zone&&n.zone!==ZONE){ ZONE=n.zone; var kids=$('chips').children; for(var i=0;i<kids.length;i++){ kids[i].className=(kids[i].dataset.id===ZONE)?'on':''; if(kids[i].className==='on')kids[i].scrollIntoView({inline:'center',block:'nearest'}); } } }
   renderDrawer(); if(SEL)$('drawer').classList.remove('open');
-  if(EMBED&&window.parent!==window)window.parent.postMessage({t:'selected',ref:SEL,name:SEL?(isService(SEL)?SVC[SEL].name:runLabel(SEL)):null,zone:SEL?((NAMES.runs[SEL]||{}).zone||null):null},location.origin);
+  if(EMBED&&window.parent!==window&&SEL!==was)window.parent.postMessage({t:'selected',ref:SEL,name:SEL?(isService(SEL)?SVC[SEL].name:runLabel(SEL)):null,zone:SEL?((NAMES.runs[SEL]||{}).zone||null):null},location.origin);
 }
 /* ---- embed mode: the crew app drives this page ---- */
 function embedBar(){ var a=$('eb-names'),b=$('eb-trees'); if(a)a.className=LABELS.on?'on':''; if(b){ b.className=SHOW_TREES?'on':''; b.style.display=TREES?'':'none'; } }
