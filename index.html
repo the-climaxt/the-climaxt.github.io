@@ -110,6 +110,14 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 #zbtns button:disabled{opacity:.4;cursor:default}
 @media (hover:hover) and (pointer:fine){ #zbtns.on{display:flex} }
 #zstage img{width:100%;height:100%;object-fit:contain;display:block}
+/* the 3D map (Sep 2026): for Revelstoke + Sunshine the stage shows 3d.html in a frame instead of the painted panel.
+   The frame is the picture; the app's chips and run list drive it. The painted panel stays one tap away (Map). */
+#z3d{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:var(--pr-ink)}
+#zstage.three #zpan{display:none} #zstage.three #z3d{display:block}
+#zmode{flex:0 0 auto;display:none;border:1px solid var(--pr-text-2);border-radius:999px;overflow:hidden}
+#zmode.on{display:inline-flex}
+#zmode button{font-family:inherit;font-size:12px;font-weight:700;border:0;padding:6px 10px;background:var(--pr-ink);color:var(--pr-cream);cursor:pointer}
+#zmode button.on{background:var(--pr-cream);color:var(--pr-ink)}
 .zpulse{position:absolute;width:0;height:0;pointer-events:none;transition:left .28s ease,top .28s ease}
 .zpulse i{position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;border:3px solid var(--pr-yellow);opacity:0}
 .zpulse b{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--pr-yellow);border:2px solid var(--pr-ink);opacity:0}
@@ -494,7 +502,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
   <div id="zstage"><div id="zpan"><img id="zimg" alt=""><svg id="zsvg" viewBox="0 0 1 1" preserveAspectRatio="none"></svg></div></div>
   <button id="zzoom" onclick="zResetZoom()"></button>
   <div id="zbtns"><button onclick="zZoomBy(1.5)" aria-label="Zoom in">&#65291;</button><button onclick="zZoomBy(1/1.5)" aria-label="Zoom out">&#8722;</button></div>
-  <div id="ztop"><button class="zx" onclick="zClose()" aria-label="Close map">&#10005;</button><div id="zchips"></div></div>
+  <div id="ztop"><button class="zx" onclick="zClose()" aria-label="Close map">&#10005;</button><div id="zmode"><button id="zmode3d" onclick="z3dMode('3d')">3D</button><button id="zmodemap" onclick="z3dMode('map')">Map</button></div><div id="zchips"></div></div>
   <button id="zreflash" onclick="zReflashAny()"><span class="zrd"></span><span class="zrn" id="zreflashname"></span></button>
   <div id="zdrawer">
     <span class="zgrab">&#9662;</span>
@@ -753,9 +761,42 @@ function zZone(){ return zMapZones(ZR)[ZI]; }
 var BUNDLES3D={revelstoke:1,sunshine:1};
 function z3dSlug(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48); }
 function z3dUrl(k,zoneName,runName){ return '3d.html?m='+encodeURIComponent(k)+'&zone='+encodeURIComponent(z3dSlug(zoneName))+(runName?'&q='+encodeURIComponent(runName):''); }
+/* ---- the 3D frame (Sep 4 2026): "replace the snow tab terrain drawer maps with our sick 3d map" ----
+   3D is the standard for a resort with a bundle; the painted panel is one tap away (Map) and comes back by itself when
+   you tap a run that has no 3D line yet. The frame is 3d.html?embed=1 — no chips, no drawer of its own — and talks over
+   postMessage: we send {t:'zone'} / {t:'select', name} / {t:'clear'}; it answers {t:'ready', names} / {t:'selected'} / {t:'nomatch'}. */
+var Z3D={mode:'3d',m:null,ready:false,names:{},queue:[]};
+function z3dOn(){ return !!(BUNDLES3D[ZR]&&Z3D.mode==='3d'); }
+function z3dPost(msg){ var f=$('z3d'); if(!f||!f.contentWindow)return; if(!Z3D.ready){ Z3D.queue.push(msg); return; } f.contentWindow.postMessage(msg,location.origin); }
+function z3dHas(name){ return !!Z3D.names[(name||'').toLowerCase().split(/\s+/).filter(Boolean).join(' ')]; }
+function z3dApply(){
+  var on=z3dOn(), st=$('zstage'), f=$('z3d'), mode=$('zmode');
+  mode.className=BUNDLES3D[ZR]?'on':''; $('zmode3d').className=(Z3D.mode==='3d')?'on':''; $('zmodemap').className=(Z3D.mode==='map')?'on':'';
+  st.classList.toggle('three',on);
+  $('zzoom').style.visibility=on?'hidden':''; $('zbtns').style.visibility=on?'hidden':'';
+  if(on){ var z=zZone(), zid=z?z3dSlug(z.name):'';
+    if(Z3D.m!==ZR){ Z3D.m=ZR; Z3D.ready=false; Z3D.names={}; Z3D.queue=[];
+      /* a fresh frame each time the resort changes, with its address set BEFORE it joins the page: changing a live frame's
+         address adds a browser-history entry, and the overlay's back-button handling would trip over it */
+      if(f)f.parentNode.removeChild(f); f=document.createElement('iframe'); f.id='z3d'; f.title='3D map'; f.setAttribute('allow','geolocation');
+      f.src='3d.html?m='+encodeURIComponent(ZR)+'&embed=1&zone='+encodeURIComponent(zid); st.appendChild(f); }
+    else z3dPost({t:'zone',id:zid}); }
+}
+function z3dMode(mode){ Z3D.mode=mode; z3dApply(); if(mode==='map'){ zResetZoom(); setTimeout(zPlace,30); } }
+window.addEventListener('message',function(ev){
+  if(ev.origin!==location.origin||!ev.data||!ev.data.t||!ZOPEN)return; var d=ev.data;
+  if(d.t==='ready'){ Z3D.ready=true; Z3D.names={}; (d.names||[]).forEach(function(n){ Z3D.names[n]=1; }); var q=Z3D.queue; Z3D.queue=[]; q.forEach(z3dPost); zRenderRuns(); }
+  else if(d.t==='selected'){ /* a tap on the 3D map: light the matching row in the list (no flight — the map already moved) */
+    if(!d.name){ zClearPulse(); return; }
+    var want=d.name.toLowerCase(), list=zList(), hit=-1;
+    list.forEach(function(r,i){ if(hit<0&&r.name&&r.name.toLowerCase()===want)hit=i; });
+    if(hit<0)list.forEach(function(r,i){ if(hit<0&&r.name&&r.name.toLowerCase().split(/\s*[\/+]\s*/).indexOf(want)>=0)hit=i; });
+    if(hit>=0){ ZRUN=hit; ZRT=-1; zRenderRuns(); zUpdateReflash(); var row=document.querySelector('#zruns .zrr.on'); if(row)row.scrollIntoView({block:'nearest'}); } }
+  else if(d.t==='nomatch'){ z3dMode('map'); if(ZRUN>=0)zFlash(ZRUN); toast('Not drawn in 3D yet \u2014 showing the painted map'); }
+});
 function zOpen(k,zi,ri){
   if(!D||!D.terrain||!D.terrain[k])return;
-  ZR=k; ZSHUT=false; ZOPEN=true;
+  ZR=k; ZSHUT=false; ZOPEN=true; Z3D.mode='3d';
   $('zov').classList.add('on'); $('zov').setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
   if(!ZPUSHED){ try{ history.pushState({zov:1},''); ZPUSHED=true; }catch(e){} }
@@ -808,13 +849,13 @@ function zSetZone(i){
   $('zsub').innerHTML=sub;
   var sk=z.zmap.sheet||'map', href=r[sk], lab=r[sk+'Label'];
   $('zopen').innerHTML=(href?('<a class="btn" href="'+href+'" download target="_blank" rel="noopener">'+ic('map',14)+' Open the full '+esc(lab||'trail')+' map</a>'):'')
-    +(BUNDLES3D[ZR]?' <a class="btn" href="'+z3dUrl(ZR,z.name,null)+'">'+ic('mountain',14)+' View in 3D</a>':'');
+    +(BUNDLES3D[ZR]?' <a class="btn" href="'+z3dUrl(ZR,z.name,null)+'">'+ic('mountain',14)+' Open the full 3D map</a>':'');
   var box=$('zchips'), kids=box.children, zs=zMapZones(ZR);
   for(var j=0;j<kids.length;j++)kids[j].className=(j===i?'on':
     ((cruisersOn(ZR)&&!zItems((D.terrain||{})[ZR],zs[j]).some(isMellowRun))?'dim':''));
   /* keep the active chip visible — zones 4 and 5 sit off the right edge */
   if(kids[i])box.scrollLeft=Math.max(0,kids[i].offsetLeft-(box.clientWidth-kids[i].offsetWidth)/2);
-  ZRT=-1; zDrawRoutes(); zRenderRuns();
+  ZRT=-1; zDrawRoutes(); zRenderRuns(); z3dApply();
 }
 /* ================= the drawer list =================
    Three blocks: the ranked picks, the cruiser itinerary, then everything
@@ -895,7 +936,7 @@ function zRunRow(z,zi,r,ri,showZone,rich){
   d.innerHTML=head+body
     +(r.kind?'<span class="kind '+r.kind+'">'+r.kind+'</span>':'')
     +(showZone?'<span class="zzt">'+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+'</span>':'');
-  if(!nopin) d.onclick=function(){ if(zi!==ZI)zSetZone(zi); zFlash(ri); };
+  if(!nopin||(z3dOn()&&z3dHas(r.name))) d.onclick=function(){ if(zi!==ZI)zSetZone(zi); zFlash(ri); };
   return d;
 }
 
@@ -1064,6 +1105,7 @@ function zRenderRoutes(box){
 }
 function zClearPulse(){
   if(ZPULSE){ ZPULSE.parentNode&&ZPULSE.parentNode.removeChild(ZPULSE); ZPULSE=null; }
+  if(ZRUN<0&&z3dOn()&&Z3D.ready)z3dPost({t:'clear'});
   ZRT=-1;
   var rr=document.querySelectorAll('#zruns .zrr');
   for(var i=0;i<rr.length;i++)rr[i].classList.remove('on');
@@ -1079,7 +1121,13 @@ function zFlashAt(x,y){
   return p;
 }
 function zFlash(ri){
-  var r=zList()[ri]; if(!r||r.x==null)return;
+  var r=zList()[ri]; if(!r)return;
+  if(z3dOn()){
+    if(!Z3D.ready||z3dHas(r.name)){ ZRUN=ri; ZRT=-1; zClearPulse(); ZRUN=ri; var z=zZone(); z3dPost({t:'select',name:r.name,zone:z?z3dSlug(z.name):null}); zRenderRuns(); zUpdateReflash(); return; }
+    if(r.x==null){ toast('Not drawn in 3D yet'); return; }
+    z3dMode('map');                                   /* pinned but no line yet: the painted map still knows where it is */
+  }
+  if(r.x==null)return;
   ZRUN=ri; ZRT=-1; zDrawRoutes(); zFlashAt(r.x,r.y); zRenderRuns(); zUpdateReflash();
 }
 function zReflash(){ if(ZRUN>=0)zFlash(ZRUN); }
