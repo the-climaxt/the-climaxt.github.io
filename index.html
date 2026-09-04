@@ -747,6 +747,12 @@ function zHasMap(z){ return !!(z&&z.zmap&&z.zmap.img); }
 function zMapZones(k){ var t=(D.terrain||{})[k]||{}; return (t.zones||[]).filter(zHasMap); }
 function zZone(){ return zMapZones(ZR)[ZI]; }
 
+/* ---- 3D pilot (Sep 2026): a sealed 3D bundle exists for these resorts in maps/3d/.
+   3d.html unlocks it with the same trip phrase (read from this origin's localStorage).
+   Zone ids there are the zone name slugged the same way build_furniture_gpkg.py does. */
+var BUNDLES3D={revelstoke:1,sunshine:1};
+function z3dSlug(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48); }
+function z3dUrl(k,zoneName,runName){ return '3d.html?m='+encodeURIComponent(k)+'&zone='+encodeURIComponent(z3dSlug(zoneName))+(runName?'&q='+encodeURIComponent(runName):''); }
 function zOpen(k,zi,ri){
   if(!D||!D.terrain||!D.terrain[k])return;
   ZR=k; ZSHUT=false; ZOPEN=true;
@@ -801,7 +807,8 @@ function zSetZone(i){
   if(z.zmap.note)sub+='<div style="margin-top:4px">'+ic('tip',12)+' '+esc(z.zmap.note)+'</div>';
   $('zsub').innerHTML=sub;
   var sk=z.zmap.sheet||'map', href=r[sk], lab=r[sk+'Label'];
-  $('zopen').innerHTML=href?('<a class="btn" href="'+href+'" download target="_blank" rel="noopener">'+ic('map',14)+' Open the full '+esc(lab||'trail')+' map</a>'):'';
+  $('zopen').innerHTML=(href?('<a class="btn" href="'+href+'" download target="_blank" rel="noopener">'+ic('map',14)+' Open the full '+esc(lab||'trail')+' map</a>'):'')
+    +(BUNDLES3D[ZR]?' <a class="btn" href="'+z3dUrl(ZR,z.name,null)+'">'+ic('mountain',14)+' View in 3D</a>':'');
   var box=$('zchips'), kids=box.children, zs=zMapZones(ZR);
   for(var j=0;j<kids.length;j++)kids[j].className=(j===i?'on':
     ((cruisersOn(ZR)&&!zItems((D.terrain||{})[ZR],zs[j]).some(isMellowRun))?'dim':''));

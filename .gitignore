@@ -1,0 +1,10 @@
+# Windows / Google Drive junk — never part of the app
+desktop.ini
+Thumbs.db
+
+# 3D pilot — ON HOLD (housekeeping hold, Sep 2026). Remove these two lines when Tanner gives the deploy go-ahead.
+3d.html
+maps/3d/
+
+# Editor-only aerial tiles — NEVER deploy, even after the 3D go-ahead
+*-aerial.pmtiles
