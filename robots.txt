@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /3d.html
+Disallow: /maps/3d/

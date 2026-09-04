@@ -2,9 +2,7 @@
 desktop.ini
 Thumbs.db
 
-# 3D pilot — ON HOLD (housekeeping hold, Sep 2026). Remove these two lines when Tanner gives the deploy go-ahead.
-3d.html
-maps/3d/
+# 3D map — shipped Sep 4 2026 (v.69.69.16): 3d.html and the sealed maps/3d/*.bundle* files are part of the app.
 
 # Editor-only aerial tiles — NEVER deploy, even after the 3D go-ahead
 *-aerial.pmtiles
