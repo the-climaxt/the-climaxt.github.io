@@ -95,11 +95,13 @@ function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clear
 var Q=new URLSearchParams(location.search), INDEX=[], W={}, M=null, FILTER='all';
 
 async function fetchBundle(){
-  var r=await fetch('maps/3d/wanted.bundle'); if(!r.ok)throw new Error('No wanted list on the server yet ('+r.status+')');
+  /* /maps/ is cache-first in the service worker; an hourly stamp on the address gets a fresh list without a version plumbed through */
+  var stamp=new Date().toISOString().slice(0,13), r=await fetch('maps/3d/wanted.bundle?t='+stamp).catch(function(){return null;});
+  if(!r||!r.ok) r=await fetch('maps/3d/wanted.bundle'); if(!r.ok)throw new Error('No wanted list on the server yet ('+r.status+')');
   var first=new Uint8Array(await r.arrayBuffer());
   var n=new DataView(first.buffer).getUint32(0,true), hdr=JSON.parse(new TextDecoder().decode(first.subarray(4,4+n)));
   var pieces=[first.subarray(4+n)];
-  for(var i=1;i<(hdr.chunks||[]).length;i++){ var p=await fetch('maps/3d/'+hdr.chunks[i]); pieces.push(new Uint8Array(await p.arrayBuffer())); }
+  for(var i=1;i<(hdr.chunks||[]).length;i++){ var p=await fetch('maps/3d/'+hdr.chunks[i]+'?t='+stamp); pieces.push(new Uint8Array(await p.arrayBuffer())); }
   var len=pieces.reduce(function(a,p){return a+p.length;},0), body=new Uint8Array(len), o=0; pieces.forEach(function(p){body.set(p,o);o+=p.length;});
   return {hdr:hdr, body:body};
 }
@@ -122,7 +124,8 @@ async function boot(){
 
 /* --- what this phone has already drawn: the editor's stored collection per mountain --- */
 function edits(m){ try{ var s=localStorage.getItem('pr3d-edits-'+m); return s?(JSON.parse(s).features||[]):[]; }catch(e){ return []; } }
-function drawnNames(m){ var d={}; edits(m).forEach(function(f){ var p=f.properties||{}; if(p.edit_kind==='add'||p.edit_kind==='area'||p.edit_kind==='alias'||p.edit_kind==='rename'){ [p.name,p.app_name].forEach(function(n){ if(n)d[n.toLowerCase()]=p.edit_kind; }); } }); return d; }
+function finals(m){ try{ var s=localStorage.getItem('pr3d-edits-'+m+'-final'); return s?(JSON.parse(s).features||[]):[]; }catch(e){ return []; } }   /* edits already built into the map (the editor moves them there) */
+function drawnNames(m){ var d={}; edits(m).concat(finals(m)).forEach(function(f){ var p=f.properties||{}; if(p.edit_kind==='add'||p.edit_kind==='area'||p.edit_kind==='alias'||p.edit_kind==='rename'){ [p.name,p.app_name].forEach(function(n){ if(n)d[n.toLowerCase()]=p.edit_kind; }); } }); return d; }
 function editsFile(m){ var feats=edits(m); return JSON.stringify({type:'FeatureCollection',mountain:m,generated:new Date().toISOString(),editor:localStorage.getItem('pr3d-editor')||'',tool:'3d.html edit mode (saved from mark.html)',features:feats},null,1); }
 function save(m){ var json=editsFile(m), blob=new Blob([json],{type:'application/geo+json'}), a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=m+'-edits.geojson'; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500); toast('Saved '+m+'-edits.geojson — put it in zone-maps-geo/'); }
 async function share(m){ var json=editsFile(m), f; try{ f=new File([json],m+'-edits.geojson',{type:'application/geo+json'}); }catch(e){}
@@ -142,7 +145,7 @@ function render(){
   var kids=$('chips').children; for(var i=0;i<kids.length;i++)kids[i].className=kids[i].dataset.id===M?'on':'';
   var fk=$('filters').children; for(var j=0;j<fk.length;j++)fk[j].className=fk[j].dataset.f===FILTER?'on':'';
   var list=W[M]||[], d=drawnNames(M), n=edits(M).length, left=list.filter(function(w){return !d[w.name.toLowerCase()];}).length, info=INDEX.filter(function(x){return x.id===M;})[0]||{};
-  $('summary').innerHTML='<b>'+esc(info.name||M)+'</b> · '+list.length+' unmarked'+(left!==list.length?' · <span style="color:var(--pr-lime-text)">'+(list.length-left)+' drawn on this phone</span>':'')+(n?' · '+n+' edit'+(n===1?'':'s')+' stored here':'');
+  $('summary').innerHTML='<b>'+esc(info.name||M)+'</b> · '+list.length+' unmarked'+(left!==list.length?' · <span style="color:var(--pr-lime-text)">'+(list.length-left)+' drawn on this phone</span>':'')+(n?' · '+n+' edit'+(n===1?'':'s')+' pending here':'')+(finals(M).length?' · '+finals(M).length+' in the map ✓':'');
   $('tools').innerHTML='<a class="btn" href="3d.html?m='+M+'&edit=1">Open the editor</a>'+(n?'<button class="btn pri" onclick="save(\''+M+'\')">Save '+n+' edit'+(n===1?'':'s')+'</button><button class="btn" onclick="share(\''+M+'\')">Share</button>':'')+'<a class="btn" href="index.html">← App</a>';
   var byZone={}, order=[];
   list.forEach(function(w){ var isD=!!d[w.name.toLowerCase()];

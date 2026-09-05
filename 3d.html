@@ -274,8 +274,17 @@ var BOUNDARY_LIFT_M=42, BOUNDARY_WIDTH_M=5, BOUNDARY_UNDER_WIDTH_M=7.5, BOUNDARY
 var THEME='paper';   /* the night theme code stays (Huck's), but no button offers it */
 document.documentElement.dataset.theme=THEME;
 
+/* The service worker keeps everything under /maps/ cache-first, so a rebuilt bundle at the SAME address would never
+   reach a phone that already opened it (Tanner, Sep 5: "once I approve and you implement an update… it should appear
+   as final"). Every bundle URL therefore carries the bundle's build stamp — &v= on this page's URL (the app adds it
+   from trip-data's maps3d, which is network-first), or the copy the app leaves in localStorage — so a new build is a
+   new address. Offline with no copy under the new stamp, fall back to whatever older copy the cache holds. */
+var BUNDLE_V=(function(){ try{ return Q.get('v')||localStorage.getItem('pr3d-v-'+M)||''; }catch(e){ return Q.get('v')||''; } })();
 async function fetchPiece(url,onbytes){
-  var r=await fetch(url); if(!r.ok)throw new Error('No 3D bundle for '+M+' yet ('+r.status+')');
+  var vurl=BUNDLE_V?url+'?v='+encodeURIComponent(BUNDLE_V):url, r;
+  try{ r=await fetch(vurl); }catch(e){ r=null; }
+  if((!r||!r.ok)&&vurl!==url){ try{ r=await fetch(url); }catch(e){ r=null; } }
+  if(!r||!r.ok)throw new Error('No 3D bundle for '+M+' yet ('+(r?r.status:'offline')+')');
   var chunks=[], got=0, rd=r.body.getReader();
   for(;;){var c=await rd.read(); if(c.done)break; chunks.push(c.value); got+=c.value.length; onbytes(c.value.length);}
   var buf=new Uint8Array(got), o=0; chunks.forEach(function(c){buf.set(c,o);o+=c.length;}); return buf;
@@ -747,6 +756,11 @@ Ribbons3D.prototype.build=function(gl){
     ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
     ribbon(opaque,pts,RUN_WIDTH_M,RUN_LIFT_M+extra,self.colours.run[d]||self.colours.run.unknown,id);
     var n=(typeof NAMES!=='undefined'&&NAMES.runs[ref])||{}; pins(ref,pts,d in LABELS.ink?d:'unknown',n.pr||n.osm||'',RUN_LIFT_M+extra,id); });
+  /* edit mode: extra ribbons that are not (yet) in the package — the lower half of a cut run, drawn like its parent so it doesn't look deleted */
+  Object.keys(self.extras||{}).forEach(function(key){ var x=self.extras[key], pts=local(x.pts), id=idOf(x.ref), d=x.d||'unknown';
+    ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
+    ribbon(opaque,pts,RUN_WIDTH_M,RUN_LIFT_M+extra,self.colours.run[d]||self.colours.run.unknown,id);
+    if(x.label)pins(x.ref,pts,d in LABELS.ink?d:'unknown',x.label,RUN_LIFT_M+extra,id); });
   Object.keys(this.geom.lifts).forEach(function(ref){ if(ref in ov&&ov[ref]===null)return; var pts=local(ref in ov?ov[ref]:self.geom.lifts[ref]), id=idOf(ref);
     ribbon(shadow,pts,LIFT_WIDTH_M,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_LIFT_OFFSET_M,SHADOW_LIFT_OFFSET_M);
     ribbon(opaque,pts,LIFT_WIDTH_M,LIFT_LIFT_M+extra,self.colours.lift,id);
@@ -926,8 +940,16 @@ var ED={mode:'select',sub:'point',fallLine:true,follow:false,draft:[],feats:[],u
 
 /* ---------- storage ---------- */
 function edKey(){ return 'pr3d-edits-'+M; }
-function edLoad(){ try{ var s=localStorage.getItem(edKey()); if(s){ var o=JSON.parse(s); ED.feats=o.features||[]; } ED.editor=localStorage.getItem('pr3d-editor')||''; }catch(e){} }
-function edStore(){ try{ localStorage.setItem(edKey(),JSON.stringify(edCollection())); }catch(e){} edRefresh(); }
+function edFinalKey(){ return 'pr3d-edits-'+M+'-final'; }
+/* applied.json rides in the bundle: the uids of every edit that is IN this package (build_manifest.py from the loader's
+   edit_log). Any stored edit with one of those uids is finished — it moves from the pending list to the "in the map"
+   list, stops drawing as a pink line and leaves Save/Share (Tanner, Sep 5: "once I approve and you implement an update,
+   it shouldn't be on the edit list anymore, it should appear as final"). */
+function edApplied(){ try{ var a=PARTS['applied.json']?JSON.parse(new TextDecoder().decode(PARTS['applied.json'])):[]; var m={}; a.forEach(function(x){m[x.uid]=x;}); return m; }catch(e){ return {}; } }
+function edLoad(){ try{ var s=localStorage.getItem(edKey()); if(s){ var o=JSON.parse(s); ED.feats=o.features||[]; } var f=localStorage.getItem(edFinalKey()); ED.final=f?(JSON.parse(f).features||[]):[]; ED.editor=localStorage.getItem('pr3d-editor')||''; }catch(e){ ED.final=ED.final||[]; }
+  var ap=edApplied(), moved=[]; ED.feats=ED.feats.filter(function(x){ if(ap[x.properties.uid]){ x.properties.applied=ap[x.properties.uid].applied||true; x.properties.applied_result=ap[x.properties.uid].result||''; moved.push(x); return false; } return true; });
+  if(moved.length){ var have={}; ED.final.forEach(function(x){have[x.properties.uid]=1;}); moved.forEach(function(x){ if(!have[x.properties.uid])ED.final.push(x); }); edStore(); setTimeout(function(){ toast(moved.length+' of your edits are in the map now — moved to "In the map"'); },1500); } }
+function edStore(){ try{ localStorage.setItem(edKey(),JSON.stringify(edCollection())); localStorage.setItem(edFinalKey(),JSON.stringify({type:'FeatureCollection',mountain:M,features:ED.final||[]})); }catch(e){} edRefresh(); }
 function edCollection(){ return {type:'FeatureCollection',mountain:M,generated:new Date().toISOString(),editor:ED.editor,tool:'3d.html edit mode',features:ED.feats}; }
 function edUid(){ return Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4); }
 function edNow(){ return new Date().toISOString().slice(0,16); }
@@ -980,7 +1002,7 @@ function edRefresh(){
     else if(ED.draft.length>1) d.push({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:ED.draft}});
     ED.draft.forEach(function(p,i){ d.push({type:'Feature',properties:{i:i},geometry:{type:'Point',coordinates:p}}); }); }
   map.getSource('ed-draft').setData({type:'FeatureCollection',features:d});
-  var e=$('ed-count'); if(e)e.textContent=ED.feats.length?ED.feats.length+' edit'+(ED.feats.length>1?'s':''):'no edits yet';
+  var e=$('ed-count'); if(e)e.textContent=(ED.feats.length?ED.feats.length+' pending':'none pending')+((ED.final||[]).length?' · '+ED.final.length+' in the map':'');
   var l=$('ed-list'); if(l&&l.style.display!=='none')edList();
 }
 
@@ -1009,8 +1031,10 @@ function edMode(m){ ED.mode=m; ED.draft=[]; ED.anchorPick=null; var b=$('ed-mode
 }
 function edFlat(){ ED.flat=!ED.flat; if(ED.flat){ ED.savedPitch=map.getPitch(); map.easeTo({pitch:0,duration:400}); } else map.easeTo({pitch:ED.savedPitch==null?PITCH:ED.savedPitch,duration:400}); $('ed-flat').className='btn'+(ED.flat?' on':''); }
 function edToggleList(){ var l=$('ed-list'); l.style.display=l.style.display==='none'?'':'none'; if(l.style.display!=='none')edList(); }
-function edList(){ var l=$('ed-list'); if(!ED.feats.length){ l.innerHTML='<div class="zsb">Nothing yet.</div>'; return; }
-  l.innerHTML=ED.feats.slice().reverse().map(function(f){ var p=f.properties; return '<div class="zrr" onclick="edSelect(\''+p.uid+'\')"><span class="zd" style="background:'+({service:'#1FC9B7',feature:'#8A4DEB',view:'#FFC53D',move:'#FFC53D',split:'#FFC53D',merge:'#FFC53D'}[p.edit_kind]||'#FF4D9D')+'"></span><span class="znm">'+esc(p.name||p.app_name||p.ref_id||p.zone_id||'')+'<div class="zsb">'+esc(p.edit_kind+(p.kind?' · '+p.kind:'')+(p.service_subtype?' · '+p.service_subtype:'')+(p.feature_type?' · '+p.feature_type+'/'+p.feature_subtype:'')+(p.derivation_method?' · '+p.derivation_method:''))+'</div></span><button class="zx" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation();edDelete(\''+p.uid+'\')">✕</button></div>'; }).join(''); }
+function edList(){ var l=$('ed-list'); var fin=ED.final||[];
+  var finalHtml=fin.length?'<div class="zlab" style="margin-top:8px">In the map ✓<span class="zct">'+fin.length+'</span></div>'+fin.slice().reverse().map(function(f){ var p=f.properties; return '<div class="zrr" style="opacity:.7"><span class="zd" style="background:#7BB800"></span><span class="znm">'+esc(p.name||p.app_name||p.ref_id||p.zone_id||'')+'<div class="zsb">'+esc(p.edit_kind+(p.kind?' · '+p.kind:'')+' · built in'+(p.applied&&p.applied!==true?' '+p.applied.slice(0,10):''))+'</div></span></div>'; }).join(''):'';
+  if(!ED.feats.length){ l.innerHTML='<div class="zsb">Nothing pending.</div>'+finalHtml; return; }
+  l.innerHTML='<div class="zlab">Pending<span class="zct">'+ED.feats.length+'</span></div>'+ED.feats.slice().reverse().map(function(f){ var p=f.properties; return '<div class="zrr" onclick="edSelect(\''+p.uid+'\')"><span class="zd" style="background:'+({service:'#1FC9B7',feature:'#8A4DEB',view:'#FFC53D',move:'#FFC53D',split:'#FFC53D',merge:'#FFC53D'}[p.edit_kind]||'#FF4D9D')+'"></span><span class="znm">'+esc(p.name||p.app_name||p.ref_id||p.zone_id||'')+'<div class="zsb">'+esc(p.edit_kind+(p.kind?' · '+p.kind:'')+(p.service_subtype?' · '+p.service_subtype:'')+(p.feature_type?' · '+p.feature_type+'/'+p.feature_subtype:'')+(p.derivation_method?' · '+p.derivation_method:''))+'</div></span><button class="zx" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation();edDelete(\''+p.uid+'\')">✕</button></div>'; }).join('')+finalHtml; }
 function edSelect(uid){ var f=ED.feats.filter(function(x){return x.properties.uid===uid;})[0]; if(!f)return; ED.sel=uid;
   if(f.geometry){ var c=f.geometry.type==='Point'?f.geometry.coordinates:f.geometry.type==='Polygon'?f.geometry.coordinates[0][0]:f.geometry.coordinates[0]; map.easeTo({center:c,duration:500}); }
   edForm(f,true); }
@@ -1162,7 +1186,12 @@ function edDragInit(){
   map.on('mousedown',down); map.on('touchstart',down); map.on('mousemove',move); map.on('touchmove',move); map.on('mouseup',up); map.on('touchend',up);
 }
 function edVertexDone(){ var mf=ED.dragFeat; mf.geometry.coordinates=ED.draft.slice(); ED.moved[mf.properties.ref_id]=mf.geometry.coordinates; ED.dragFeat=null; ED.draft=[]; edRebuildRibbons(); edStore(); edMode('select'); toast('Shape kept'); }
-function edRebuildRibbons(){ if(!ribbons||!ribbons.gl)return; ribbons.overrides={}; Object.keys(ED.hidden).forEach(function(r){ribbons.overrides[r]=null;}); Object.keys(ED.moved).forEach(function(r){ ribbons.overrides[r]=ED.moved[r].map(function(c){ var z=edElev(c); return [c[0],c[1],z==null?0:z/ (EXAG||1)]; }); }); ribbons.build(ribbons.gl); ribbons.buildLabels(ribbons.gl); if(map)map.triggerRepaint(); }
+function edRebuildRibbons(){ if(!ribbons||!ribbons.gl)return; ribbons.overrides={}; Object.keys(ED.hidden).forEach(function(r){ribbons.overrides[r]=null;});
+  function withZ(cs){ return cs.map(function(c){ var z=edElev(c); return [c[0],c[1],z==null?0:z/ (EXAG||1)]; }); }
+  Object.keys(ED.moved).forEach(function(r){ ribbons.overrides[r]=withZ(ED.moved[r]); });
+  /* the LOWER half of every pending cut is drawn as its own ribbon in the parent's colour (Tanner, Sep 5: "it seems to be deleting the lower half when I cut a run") */
+  ribbons.extras={}; ED.feats.forEach(function(f){ var p=f.properties; if(p.edit_kind==='split'&&f.geometry&&f.geometry.coordinates[1]) ribbons.extras['split-'+p.uid]={ref:p.ref_id,pts:withZ(f.geometry.coordinates[1]),d:ribbons.diffOf(p.ref_id),label:p.name||''}; });
+  ribbons.build(ribbons.gl); ribbons.buildLabels(ribbons.gl); if(map)map.triggerRepaint(); }
 
 /* ---------- cut one run into two (Tanner, Sep 5) ----------
    Tap the ribbon where the cut goes; the tap is snapped onto the line. The edit carries BOTH halves as a MultiLineString
@@ -1228,7 +1257,7 @@ function edInit(){
   if(!EDIT)return; edLoad(); edLayers(); edPanel(); edDragInit(); edGps();
   ED.feats.forEach(function(f){ var p=f.properties; if(p.edit_kind==='hide')ED.hidden[p.ref_id]=true; if(p.edit_kind==='move'&&f.geometry)ED.moved[p.ref_id]=f.geometry.coordinates;
     if(p.edit_kind==='split'&&f.geometry)ED.moved[p.ref_id]=f.geometry.coordinates[0]; if(p.edit_kind==='merge'&&f.geometry){ ED.moved[p.ref_id]=f.geometry.coordinates; ED.hidden[p.ref_id_other]=true; } });
-  if(Object.keys(ED.hidden).length||Object.keys(ED.moved).length) edRebuildRibbons();
+  if(Object.keys(ED.hidden).length||Object.keys(ED.moved).length||ED.feats.some(function(f){return f.properties.edit_kind==='split';})) edRebuildRibbons();
   edRefresh();
   var od=edDone; edDone=function(){ if(ED.mode==='vertex'){ edVertexDone(); return; } od(); };
   toast('Edit mode — your changes stay on this phone until you Save or Share');
