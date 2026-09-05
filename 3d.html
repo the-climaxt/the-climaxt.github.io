@@ -737,10 +737,27 @@ Ribbons3D.prototype.build=function(gl){
     for(var j=0;j<n-1;j++){ v(j,1);v(j,-1);v(j+1,1); v(j,-1);v(j+1,-1);v(j+1,1); } }
   /* a one-sided band along a ring, from the ring outward (sign says which side is out), colour c0 on the ring fading to c1 at the far edge.
      Widths here are pre-divided by HI_WIDEN because the shader widens every highlighted vertex by that much. */
-  function band(arr,pts,width,lift,c0,c1,id,sign){ var n=pts.length; if(n<2)return; var C=[],S=[],w=width/HI_WIDEN;
-    for(var i=0;i<n;i++){ var a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)]; var ex_=b[0]-a[0],ey=b[1]-a[1],len=Math.hypot(ex_,ey)||1; ex_/=len;ey/=len; C.push([pts[i][0],pts[i][1],pts[i][2]+lift]); S.push([-ey*w*sign,ex_*w*sign]); }
+  /* the glow band around a glade. The outline may be ragged (a stand traced off the 1 m forest mask has a bend every
+     metre), and a per-vertex normal on a ragged line swings wildly — the band's quads then cross and show as little
+     "bowties" and spokes (Tanner, Sep 5, Mystic right-side trees). So: (1) the ring is resampled every BAND_STEP_M and the
+     normal at each sample is taken over its neighbours two samples either way; (2) each outward "spoke" is clipped where it
+     first meets a neighbouring spoke (up to BAND_LOOK samples away) — inside a tight concave corner the spokes converge,
+     and stopping at the meeting point is what keeps the quads from crossing; (3) a closed ring wraps, so there is no gap
+     at its start. Modelled offline on Norquay's Mystic stands before it went in. */
+  var BAND_STEP_M=8, BAND_LOOK=8;
+  function resample(pts,step){ var out=[pts[0]],carry=0; for(var i=1;i<pts.length;i++){ var a=pts[i-1],b=pts[i],seg=Math.hypot(b[0]-a[0],b[1]-a[1]); if(!seg)continue; var d=step-carry; while(d<=seg){ var t=d/seg; out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]); d+=step; } carry=seg-(d-step); } return out; }
+  function spokeT(p,p2,q,q2){ var rx=p2[0]-p[0],ry=p2[1]-p[1],sx=q2[0]-q[0],sy=q2[1]-q[1],den=rx*sy-ry*sx; if(Math.abs(den)<1e-9)return null; var t=((q[0]-p[0])*sy-(q[1]-p[1])*sx)/den,u=((q[0]-p[0])*ry-(q[1]-p[1])*rx)/den; return (t>=0&&t<=1&&u>=0&&u<=1)?t:null; }
+  function band(arr,pts,width,lift,c0,c1,id,sign){ if(pts.length<2)return; var closed=Math.hypot(pts[0][0]-pts[pts.length-1][0],pts[0][1]-pts[pts.length-1][1])<0.5;
+    pts=resample(pts,BAND_STEP_M); if(closed&&pts.length>2&&Math.hypot(pts[0][0]-pts[pts.length-1][0],pts[0][1]-pts[pts.length-1][1])<BAND_STEP_M/2)pts.pop();
+    var n=pts.length; if(n<2)return; var C=[],S=[],w=width/HI_WIDEN, wrap=function(i){ return ((i%n)+n)%n; };
+    for(var i=0;i<n;i++){ var a=closed?pts[wrap(i-2)]:pts[Math.max(0,i-2)], b=closed?pts[wrap(i+2)]:pts[Math.min(n-1,i+2)]; var ex_=b[0]-a[0],ey=b[1]-a[1],len=Math.hypot(ex_,ey)||1; ex_/=len;ey/=len; C.push([pts[i][0],pts[i][1],pts[i][2]+lift]); S.push([-ey*w*sign,ex_*w*sign]); }
+    /* the shader multiplies every highlighted extrude by HI_WIDEN, so the spokes are clipped at their FULL (widened) length —
+       clipping the short ones and then widening would put the crossings right back */
+    var O=C.map(function(c,i){ return [c[0]+S[i][0]*HI_WIDEN,c[1]+S[i][1]*HI_WIDEN]; }), T=[];
+    for(var i=0;i<n;i++){ var tmin=1; for(var d=1;d<=BAND_LOOK;d++){ var js=closed?[wrap(i+d),wrap(i-d)]:[i+d,i-d]; for(var k=0;k<2;k++){ var j=js[k]; if(j<0||j>=n||j===i)continue; var t=spokeT(C[i],O[i],C[j],O[j]); if(t!=null&&t<tmin)tmin=t; } } T.push(tmin); }
+    for(var i=0;i<n;i++){ S[i]=[S[i][0]*T[i],S[i][1]*T[i]]; }
     function v(i,out){ push(arr,C[i][0],C[i][1],C[i][2],S[i][0]*out,S[i][1]*out,out?c1:c0,id); }
-    for(var j=0;j<n-1;j++){ v(j,0);v(j,1);v(j+1,0); v(j,1);v(j+1,1);v(j+1,0); } }
+    var m=closed?n:n-1; for(var j=0;j<m;j++){ var jn=wrap(j+1); v(j,0);v(j,1);v(jn,0); v(j,1);v(jn,1);v(jn,0); } }
   function ringSign(pts){ var a=0; for(var i=0;i<pts.length-1;i++)a+=pts[i][0]*pts[i+1][1]-pts[i+1][0]*pts[i][1]; return a>0?-1:1; }   /* counter-clockwise → inside is on the left → outward is -1 */
   function pre(c,a){ return [c[0]*a,c[1]*a,c[2]*a,a]; }   /* premultiplied, for the blended batches */
   var extra=(MAN&&MAN.camera&&MAN.camera.terrainRes>5)?COARSE_EXTRA_LIFT_M:0;   // coarse mesh: float higher
