@@ -266,6 +266,8 @@ var LAB=Q.get('lab')==='1';
    1.5× for every mountain (Sep 4: "really happy with keeping the 1.5 relief permanent"). The manifest carries it
    (seed_manifest.py EXAGGERATION); the page takes it as is — no chooser, no per-phone memory. */
 var EXAG_LOCKED=1.5;
+/* the ski-area boundary line (Sep 5): the app's yellow under orange dashes — a printed trail map's "area boundary" */
+var BOUNDARY_YELLOW='#FFC53D', BOUNDARY_ORANGE='#FF8A3C', BOUNDARY_WIDTH_PX=2.4;
 var THEME='paper';   /* the night theme code stays (Huck's), but no button offers it */
 document.documentElement.dataset.theme=THEME;
 
@@ -335,7 +337,11 @@ function start(){
       {id:'bg',type:'background',paint:{'background-color':sky}},
       {id:'texture',type:'raster',source:'texture',paint:texturePaint()},
       {id:'outside-mask',type:'fill',source:'outside',paint:{'fill-color':sky,'fill-opacity':1}},
-      {id:'boundary',type:'line',source:'furniture','source-layer':'zones',filter:['==',['get','level'],'mountain'],paint:{'line-color':'#FBF6EC','line-width':1,'line-opacity':0.35,'line-dasharray':[3,2]}},
+      /* the ski-area boundary, trail-map style (Tanner, Sep 5: "I should have an orange and yellow in my app color scheme.
+         Make it trail map style with that"): a solid yellow underline with orange dashes on top, in the app's own
+         --pr-yellow / --pr-orange, draped on the terrain. Widths in px; BOUNDARY_* knobs at the top of the script. */
+      {id:'boundary-under',type:'line',source:'furniture','source-layer':'zones',filter:['==',['get','level'],'mountain'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':BOUNDARY_YELLOW,'line-width':BOUNDARY_WIDTH_PX+1.6,'line-opacity':0.85}},
+      {id:'boundary',type:'line',source:'furniture','source-layer':'zones',filter:['==',['get','level'],'mountain'],layout:{'line-join':'round'},paint:{'line-color':BOUNDARY_ORANGE,'line-width':BOUNDARY_WIDTH_PX,'line-opacity':0.95,'line-dasharray':[3,2.2]}},
       /* glades and other skiable shapes: a light ink wash on the snow (the coloured outline is a 3D ribbon in the layer below) */
       {id:'areas-fill',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','level'],'area'],paint:{'fill-color':'#241E2C','fill-opacity':0}},
       {id:'areas-sel',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','zone_id'],'-'],paint:{'fill-color':'#FFC53D','fill-opacity':AREA_GLOW_ALPHA}},
