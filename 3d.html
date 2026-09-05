@@ -755,7 +755,7 @@ Ribbons3D.prototype.build=function(gl){
   Object.keys(this.geom.runs).forEach(function(ref){ if(ref in ov&&ov[ref]===null)return; if(typeof isCentreline==='function'&&isCentreline(ref))return; var pts=local(ref in ov?ov[ref]:self.geom.runs[ref]), id=idOf(ref), d=self.diffOf(ref);
     ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
     ribbon(opaque,pts,RUN_WIDTH_M,RUN_LIFT_M+extra,self.colours.run[d]||self.colours.run.unknown,id);
-    var n=(typeof NAMES!=='undefined'&&NAMES.runs[ref])||{}; pins(ref,pts,d in LABELS.ink?d:'unknown',n.pr||n.osm||'',RUN_LIFT_M+extra,id); });
+    var n=(typeof NAMES!=='undefined'&&NAMES.runs[ref])||{}, nm=(self.nameOverrides&&self.nameOverrides[ref])||n.pr||n.osm||''; pins(ref,pts,d in LABELS.ink?d:'unknown',nm,RUN_LIFT_M+extra,id); });
   /* edit mode: extra ribbons that are not (yet) in the package — the lower half of a cut run, drawn like its parent so it doesn't look deleted */
   Object.keys(self.extras||{}).forEach(function(key){ var x=self.extras[key], pts=local(x.pts), id=idOf(x.ref), d=x.d||'unknown';
     ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
@@ -991,6 +991,7 @@ function edLayers(){
   map.addLayer({id:'ed-fill',type:'fill',source:'edits',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':'#FF4D9D','fill-opacity':0.18}});
   map.addLayer({id:'ed-line',type:'line',source:'edits',filter:['any',['==',['geometry-type'],'LineString'],['==',['geometry-type'],'Polygon'],['==',['geometry-type'],'MultiLineString']],paint:{'line-color':['case',['any',['==',['get','edit_kind'],'move'],['==',['get','edit_kind'],'merge']],'#FFC53D','#FF4D9D'],'line-width':4,'line-dasharray':[2,1.2]}});
   map.addLayer({id:'ed-pt',type:'circle',source:'edits',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':8,'circle-color':['match',['get','edit_kind'],'service','#1FC9B7','feature','#8A4DEB','view','#FFC53D','#FF4D9D'],'circle-stroke-color':'#FBF6EC','circle-stroke-width':2}});
+  map.addLayer({id:'ed-hit',type:'line',source:'edits',filter:['any',['==',['geometry-type'],'LineString'],['==',['geometry-type'],'MultiLineString']],paint:{'line-color':'#000','line-opacity':0,'line-width':26}});   /* fat invisible target: a pending line is tappable even where the pink line hides under cones */
   map.addLayer({id:'ed-draft-line',type:'line',source:'ed-draft',filter:['==',['geometry-type'],'LineString'],paint:{'line-color':'#FFC53D','line-width':3}});
   map.addLayer({id:'ed-draft-fill',type:'fill',source:'ed-draft',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':'#FFC53D','fill-opacity':0.2}});
   map.addLayer({id:'ed-vtx',type:'circle',source:'ed-draft',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':7,'circle-color':'#FFC53D','circle-stroke-color':'#241E2C','circle-stroke-width':1.5}});
@@ -1036,7 +1037,7 @@ function edList(){ var l=$('ed-list'); var fin=ED.final||[];
   if(!ED.feats.length){ l.innerHTML='<div class="zsb">Nothing pending.</div>'+finalHtml; return; }
   l.innerHTML='<div class="zlab">Pending<span class="zct">'+ED.feats.length+'</span></div>'+ED.feats.slice().reverse().map(function(f){ var p=f.properties; return '<div class="zrr" onclick="edSelect(\''+p.uid+'\')"><span class="zd" style="background:'+({service:'#1FC9B7',feature:'#8A4DEB',view:'#FFC53D',move:'#FFC53D',split:'#FFC53D',merge:'#FFC53D'}[p.edit_kind]||'#FF4D9D')+'"></span><span class="znm">'+esc(p.name||p.app_name||p.ref_id||p.zone_id||'')+'<div class="zsb">'+esc(p.edit_kind+(p.kind?' · '+p.kind:'')+(p.service_subtype?' · '+p.service_subtype:'')+(p.feature_type?' · '+p.feature_type+'/'+p.feature_subtype:'')+(p.derivation_method?' · '+p.derivation_method:''))+'</div></span><button class="zx" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation();edDelete(\''+p.uid+'\')">✕</button></div>'; }).join('')+finalHtml; }
 function edSelect(uid){ var f=ED.feats.filter(function(x){return x.properties.uid===uid;})[0]; if(!f)return; ED.sel=uid;
-  if(f.geometry){ var c=f.geometry.type==='Point'?f.geometry.coordinates:f.geometry.type==='Polygon'?f.geometry.coordinates[0][0]:f.geometry.coordinates[0]; map.easeTo({center:c,duration:500}); }
+  if(f.geometry){ var g=f.geometry, c=g.type==='Point'?g.coordinates:g.type==='Polygon'?g.coordinates[0][0]:g.type==='MultiLineString'?g.coordinates[0][0]:g.type==='MultiPolygon'?g.coordinates[0][0][0]:g.coordinates[0]; map.easeTo({center:c,duration:500}); }
   edForm(f,true); }
 function edForget(f){ var p=f.properties; if(p.edit_kind==='hide')delete ED.hidden[p.ref_id]; if(p.edit_kind==='move'||p.edit_kind==='split'||p.edit_kind==='merge')delete ED.moved[p.ref_id]; if(p.edit_kind==='merge')delete ED.hidden[p.ref_id_other]; if(['hide','move','split','merge'].indexOf(p.edit_kind)>=0)edRebuildRibbons(); }
 function edDelete(uid){ var f=ED.feats.filter(function(x){return x.properties.uid===uid;})[0]; ED.feats=ED.feats.filter(function(x){return x.properties.uid!==uid;});
@@ -1051,7 +1052,7 @@ function edClick(ev){
   if(ED.cutPick){ ED.cutPick(ll); return true; }
   if(ED.joinPick){ var hj=map.queryRenderedFeatures(box,{layers:['runs-hit']}); if(hj.length){ ED.joinPick(hj[0].properties.ref_id); } else toast('Tap the other run'); return true; }
   if(ED.anchorPick){ var h=map.queryRenderedFeatures(box,{layers:['runs-hit','lifts-hit']}); if(h.length){ ED.anchorPick(h[0].properties.ref_id, NAMES.lifts[h[0].properties.ref_id]?'lift':'run'); } else toast('Tap a ribbon'); return true; }
-  if(ED.mode==='select'){ var e=map.queryRenderedFeatures(box,{layers:['ed-pt','ed-line','ed-fill']}); if(e.length){ edSelect(e[0].properties.uid); return true; } return false; }
+  if(ED.mode==='select'){ var e=map.queryRenderedFeatures(box,{layers:['ed-pt','ed-hit','ed-line','ed-fill']}); if(e.length){ edSelect(e[0].properties.uid); return true; } return false; }
   if(ED.mode==='view'){ return false; }
   if(ED.mode==='service'){ edForm({type:'Feature',properties:{edit_kind:'service',uid:edUid()},geometry:{type:'Point',coordinates:ll}}); return true; }
   if(ED.mode==='feature'&&ED.sub==='point'){ edForm({type:'Feature',properties:{edit_kind:'feature',uid:edUid(),derivation_method:edGpsMethod(ll)},geometry:{type:'Point',coordinates:ll}}); return true; }
@@ -1101,7 +1102,9 @@ function edForm(f,existing){
     h+='<label>Zone '+zoneSel(p.zone_id||ZONE||M)+'</label><div class="zsb">zoom '+p.zoom+' · pitch '+p.pitch+' · bearing '+p.bearing+'</div>';
   } else if(k==='rename'){ h+='<label>New name <input id="f-name" value="'+esc(p.name||'')+'"></label>'; }
   else if(k==='alias'){ h+=wantedList()+'<label>This line IS the app\'s <input id="f-app" list="ed-names" value="'+esc(p.app_name||'')+'"></label><label>Zone '+zoneSel(p.zone_id||ZONE||'')+'</label>'; }
-  else if(k==='split'){ h+='<div class="zsb">'+esc(p.name||p.ref_id)+' cut into two pieces ('+p.upper_m+' m above the cut, '+p.lower_m+' m below). Both keep the name — use Rename on either half after the next build if they should differ.</div>'; }
+  else if(k==='split'){ h+=wantedList()+'<div class="zsb">'+esc(p.name||p.ref_id)+' cut into two pieces ('+p.upper_m+' m above the cut, '+p.lower_m+' m below).</div>'
+      +'<label>Upper half — name <input id="f-name-up" list="ed-names" value="'+esc(p.name_upper||p.name||'')+'"></label><label>Lower half — name <input id="f-name-lo" list="ed-names" value="'+esc(p.name_lower||p.name||'')+'"></label>'
+      +'<div class="tog"><button class="btn" onclick="edSplitDrag(0)">Drag the upper points</button><button class="btn" onclick="edSplitDrag(1)">Drag the lower points</button></div>'; }
   else if(k==='merge'){ h+='<label>Name for the joined run <select id="f-name">'+edOpt([p.name_a,p.name_b].filter(function(x,i,a){return x&&a.indexOf(x)===i;}),p.name||p.name_a)+'</select></label><div class="zsb">'+esc(p.name_a||p.ref_id)+' + '+esc(p.name_b||p.ref_id_other)+(p.gap_m>ED.JOIN_TOUCH_M?' — '+p.gap_m+' m gap walked down the fall line':' — ends touch')+'</div>'; }
   else { h+='<div class="zsb">'+esc(p.ref_id||'')+'</div>'; }
   h+='<label>Notes for Claude <textarea id="f-cn" rows="2" placeholder="anything the form can\'t say — e.g. every separate glade in this box is this run">'+esc(p.claude_note||'')+'</textarea></label>';
@@ -1141,6 +1144,7 @@ function edCommit(){
   else if(k==='rename'){ p.name=v('f-name'); if(!p.name){ toast('Type the new name'); return; } }
   else if(k==='alias'){ p.app_name=v('f-app'); if(!p.app_name){ toast('Pick the app run'); return; } p.zone_id=v('f-zone')||''; }
   else if(k==='merge'){ p.name=v('f-name')||p.name_a; }
+  else if(k==='split'){ p.name_upper=v('f-name-up')||p.name; p.name_lower=v('f-name-lo')||p.name; }
   p.claude_note=v('f-cn')||undefined;
   p.edited=edNow(); p.editor=ED.editor; p.status='ok';
   if(!ED.pendingExisting) ED.feats.push(f);
@@ -1175,22 +1179,32 @@ function edFix(what){
   if(what==='move'){ edVertexMode(mf); }
 }
 /* vertex dragging: the moved line's points become handles; drag one, the line follows. Flat mode helps here. */
-function edVertexMode(mf){
-  ED.dragFeat=mf; ED.draft=mf.geometry.coordinates.slice(); edRefresh(); edHint('Drag the yellow points. Tap Done when the shape is right.'); $('ed-done').style.display='';
+function edVertexMode(mf,part){
+  ED.dragFeat=mf; ED.dragPart=part; ED.draft=(part==null?mf.geometry.coordinates:mf.geometry.coordinates[part]).slice(); edRefresh(); edHint('Drag the yellow points. Tap Done when the shape is right.'); $('ed-done').style.display='';
   ED.mode='vertex';
 }
+/* a split's halves are dragged one at a time; the split feature (pending or already kept) is what gets edited */
+function edSplitDrag(part){ var f=ED.pending; if(!f||f.properties.edit_kind!=='split')return; ED.splitReturn=f; $('ed-form').style.display='none'; edVertexMode(f,part); }
 function edDragInit(){
   function down(e){ if(ED.mode!=='vertex')return; var hits=map.queryRenderedFeatures(e.point,{layers:['ed-vtx']}); if(!hits.length)return; ED.dragging=hits[0].properties.i; map.dragPan.disable(); e.preventDefault(); }
   function move(e){ if(ED.dragging==null)return; ED.draft[ED.dragging]=[+e.lngLat.lng.toFixed(6),+e.lngLat.lat.toFixed(6)]; edRefresh(); }
   function up(){ if(ED.dragging==null)return; ED.dragging=null; map.dragPan.enable(); }
   map.on('mousedown',down); map.on('touchstart',down); map.on('mousemove',move); map.on('touchmove',move); map.on('mouseup',up); map.on('touchend',up);
 }
-function edVertexDone(){ var mf=ED.dragFeat; mf.geometry.coordinates=ED.draft.slice(); ED.moved[mf.properties.ref_id]=mf.geometry.coordinates; ED.dragFeat=null; ED.draft=[]; edRebuildRibbons(); edStore(); edMode('select'); toast('Shape kept'); }
+function edVertexDone(){ var mf=ED.dragFeat, part=ED.dragPart;
+  if(part==null){ mf.geometry.coordinates=ED.draft.slice(); ED.moved[mf.properties.ref_id]=mf.geometry.coordinates; }
+  else { mf.geometry.coordinates[part]=ED.draft.slice(); if(part===0)ED.moved[mf.properties.ref_id]=mf.geometry.coordinates[0]; mf.properties[part===0?'upper_m':'lower_m']=Math.round(edLineLenM(mf.geometry.coordinates[part])); }
+  ED.dragFeat=null; ED.dragPart=null; ED.draft=[]; edRebuildRibbons(); if(ED.feats.indexOf(mf)>=0)edStore(); else edRefresh();
+  ED.mode='select'; var b=$('ed-modes').children; for(var i=0;i<b.length;i++)b[i].className=b[i].dataset.m==='select'?'on':'';
+  if(ED.splitReturn){ var f=ED.splitReturn; ED.splitReturn=null; edForm(f,ED.feats.indexOf(f)>=0); toast('Points kept — Keep it / Update to save'); } else toast('Shape kept'); }
 function edRebuildRibbons(){ if(!ribbons||!ribbons.gl)return; ribbons.overrides={}; Object.keys(ED.hidden).forEach(function(r){ribbons.overrides[r]=null;});
   function withZ(cs){ return cs.map(function(c){ var z=edElev(c); return [c[0],c[1],z==null?0:z/ (EXAG||1)]; }); }
   Object.keys(ED.moved).forEach(function(r){ ribbons.overrides[r]=withZ(ED.moved[r]); });
+  ribbons.nameOverrides={}; ED.feats.forEach(function(f){ var p=f.properties; if(p.edit_kind==='split'&&p.name_upper)ribbons.nameOverrides[p.ref_id]=p.name_upper; if(p.edit_kind==='rename'&&p.ref_id)ribbons.nameOverrides[p.ref_id]=p.name; });
   /* the LOWER half of every pending cut is drawn as its own ribbon in the parent's colour (Tanner, Sep 5: "it seems to be deleting the lower half when I cut a run") */
-  ribbons.extras={}; ED.feats.forEach(function(f){ var p=f.properties; if(p.edit_kind==='split'&&f.geometry&&f.geometry.coordinates[1]) ribbons.extras['split-'+p.uid]={ref:p.ref_id,pts:withZ(f.geometry.coordinates[1]),d:ribbons.diffOf(p.ref_id),label:p.name||''}; });
+  ribbons.extras={}; ED.feats.forEach(function(f){ var p=f.properties; if(!f.geometry)return;
+    if(p.edit_kind==='split'&&f.geometry.coordinates[1]) ribbons.extras['edit:'+p.uid+':1']={ref:'edit:'+p.uid+':1',pts:withZ(f.geometry.coordinates[1]),d:ribbons.diffOf(p.ref_id),label:p.name_lower||p.name||''};
+    if(p.edit_kind==='add'&&p.kind!=='lift'&&f.geometry.type==='LineString') ribbons.extras['edit:'+p.uid]={ref:'edit:'+p.uid,pts:withZ(f.geometry.coordinates),d:p.difficulty||'unknown',label:p.name||''}; });
   ribbons.build(ribbons.gl); ribbons.buildLabels(ribbons.gl); if(map)map.triggerRepaint(); }
 
 /* ---------- cut one run into two (Tanner, Sep 5) ----------
@@ -1257,7 +1271,7 @@ function edInit(){
   if(!EDIT)return; edLoad(); edLayers(); edPanel(); edDragInit(); edGps();
   ED.feats.forEach(function(f){ var p=f.properties; if(p.edit_kind==='hide')ED.hidden[p.ref_id]=true; if(p.edit_kind==='move'&&f.geometry)ED.moved[p.ref_id]=f.geometry.coordinates;
     if(p.edit_kind==='split'&&f.geometry)ED.moved[p.ref_id]=f.geometry.coordinates[0]; if(p.edit_kind==='merge'&&f.geometry){ ED.moved[p.ref_id]=f.geometry.coordinates; ED.hidden[p.ref_id_other]=true; } });
-  if(Object.keys(ED.hidden).length||Object.keys(ED.moved).length||ED.feats.some(function(f){return f.properties.edit_kind==='split';})) edRebuildRibbons();
+  if(Object.keys(ED.hidden).length||Object.keys(ED.moved).length||ED.feats.some(function(f){return f.properties.edit_kind==='split'||f.properties.edit_kind==='add'||f.properties.edit_kind==='rename';})) edRebuildRibbons();
   edRefresh();
   var od=edDone; edDone=function(){ if(ED.mode==='vertex'){ edVertexDone(); return; } od(); };
   toast('Edit mode — your changes stay on this phone until you Save or Share');
