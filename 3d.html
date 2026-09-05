@@ -751,6 +751,7 @@ Ribbons3D.prototype.build=function(gl){
     ribbon(shadow,pts,LIFT_WIDTH_M,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_LIFT_OFFSET_M,SHADOW_LIFT_OFFSET_M);
     ribbon(opaque,pts,LIFT_WIDTH_M,LIFT_LIFT_M+extra,self.colours.lift,id);
     var ln=(typeof NAMES!=='undefined'&&NAMES.lifts[ref])||{}; pins(ref,pts,'lift',ln.pr||ln.name||'',LIFT_LIFT_M+extra,id);
+    if(ln.type==='snowcat')return;   /* a cat road is a lift to the model (RED's Kirkup cat) but has no towers to draw */
     var carry=TOWER_EVERY_M/2;
     for(var i=1;i<pts.length;i++){ var a=pts[i-1],b=pts[i],seg=Math.hypot(b[0]-a[0],b[1]-a[1]); if(!seg)continue; var dx=(b[0]-a[0])/seg,dy=(b[1]-a[1])/seg,d=carry;
       while(d<seg){ var t=d/seg,px=a[0]+(b[0]-a[0])*t,py=a[1]+(b[1]-a[1])*t,pz=a[2]+(b[2]-a[2])*t;
