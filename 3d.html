@@ -544,8 +544,8 @@ function row(r){ var n=NAMES.runs[r.ref_id]||{}, sub=[]; if(n.pr&&n.osm&&n.pr!==
    Each is a pill pinned to the ground. Tap one: its drawer lists the lifts that ski to it (the reach model treats a
    ski-in service as a tiny run). "Set as home" remembers your hotel on this phone; every lift's drawer then says
    whether it gets you home (Tanner, Sep 4: "I want to know that lift gets me back to my room"). */
-var SVC_COL={bar:'#FF4D9D',restaurant:'#FF8A3C',cafe:'#FF8A3C',lodging:'#8A4DEB',base_lodge:'#8A4DEB',warming_hut:'#8A4DEB',parking:'#736A7B',transit_stop:'#35B5E8',tickets:'#1FC9B7',patrol:'#C4116B',poi:'#736A7B'};
-var SVC_WORD={bar:'bar',restaurant:'restaurant',cafe:'café',lodging:'hotel',base_lodge:'base lodge',warming_hut:'warming hut',parking:'parking',transit_stop:'bus / shuttle',tickets:'tickets',patrol:'patrol',poi:'place'};
+var SVC_COL={bar:'#FF4D9D',restaurant:'#FF8A3C',cafe:'#FF8A3C',lodging:'#8A4DEB',base_lodge:'#8A4DEB',warming_hut:'#8A4DEB',parking:'#736A7B',transit_stop:'#35B5E8',tickets:'#1FC9B7',patrol:'#C4116B',poi:'#736A7B',gate:'#FF8A3C'};
+var SVC_WORD={bar:'bar',restaurant:'restaurant',cafe:'café',lodging:'hotel',base_lodge:'base lodge',warming_hut:'warming hut',parking:'parking',transit_stop:'bus / shuttle',tickets:'tickets',patrol:'patrol',poi:'place',gate:'backcountry gate'};
 function isService(id){ return !!SVC[id]; }
 function svcMarkers(){
   SVC={}; (MAN.services||[]).forEach(function(s){ SVC[s.id]=s; });
@@ -950,7 +950,7 @@ var HUCK_VOCAB={
     poi:['viewpoint','shrine','memorial','artifact','historic_site','named_landmark','orientation_marker','story_site','race_section','defunct_lift']},
   name_status:['local_known','source_given','huck_working','unnamed'],
   anchor_ref_kind:['run','lift','zone']};
-var SERVICE_SUBTYPES=['bar','restaurant','cafe','lodging','base_lodge','warming_hut','parking','transit_stop','tickets','patrol'];
+var SERVICE_SUBTYPES=['bar','restaurant','cafe','lodging','base_lodge','warming_hut','parking','transit_stop','tickets','patrol','gate','poi'];   /* gate = backcountry access gate, poi = a landmark (a single tree, a viewpoint) */
 var DIFFICULTIES=[['easy','green'],['intermediate','blue'],['advanced','black'],['expert','double black'],['freeride','freeride / unrated']];
 var AREA_KINDS=['glade','bowl','pocket','face','chutes','trees','stash','zone'];
 var ED={mode:'select',sub:'point',fallLine:true,follow:false,draft:[],feats:[],undo:[],sel:null,flat:false,aerial:false,gps:null,editor:'',anchorPick:null,dragging:null,hidden:{},moved:{},savedPitch:null,
