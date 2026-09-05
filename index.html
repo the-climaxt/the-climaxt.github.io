@@ -763,7 +763,7 @@ function zZone(){ return zMapZones(ZR)[ZI]; }
 /* ---- 3D pilot (Sep 2026): a sealed 3D bundle exists for these resorts in maps/3d/.
    3d.html unlocks it with the same trip phrase (read from this origin's localStorage).
    Zone ids there are the zone name slugged the same way build_furniture_gpkg.py does. */
-var BUNDLES3D={revelstoke:1,sunshine:1};
+var BUNDLES3D={revelstoke:1,sunshine:1,kickinghorse:1,panorama:1,louise:1,norquay:1,whitewater:1,schweitzer:1,red:1};   /* Sep 5: the seven hills land here as each is built */
 function z3dSlug(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48); }
 function z3dUrl(k,zoneName,runName){ return '3d.html?m='+encodeURIComponent(k)+'&zone='+encodeURIComponent(z3dSlug(zoneName))+(runName?'&q='+encodeURIComponent(runName):''); }
 /* ---- the 3D frame (Sep 4 2026): "replace the snow tab terrain drawer maps with our sick 3d map" ----

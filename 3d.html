@@ -1007,8 +1007,8 @@ function edClick(ev){
 }
 function edDone(){
   if(ED.mode==='view'){ var c=map.getCenter(); edForm({type:'Feature',properties:{edit_kind:'view',uid:edUid(),zone_id:ZONE||M,zoom:+map.getZoom().toFixed(2),pitch:Math.round(map.getPitch()),bearing:Math.round(map.getBearing())},geometry:{type:'Point',coordinates:[+c.lng.toFixed(5),+c.lat.toFixed(5)]}}); return; }
-  if(ED.mode==='line'){ if(ED.draft.length<2){ toast('Need at least two points'); return; } edForm({type:'Feature',properties:{edit_kind:'add',kind:'run',uid:edUid()},geometry:{type:'LineString',coordinates:ED.draft.slice()}}); return; }
-  if(ED.mode==='area'){ if(ED.draft.length<3){ toast('Need at least three points'); return; } edForm({type:'Feature',properties:{edit_kind:'area',uid:edUid()},geometry:{type:'Polygon',coordinates:[ED.draft.concat([ED.draft[0]])]}}); return; }
+  if(ED.mode==='line'){ if(ED.draft.length<2){ toast('Need at least two points'); return; } edForm({type:'Feature',properties:{edit_kind:'add',kind:'run',uid:edUid(),name:ED.mark||undefined},geometry:{type:'LineString',coordinates:ED.draft.slice()}}); if(ED.mark)edNamePicked(ED.mark); return; }
+  if(ED.mode==='area'){ if(ED.draft.length<3){ toast('Need at least three points'); return; } edForm({type:'Feature',properties:{edit_kind:'area',uid:edUid(),name:ED.mark||undefined},geometry:{type:'Polygon',coordinates:[ED.draft.concat([ED.draft[0]])]}}); if(ED.mark)edNamePicked(ED.mark); return; }
   if(ED.mode==='feature'){ if(ED.sub==='line'&&ED.draft.length>=2) edForm({type:'Feature',properties:{edit_kind:'feature',uid:edUid(),derivation_method:edGpsMethod(ED.draft[0])},geometry:{type:'LineString',coordinates:ED.draft.slice()}});
     else if(ED.sub==='polygon'&&ED.draft.length>=3) edForm({type:'Feature',properties:{edit_kind:'feature',uid:edUid(),derivation_method:edGpsMethod(ED.draft[0])},geometry:{type:'Polygon',coordinates:[ED.draft.concat([ED.draft[0]])]}});
     else toast('Draw the shape first'); }
@@ -1086,6 +1086,7 @@ function edCommit(){
   p.edited=edNow(); p.editor=ED.editor; p.status='ok';
   if(!ED.pendingExisting) ED.feats.push(f);
   ED.pending=null; ED.draft=[]; $('ed-form').style.display='none'; edStore(); toast((ED.pendingExisting?'Updated ':'Kept ')+(p.name||p.app_name||k));
+  if(ED.mark&&(k==='add'||k==='area')){ ED.mark=null; var hh=$('ed-hint'); if(hh)hh.innerHTML='Marked '+esc(p.name)+'. <a href="mark.html?m='+M+'#'+encodeURIComponent(p.name)+'" style="color:var(--pr-accent);font-weight:700">Back to the list ›</a> or keep drawing here.'; }
   if(k==='hide'){ ED.hidden[p.ref_id]=true; edRebuildRibbons(); }
   if(k==='move'){ ED.moved[p.ref_id]=f.geometry.coordinates; edRebuildRibbons(); }
 }
@@ -1157,6 +1158,19 @@ function edInit(){
   edRefresh();
   var od=edDone; edDone=function(){ if(ED.mode==='vertex'){ edVertexDone(); return; } od(); };
   toast('Edit mode — your changes stay on this phone until you Save or Share');
+  edMarkStart();
+}
+/* Opened from mark.html (the "mark the unmarked" list, Sep 4): &mark=<name>&kind=<run|area> jumps to that name's zone,
+   picks Line or Area mode and pre-fills the name (edNamePicked then fills zone, difficulty and kind from the app).
+   The mark is forgotten as soon as one shape is kept, so the next tap on the map is a fresh line. */
+function edMarkStart(){
+  var mk=Q.get('mark'); if(!mk)return; ED.mark=mk;
+  var w=edWanted().filter(function(x){return x.name.toLowerCase()===mk.toLowerCase();})[0];
+  var kind=Q.get('kind')||(w&&w.kind)||'run';
+  if(w&&w.zone_id&&NAMES.zones&&NAMES.zones[w.zone_id]) openZone(w.zone_id,true);
+  edMode(kind==='area'?'area':'line');
+  edHint((kind==='area'?'Tap around ':'Tap the top, then the bottom of ')+mk+(w&&w.note?' — '+w.note:''));
+  toast('Marking: '+mk);
 }
 
 boot();

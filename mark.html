@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Powder Run · Mark the map</title>
+<!--
+  mark.html — "the mark tool" (Tanner, Sep 4: "I want that tool to have a list of every unmarked run or glade or
+  whatever, so I can basically tap the unmarked run, mark it, and save it somewhere").
+
+  WHAT IT IS
+  One page for every mountain. Behind the same trip gate as 3d.html (same localStorage gname/gpw, same PBKDF2 /
+  AES-GCM recipe), it opens maps/3d/wanted.bundle — every mountain's "wanted" list (make_wanted.py: the app's runs
+  and glades that have a pin but no line on the 3D map yet), sealed by pack_bundle.js ("wanted" mode). Pick a
+  mountain, and every unmarked name is listed by zone with its pick number, difficulty, type, lift and the app's note.
+  Tap one → 3d.html?m=<m>&edit=1&mark=<name>&kind=<run|area> opens the editor on that zone, already in Line (or
+  Area) mode with the name filled in; Keep it, and the editor offers "Back to the list ›".
+
+  WHERE THE MARKS LIVE
+  The editor stores every kept shape in this browser (localStorage key pr3d-edits-<m>, one GeoJSON collection per
+  mountain — 3d.html and this page share the origin, so this page reads them). A name shows a green "drawn" tag once a
+  kept line/area/alias carries it. Save downloads <m>-edits.geojson and Share opens the phone's share sheet (→ Drive),
+  exactly like the editor's own buttons; the file goes to zone-maps-geo/ and load_edits.py writes it into the package.
+
+  UPDATING THIS PAGE'S DATA
+  Rebuild a mountain (build_hill.sh → make_wanted.py) then  node scripts/pack_bundle.js wanted bundle - out/maps/3d/wanted.bundle gate.txt
+  Nothing readable sits on the server; robots are told to stay out (robots.txt + the meta tag above).
+-->
+<style>
+@font-face{font-family:"Space Grotesk";font-weight:400;src:url(fonts/space-grotesk-latin-400-normal.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Space Grotesk";font-weight:600;src:url(fonts/space-grotesk-latin-600-normal.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Space Grotesk";font-weight:700;src:url(fonts/space-grotesk-latin-700-normal.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Righteous";font-weight:400;src:url(fonts/righteous-latin-400-normal.woff2) format("woff2");font-display:swap}
+:root{--pr-paper:#FAF3D7;--pr-cream:#FBF6EC;--pr-card:#FFFCF2;--pr-ink:#241E2C;--pr-text-2:#5C5462;--pr-text-muted:#736A7B;--pr-border:#EDE0B4;--pr-hairline:#F3EDD6;
+--pr-pink:#FF4D9D;--pr-teal:#1FC9B7;--pr-yellow:#FFC53D;--pr-lime:#B8E332;--pr-pink-text:#C4116B;--pr-teal-text:#0B6E66;--pr-blue-text:#0E6285;--pr-lime-text:#4E6B00;--pr-yellow-text:#7A5200;--pr-danger-text:#9C4A00;
+--pr-font-app:"Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;--pr-font-app-display:"Righteous","Arial Rounded MT Bold",system-ui,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--pr-paper);color:var(--pr-ink);font-family:var(--pr-font-app);min-height:100%}
+body{padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 40px)}
+h1{font-family:var(--pr-font-app-display);font-weight:400;font-size:22px;letter-spacing:.5px}
+h1::after{content:"";display:block;width:54px;height:5px;border-radius:3px;background:var(--pr-teal);margin-top:7px}
+.sub{font-size:13px;color:var(--pr-text-muted);margin:8px 0 12px;line-height:1.45}
+.btn{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--pr-font-app);padding:9px 13px;border-radius:10px;border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-ink);cursor:pointer;text-decoration:none}
+.btn.pri{background:var(--pr-pink-text);color:#fff;border-color:var(--pr-pink-text)}
+.inp{width:100%;font:15px var(--pr-font-app);padding:10px 12px;border:1px solid var(--pr-border);border-radius:10px;background:#fff;color:var(--pr-ink);margin:4px 0 10px}
+#gate{position:fixed;inset:0;z-index:20;background:#cfd5d3;display:flex;align-items:center;justify-content:center;padding:24px}
+#gate .card{background:var(--pr-card);color:var(--pr-ink);border-radius:14px;padding:18px;width:min(420px,100%)}
+.err{color:var(--pr-danger-text);font-weight:700;font-size:12px;margin-top:8px}
+/* mountain chips, like the zone chips */
+#chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}#chips::-webkit-scrollbar{display:none}
+#chips button{flex:0 0 auto;font:600 13px var(--pr-font-app);padding:8px 12px;border-radius:999px;border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-ink);cursor:pointer;white-space:nowrap}
+#chips button.on{background:var(--pr-yellow);border-color:var(--pr-yellow)}
+#chips button small{font-weight:400;color:var(--pr-text-muted);margin-left:4px}
+/* the list */
+.zone{margin:14px 0 6px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--pr-text-muted);display:flex;justify-content:space-between}
+.row{display:block;background:var(--pr-card);border:1px solid var(--pr-border);border-radius:12px;padding:10px 12px;margin:6px 0;text-decoration:none;color:var(--pr-ink)}
+.row.done{opacity:.72;background:var(--pr-hairline)}
+.row .nm{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.row .meta{font-size:12px;color:var(--pr-text-2);margin-top:3px}
+.row .note{font-size:12px;color:var(--pr-text-muted);margin-top:3px;line-height:1.4}
+.pill{font-size:10px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:999px;background:var(--pr-hairline);color:var(--pr-text-2);text-transform:uppercase}
+.pill.pick{background:var(--pr-yellow);color:var(--pr-yellow-text)}
+.pill.area{background:#E9F5F1;color:var(--pr-teal-text)}
+.pill.drawn{background:var(--pr-lime);color:var(--pr-lime-text)}
+.pill.easy{background:#DFF3E4;color:#1E6B3A}.pill.intermediate{background:#EAF4FB;color:var(--pr-blue-text)}.pill.advanced,.pill.expert{background:#2E2A33;color:#fff}
+#tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
+#summary{font-size:13px;color:var(--pr-text-2);margin:2px 0 8px}
+.filters{display:flex;gap:6px;margin:6px 0 2px}.filters button{font:600 12px var(--pr-font-app);padding:6px 10px;border-radius:999px;border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-ink)}.filters button.on{background:var(--pr-teal);border-color:var(--pr-teal);color:#fff}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);background:var(--pr-ink);color:var(--pr-cream);font-size:13px;padding:9px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<h1>Mark the map</h1>
+<div class="sub" id="intro">Every run and glade the app knows but the 3D map has no line for yet. Tap one, draw it, come back.</div>
+<div id="chips"></div>
+<div id="summary"></div>
+<div id="tools"></div>
+<div class="filters" id="filters"></div>
+<div id="list"></div>
+<div id="toast"></div>
+<div id="gate"><div class="card"><h1>Powder Run · Mark</h1><div class="sub" id="gsub">Opening the lists…</div><div id="gform" style="display:none">
+  <div style="font-size:11px;color:var(--pr-text-muted)">Trip name</div><input class="inp" id="gname" autocomplete="off" placeholder="the trip name">
+  <div style="font-size:11px;color:var(--pr-text-muted)">Trip password</div><input class="inp" id="gpw" type="password" placeholder="password">
+  <button class="btn pri" id="gok" style="width:100%;justify-content:center">Unlock</button></div>
+  <div class="err" id="gerr"></div></div></div>
+<script>
+var GATE_ITER=150000;
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function normName(x){return (x||'').toLowerCase().split(/\s+/).filter(Boolean).join(' ');}
+function b64d(x){var b=atob(x),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show');},1800);}
+var Q=new URLSearchParams(location.search), INDEX=[], W={}, M=null, FILTER='all';
+
+async function fetchBundle(){
+  var r=await fetch('maps/3d/wanted.bundle'); if(!r.ok)throw new Error('No wanted list on the server yet ('+r.status+')');
+  var first=new Uint8Array(await r.arrayBuffer());
+  var n=new DataView(first.buffer).getUint32(0,true), hdr=JSON.parse(new TextDecoder().decode(first.subarray(4,4+n)));
+  var pieces=[first.subarray(4+n)];
+  for(var i=1;i<(hdr.chunks||[]).length;i++){ var p=await fetch('maps/3d/'+hdr.chunks[i]); pieces.push(new Uint8Array(await p.arrayBuffer())); }
+  var len=pieces.reduce(function(a,p){return a+p.length;},0), body=new Uint8Array(len), o=0; pieces.forEach(function(p){body.set(p,o);o+=p.length;});
+  return {hdr:hdr, body:body};
+}
+async function unlock(b,name,pw){
+  var km=await crypto.subtle.importKey('raw',new TextEncoder().encode(normName(name)+'|'+pw),'PBKDF2',false,['deriveKey']);
+  var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(b.hdr.gate.salt),iterations:GATE_ITER,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+  var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(b.hdr.gate.iv)},key,b.body);
+  var parts={}; b.hdr.parts.forEach(function(p){parts[p.name]=JSON.parse(new TextDecoder().decode(new Uint8Array(pt,p.offset,p.length)));});
+  return parts;
+}
+function showForm(err){ $('gform').style.display=''; $('gsub').textContent='Same trip name and password as the app.'; $('gerr').textContent=err||''; }
+async function boot(){
+  var b; try{ b=await fetchBundle(); }catch(e){ $('gsub').textContent=''; $('gerr').textContent=e.message; return; }
+  var nm=localStorage.getItem('gname'), pw=localStorage.getItem('gpw');
+  async function go(n,p){ var parts; try{ parts=await unlock(b,n,p); }catch(e){ showForm(n?'Wrong trip name or password.':''); return; }
+    localStorage.setItem('gname',n); localStorage.setItem('gpw',p); INDEX=parts['index.json']||[]; INDEX.forEach(function(x){ W[x.id]=parts[x.id+'.json']||[]; }); $('gate').style.display='none'; start(); }
+  if(nm&&pw) await go(nm,pw); else showForm('');
+  $('gok').onclick=function(){ var n=$('gname').value,p=$('gpw').value; if(!n||!p){$('gerr').textContent='Both fields, ya donkey.';return;} go(n,p); };
+}
+
+/* --- what this phone has already drawn: the editor's stored collection per mountain --- */
+function edits(m){ try{ var s=localStorage.getItem('pr3d-edits-'+m); return s?(JSON.parse(s).features||[]):[]; }catch(e){ return []; } }
+function drawnNames(m){ var d={}; edits(m).forEach(function(f){ var p=f.properties||{}; if(p.edit_kind==='add'||p.edit_kind==='area'||p.edit_kind==='alias'||p.edit_kind==='rename'){ [p.name,p.app_name].forEach(function(n){ if(n)d[n.toLowerCase()]=p.edit_kind; }); } }); return d; }
+function editsFile(m){ var feats=edits(m); return JSON.stringify({type:'FeatureCollection',mountain:m,generated:new Date().toISOString(),editor:localStorage.getItem('pr3d-editor')||'',tool:'3d.html edit mode (saved from mark.html)',features:feats},null,1); }
+function save(m){ var json=editsFile(m), blob=new Blob([json],{type:'application/geo+json'}), a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=m+'-edits.geojson'; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500); toast('Saved '+m+'-edits.geojson — put it in zone-maps-geo/'); }
+async function share(m){ var json=editsFile(m), f; try{ f=new File([json],m+'-edits.geojson',{type:'application/geo+json'}); }catch(e){}
+  if(f&&navigator.canShare&&navigator.canShare({files:[f]})){ try{ await navigator.share({files:[f],title:m+' edits'}); toast('Shared'); }catch(e){} } else save(m); }
+
+/* --- the page --- */
+function start(){
+  var pick=Q.get('m'); M=(pick&&W[pick])?pick:(INDEX[0]||{}).id;
+  var box=$('chips'); box.innerHTML='';
+  INDEX.forEach(function(x){ var b=document.createElement('button'); var d=drawnNames(x.id), left=W[x.id].filter(function(w){return !d[w.name.toLowerCase()];}).length;
+    b.innerHTML=esc(x.name.replace(/ (Mountain Resort|Ski Resort)$/,''))+'<small>'+left+'</small>'; b.dataset.id=x.id; b.className=x.id===M?'on':''; b.onclick=function(){ M=x.id; history.replaceState(null,'','?m='+M); render(); }; box.appendChild(b); });
+  var fl=$('filters'); fl.innerHTML=''; [['all','All'],['todo','Still to draw'],['pick','Picks'],['area','Glades / areas'],['done','Drawn here']].forEach(function(f){ var b=document.createElement('button'); b.textContent=f[1]; b.dataset.f=f[0]; b.className=f[0]===FILTER?'on':''; b.onclick=function(){FILTER=f[0];render();}; fl.appendChild(b); });
+  render();
+  if(location.hash){ var el=document.getElementById('n-'+decodeURIComponent(location.hash.slice(1)).toLowerCase().replace(/[^a-z0-9]+/g,'-')); if(el)setTimeout(function(){el.scrollIntoView({block:'center'});},100); }
+}
+function render(){
+  var kids=$('chips').children; for(var i=0;i<kids.length;i++)kids[i].className=kids[i].dataset.id===M?'on':'';
+  var fk=$('filters').children; for(var j=0;j<fk.length;j++)fk[j].className=fk[j].dataset.f===FILTER?'on':'';
+  var list=W[M]||[], d=drawnNames(M), n=edits(M).length, left=list.filter(function(w){return !d[w.name.toLowerCase()];}).length, info=INDEX.filter(function(x){return x.id===M;})[0]||{};
+  $('summary').innerHTML='<b>'+esc(info.name||M)+'</b> · '+list.length+' unmarked'+(left!==list.length?' · <span style="color:var(--pr-lime-text)">'+(list.length-left)+' drawn on this phone</span>':'')+(n?' · '+n+' edit'+(n===1?'':'s')+' stored here':'');
+  $('tools').innerHTML='<a class="btn" href="3d.html?m='+M+'&edit=1">Open the editor</a>'+(n?'<button class="btn pri" onclick="save(\''+M+'\')">Save '+n+' edit'+(n===1?'':'s')+'</button><button class="btn" onclick="share(\''+M+'\')">Share</button>':'')+'<a class="btn" href="index.html">← App</a>';
+  var byZone={}, order=[];
+  list.forEach(function(w){ var isD=!!d[w.name.toLowerCase()];
+    if(FILTER==='todo'&&isD)return; if(FILTER==='done'&&!isD)return; if(FILTER==='pick'&&!w.pick)return; if(FILTER==='area'&&w.kind!=='area')return;
+    var z=w.zone||'(no zone)'; if(!byZone[z]){byZone[z]=[];order.push(z);} byZone[z].push(w); });
+  var h='';
+  order.forEach(function(z){ var rows=byZone[z].slice().sort(function(a,b){ return (a.pick||99)-(b.pick||99) || a.name.localeCompare(b.name); });
+    h+='<div class="zone"><span>'+esc(z)+'</span><span>'+rows.length+'</span></div>';
+    rows.forEach(function(w){ var isD=d[w.name.toLowerCase()], kind=w.kind==='area'?'area':'run', id='n-'+w.name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+      var href='3d.html?m='+M+'&edit=1&mark='+encodeURIComponent(w.name)+'&kind='+kind+(w.zone_id?'&zone='+encodeURIComponent(w.zone_id):'');
+      h+='<a class="row'+(isD?' done':'')+'" id="'+id+'" href="'+href+'"><div class="nm">'+(w.pick?'<span class="pill pick">#'+w.pick+'</span>':'')+esc(w.name)+(kind==='area'?'<span class="pill area">area</span>':'')+(w.difficulty?'<span class="pill '+esc(w.difficulty)+'">'+esc(w.difficulty)+'</span>':'')+(isD?'<span class="pill drawn">drawn · '+esc(isD)+'</span>':'')+'</div>'
+        +'<div class="meta">'+esc([w.type,w.lift?'off '+w.lift:''].filter(Boolean).join(' · '))+'</div>'+(w.note?'<div class="note">'+esc(w.note)+'</div>':'')+'</a>'; });
+  });
+  $('list').innerHTML=h||'<div class="sub">Nothing here'+(FILTER!=='all'?' for this filter':' — every name has a line')+'.</div>';
+}
+boot();
+</script>
+</body>
+</html>

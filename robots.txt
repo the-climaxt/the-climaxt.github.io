@@ -1,3 +1,4 @@
 User-agent: *
 Disallow: /3d.html
+Disallow: /mark.html
 Disallow: /maps/3d/
