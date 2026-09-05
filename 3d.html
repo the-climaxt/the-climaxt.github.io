@@ -237,7 +237,7 @@ var COL={ run:{green:hex('#7BB800'), blue:hex('#1E8FCB'), black:hex('#241E2C'), 
 var NIGHT_TEXTURE_BRIGHTNESS=0.45, NIGHT_CONTRAST=0.1, PAPER_TEXTURE_LIFT=0.14, THEME_DEFAULT='paper';
 /* Trees — Huck Ribbons3D.ts: cone radius = height×0.22 + 0.4 m, planted 0.5 m in, 5 sides, Huck's green;
    TREE_MAX thins a big census evenly (Revelstoke's forest is ~5× Copper's); below TREES_FROM_ZOOM they are sub-pixel and skipped. */
-var TREE_RADIUS_PER_M=0.22, TREE_RADIUS_BASE_M=0.4, TREE_SINK_M=0.5, TREE_SIDES=5, TREE_RGB=[0.13,0.24,0.15], TREE_MAX=400000, TREES_FROM_ZOOM=12.6,
+var TREE_RADIUS_PER_M=0.22, TREE_RADIUS_BASE_M=0.4, TREE_SINK_M=0.5, TREE_SINK_PER_ZOOM_M=5, TREE_SINK_MAX_M=25, TREE_SIDES=5, TREE_RGB=[0.13,0.24,0.15], TREE_MAX=400000, TREES_FROM_ZOOM=12.6,
     SUN=[-0.45,0.45,0.77];
 var GATE_ITER=150000;          // PBKDF2 rounds — same as the app's gateTry()
 
@@ -268,6 +268,9 @@ var LAB=Q.get('lab')==='1';
 var EXAG_LOCKED=1.5;
 /* the ski-area boundary line (Sep 5): the app's yellow under orange dashes — a printed trail map's "area boundary" */
 var BOUNDARY_YELLOW='#FFC53D', BOUNDARY_ORANGE='#FF8A3C', BOUNDARY_WIDTH_PX=2.4;
+/* …and as a 3D ribbon floated ABOVE the treetops (Tanner, Sep 5: "the ski area boundary needs to be above the treetops"):
+   Metres. BOUNDARY_LIFT_M clears the tallest cones (40 m cap in the census). Dashes are cut from the ring itself. */
+var BOUNDARY_LIFT_M=42, BOUNDARY_WIDTH_M=5, BOUNDARY_UNDER_WIDTH_M=7.5, BOUNDARY_DASH_M=18, BOUNDARY_GAP_M=11;
 var THEME='paper';   /* the night theme code stays (Huck's), but no button offers it */
 document.documentElement.dataset.theme=THEME;
 
@@ -337,11 +340,8 @@ function start(){
       {id:'bg',type:'background',paint:{'background-color':sky}},
       {id:'texture',type:'raster',source:'texture',paint:texturePaint()},
       {id:'outside-mask',type:'fill',source:'outside',paint:{'fill-color':sky,'fill-opacity':1}},
-      /* the ski-area boundary, trail-map style (Tanner, Sep 5: "I should have an orange and yellow in my app color scheme.
-         Make it trail map style with that"): a solid yellow underline with orange dashes on top, in the app's own
-         --pr-yellow / --pr-orange, draped on the terrain. Widths in px; BOUNDARY_* knobs at the top of the script. */
-      {id:'boundary-under',type:'line',source:'furniture','source-layer':'zones',filter:['==',['get','level'],'mountain'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':BOUNDARY_YELLOW,'line-width':BOUNDARY_WIDTH_PX+1.6,'line-opacity':0.85}},
-      {id:'boundary',type:'line',source:'furniture','source-layer':'zones',filter:['==',['get','level'],'mountain'],layout:{'line-join':'round'},paint:{'line-color':BOUNDARY_ORANGE,'line-width':BOUNDARY_WIDTH_PX,'line-opacity':0.95,'line-dasharray':[3,2.2]}},
+      /* the ski-area boundary is a 3D ribbon in the ribbon layer (yellow under orange dashes, floated above the treetops —
+         Tanner, Sep 5); a flat line here as well read as two lines, so there is none */
       /* glades and other skiable shapes: a light ink wash on the snow (the coloured outline is a 3D ribbon in the layer below) */
       {id:'areas-fill',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','level'],'area'],paint:{'fill-color':'#241E2C','fill-opacity':0}},
       {id:'areas-sel',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','zone_id'],'-'],paint:{'fill-color':'#FFC53D','fill-opacity':AREA_GLOW_ALPHA}},
@@ -762,6 +762,16 @@ Ribbons3D.prototype.build=function(gl){
     ribbon(shadow,pts,AREA_WIDTH_M,AREA_LIFT_M+extra,pre(col,AREA_EDGE_ALPHA),-2);
     band(glow,pts,AREA_GLOW_M,AREA_LIFT_M+extra-HI_RAISE_M,pre(self.colours.highlight,AREA_GLOW_ALPHA),pre(self.colours.highlight,0),id,ringSign(pts));   /* minus the pick raise, so the band sits on the tinted ground, not above it */
     var label=(run&&typeof runLabel==='function')?runLabel(run.ref_id):((typeof areaLabel==='function')?areaLabel(ref):''); pins(ref,pts,(d&&d in LABELS.ink)?d:'unknown',label,AREA_LIFT_M+extra,id); });
+  /* the ski-area boundary: a solid yellow ribbon with orange dashes riding on it, high enough to clear every cone;
+     both are also in the ghost pass (drawn faintly through the terrain), so the line reads behind a ridge too */
+  (self.geom.boundary||[]).forEach(function(ring,ri){ var pts=local(ring); if(pts.length<2)return; var id=-2;
+    ribbon(opaque,pts,BOUNDARY_UNDER_WIDTH_M,BOUNDARY_LIFT_M+extra,hex(BOUNDARY_YELLOW),id);
+    /* walk the ring cutting BOUNDARY_DASH_M dashes with BOUNDARY_GAP_M gaps, each dash its own little ribbon a hair higher */
+    var cum=[0]; for(var i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+    function at(d){ var i=1; while(i<cum.length-1&&cum[i]<d)i++; var a=pts[i-1],b=pts[i],t=(cum[i]-cum[i-1])?(d-cum[i-1])/(cum[i]-cum[i-1]):0; return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]; }
+    var L=cum[cum.length-1], d=0;
+    while(d<L){ var e=Math.min(L,d+BOUNDARY_DASH_M), seg=[at(d)]; for(var k=1;k<cum.length-1;k++){ if(cum[k]>d&&cum[k]<e)seg.push(pts[k]); } seg.push(at(e));
+      ribbon(opaque,seg,BOUNDARY_WIDTH_M,BOUNDARY_LIFT_M+extra+0.3,hex(BOUNDARY_ORANGE),id); d=e+BOUNDARY_GAP_M; } });
   function upload(data,blend){ if(!data.length)return; var vao=gl.createVertexArray(); gl.bindVertexArray(vao); var buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);
     var st=40, aPos=gl.getAttribLocation(self.prog,'a_pos'),aSide=gl.getAttribLocation(self.prog,'a_side'),aCol=gl.getAttribLocation(self.prog,'a_col'),aId=gl.getAttribLocation(self.prog,'a_id');
     gl.enableVertexAttribArray(aPos);gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,st,0); gl.enableVertexAttribArray(aSide);gl.vertexAttribPointer(aSide,2,gl.FLOAT,false,st,12);
@@ -838,7 +848,11 @@ Ribbons3D.prototype.render=function(gl,args){
   if(this.showTrees&&this.treeVao&&this.treeCount&&zoom>=TREES_FROM_ZOOM){
     gl.useProgram(this.treeProg); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE);
     gl.uniformMatrix4fv(gl.getUniformLocation(this.treeProg,'u_matrix'),false,M32); gl.uniform3fv(gl.getUniformLocation(this.treeProg,'u_sun'),SUN);
-    gl.uniform1f(gl.getUniformLocation(this.treeProg,'u_lift'),lift); gl.uniform3fv(gl.getUniformLocation(this.treeProg,'u_rgb'),TREE_RGB);
+    /* NOT the ribbons' zoom-out lift (Tanner, Sep 5: "trees floating above the mountaintops" — at zoom 12.6 that lift is
+       64 m). Cones sit on the ground; zoomed out they sink a little instead, because the coarse terrain mesh drawn far
+       away runs under the true ground on ridges and a cone standing on the true ground would hover over it. */
+    var treeSink=Math.min(TREE_SINK_MAX_M,Math.max(0,LIFT_FROM_ZOOM-zoom)*TREE_SINK_PER_ZOOM_M)*this.unitPerMetre;
+    gl.uniform1f(gl.getUniformLocation(this.treeProg,'u_lift'),-treeSink); gl.uniform3fv(gl.getUniformLocation(this.treeProg,'u_rgb'),TREE_RGB);
     gl.bindVertexArray(this.treeVao); gl.drawArraysInstanced(gl.TRIANGLES,0,TREE_SIDES*3,this.treeCount); gl.bindVertexArray(null);
   }
   gl.useProgram(this.prog); if(zoom<XRAY_BELOW_ZOOM)gl.disable(gl.DEPTH_TEST); else gl.enable(gl.DEPTH_TEST);
