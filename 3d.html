@@ -107,7 +107,7 @@ html,body{height:100%;background:var(--sky);color:var(--pr-cream);font-family:va
 #ed{position:absolute;left:8px;right:8px;top:calc(env(safe-area-inset-top) + 56px);z-index:7;background:var(--pr-card);border:1px solid var(--pr-border);border-radius:12px;padding:8px 10px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:38vh;overflow:auto} #ed.min{max-height:38px;overflow:hidden} #ed-min{position:absolute;right:8px;top:6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--pr-border);background:var(--pr-cream);font-size:12px}
 #ed-modes{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px} #ed-modes button{font:600 12px var(--pr-font-app);padding:6px 9px;border-radius:999px;border:1px solid var(--pr-border);background:var(--pr-cream);color:var(--pr-ink)} #ed-modes button.on{background:var(--pr-yellow)}
 #ed-opts label{display:inline-block;margin:0 10px 4px 0} #ed-actions{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0} #ed-actions .btn{padding:6px 9px;font-size:12px} #ed-actions .btn.on{background:var(--pr-yellow)}
-#ed-form{position:fixed;left:8px;right:8px;bottom:140px;z-index:9;background:var(--pr-card);border:1px solid var(--pr-border);border-radius:12px;padding:10px 12px;max-height:56vh;overflow:auto;box-shadow:0 -4px 16px rgba(0,0,0,.2)} #ed-form label{display:block;margin:6px 0;font-size:12px} #ed-form input:not([type=checkbox]):not([type=radio]):not([type=range]),#ed-form select{width:100%;font:13px var(--pr-font-app);padding:6px 8px;border:1px solid var(--pr-border);border-radius:8px;background:#fff;color:var(--pr-ink)}
+#ed-form{position:fixed;left:8px;right:8px;bottom:140px;z-index:9;background:var(--pr-card);border:1px solid var(--pr-border);border-radius:12px;padding:10px 12px;max-height:56vh;overflow:auto;box-shadow:0 -4px 16px rgba(0,0,0,.2)} #ed-form label{display:block;margin:6px 0;font-size:12px} #ed-form input:not([type=checkbox]):not([type=radio]):not([type=range]),#ed-form select,#ed-form textarea{width:100%;font:13px var(--pr-font-app);padding:6px 8px;border:1px solid var(--pr-border);border-radius:8px;background:#fff;color:var(--pr-ink)} #ed-form textarea{resize:vertical;box-sizing:border-box}
 #ed-hint{font-size:11px;color:var(--pr-text-muted);margin-top:4px} #ed-list{max-height:30vh;overflow:auto;margin:6px 0}
 .ed-gps{width:14px;height:14px;border-radius:50%;background:#35B5E8;border:2px solid #fff;box-shadow:0 0 0 4px rgba(53,181,232,.3)}
 .svc{display:flex;align-items:center;gap:5px;background:var(--pr-cream);color:var(--pr-ink);border:1px solid var(--pr-border);border-radius:999px;padding:3px 8px 3px 5px;font:600 11px var(--pr-font-app);white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.18);cursor:pointer} .svc i{width:9px;height:9px;border-radius:50%;display:inline-block} .svc.home{border-color:#FFC53D;box-shadow:0 0 0 2px #FFC53D}
@@ -759,10 +759,13 @@ Ribbons3D.prototype.build=function(gl){
       carry=d-seg; } });
   /* areas (glades): almost invisible until picked — a faint edge in the run colour plus the name along it. Picked, the inside is tinted
      (the flat 'areas-sel' layer) and a glow band fades OUT past the edge, so the boundary reads soft, not surveyed. */
-  Object.keys(this.geom.areas||{}).forEach(function(ref){ var pts=local(self.geom.areas[ref]), run=(typeof runOfArea==='function')?runOfArea(ref):null, d=run?run.difficulty:null, col=(d&&self.colours.run[d])||self.colours.area, id=idOf(ref);
-    ribbon(shadow,pts,AREA_WIDTH_M,AREA_LIFT_M+extra,pre(col,AREA_EDGE_ALPHA),-2);
-    band(glow,pts,AREA_GLOW_M,AREA_LIFT_M+extra-HI_RAISE_M,pre(self.colours.highlight,AREA_GLOW_ALPHA),pre(self.colours.highlight,0),id,ringSign(pts));   /* minus the pick raise, so the band sits on the tinted ground, not above it */
-    var label=(run&&typeof runLabel==='function')?runLabel(run.ref_id):((typeof areaLabel==='function')?areaLabel(ref):''); pins(ref,pts,(d&&d in LABELS.ink)?d:'unknown',label,AREA_LIFT_M+extra,id); });
+  Object.keys(this.geom.areas||{}).forEach(function(ref){ var raw=self.geom.areas[ref], rings=(raw.length&&raw[0].length&&typeof raw[0][0]!=='number')?raw:[raw];   /* one ring, or several (a glade in separate stands) */
+    var run=(typeof runOfArea==='function')?runOfArea(ref):null, d=run?run.difficulty:null, col=(d&&self.colours.run[d])||self.colours.area, id=idOf(ref);
+    var label=(run&&typeof runLabel==='function')?runLabel(run.ref_id):((typeof areaLabel==='function')?areaLabel(ref):'');
+    rings.forEach(function(ring,ri){ var pts=local(ring);
+      ribbon(shadow,pts,AREA_WIDTH_M,AREA_LIFT_M+extra,pre(col,AREA_EDGE_ALPHA),-2);
+      band(glow,pts,AREA_GLOW_M,AREA_LIFT_M+extra-HI_RAISE_M,pre(self.colours.highlight,AREA_GLOW_ALPHA),pre(self.colours.highlight,0),id,ringSign(pts));   /* minus the pick raise, so the band sits on the tinted ground, not above it */
+      if(ri===0)pins(ref,pts,(d&&d in LABELS.ink)?d:'unknown',label,AREA_LIFT_M+extra,id); }); });
   /* the ski-area boundary: a solid yellow ribbon with orange dashes riding on it, high enough to clear every cone;
      both are also in the ghost pass (drawn faintly through the terrain), so the line reads behind a ridge too */
   (self.geom.boundary||[]).forEach(function(ring,ri){ var pts=local(ring); if(pts.length<2)return; var id=-2;
@@ -898,7 +901,10 @@ Ribbons3D.prototype.render=function(gl,args){
    Edits live in this browser (localStorage) until you Save (download) or Share (the phone's share sheet → Drive).
    This file is pasted into 3d.html by build_viewer.py at the EDIT_JS marker; it uses the page's map, ribbons,
    NAMES, MAN, GEOM, PARTS, select() and toast(). Written in plain JS so the TypeScript port into Huck's
-   app/src/map/EditMode.ts is mechanical. */
+   app/src/map/EditMode.ts is mechanical.
+   Sep 5 (Tanner): every form has a "Notes for Claude" box (claude_note — free text the loader lists for a human,
+   never acts on); Select → Cut splits a ribbon in two at a tap (both halves keep the name); Select → Join glues two
+   ribbons into one (the gap between them is walked down the fall line; refused past JOIN_MAX_GAP_M). */
 var EDIT=Q.get('edit')==='1';
 /* Huck's controlled vocabulary (build_gpkg.py VOCAB), grouped by feature type so the second picker only offers
    what fits the first. `service` is the one type this tool adds to Huck's list (plan §2). */
@@ -916,7 +922,7 @@ var SERVICE_SUBTYPES=['bar','restaurant','cafe','lodging','base_lodge','warming_
 var DIFFICULTIES=[['easy','green'],['intermediate','blue'],['advanced','black'],['expert','double black'],['freeride','freeride / unrated']];
 var AREA_KINDS=['glade','bowl','pocket','face','chutes','trees','stash','zone'];
 var ED={mode:'select',sub:'point',fallLine:true,follow:false,draft:[],feats:[],undo:[],sel:null,flat:false,aerial:false,gps:null,editor:'',anchorPick:null,dragging:null,hidden:{},moved:{},savedPitch:null,
-  STEP_M:12, MAX_STEPS:400, GPS_NEAR_M:50};
+  STEP_M:12, MAX_STEPS:400, GPS_NEAR_M:50, JOIN_MAX_GAP_M:150, JOIN_TOUCH_M:15, cutPick:null, joinPick:null};
 
 /* ---------- storage ---------- */
 function edKey(){ return 'pr3d-edits-'+M; }
@@ -961,7 +967,7 @@ function edLayers(){
   map.addSource('edits',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
   map.addSource('ed-draft',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
   map.addLayer({id:'ed-fill',type:'fill',source:'edits',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':'#FF4D9D','fill-opacity':0.18}});
-  map.addLayer({id:'ed-line',type:'line',source:'edits',filter:['any',['==',['geometry-type'],'LineString'],['==',['geometry-type'],'Polygon']],paint:{'line-color':['case',['==',['get','edit_kind'],'move'],'#FFC53D','#FF4D9D'],'line-width':4,'line-dasharray':[2,1.2]}});
+  map.addLayer({id:'ed-line',type:'line',source:'edits',filter:['any',['==',['geometry-type'],'LineString'],['==',['geometry-type'],'Polygon'],['==',['geometry-type'],'MultiLineString']],paint:{'line-color':['case',['any',['==',['get','edit_kind'],'move'],['==',['get','edit_kind'],'merge']],'#FFC53D','#FF4D9D'],'line-width':4,'line-dasharray':[2,1.2]}});
   map.addLayer({id:'ed-pt',type:'circle',source:'edits',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':8,'circle-color':['match',['get','edit_kind'],'service','#1FC9B7','feature','#8A4DEB','view','#FFC53D','#FF4D9D'],'circle-stroke-color':'#FBF6EC','circle-stroke-width':2}});
   map.addLayer({id:'ed-draft-line',type:'line',source:'ed-draft',filter:['==',['geometry-type'],'LineString'],paint:{'line-color':'#FFC53D','line-width':3}});
   map.addLayer({id:'ed-draft-fill',type:'fill',source:'ed-draft',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':'#FFC53D','fill-opacity':0.2}});
@@ -1004,19 +1010,22 @@ function edMode(m){ ED.mode=m; ED.draft=[]; ED.anchorPick=null; var b=$('ed-mode
 function edFlat(){ ED.flat=!ED.flat; if(ED.flat){ ED.savedPitch=map.getPitch(); map.easeTo({pitch:0,duration:400}); } else map.easeTo({pitch:ED.savedPitch==null?PITCH:ED.savedPitch,duration:400}); $('ed-flat').className='btn'+(ED.flat?' on':''); }
 function edToggleList(){ var l=$('ed-list'); l.style.display=l.style.display==='none'?'':'none'; if(l.style.display!=='none')edList(); }
 function edList(){ var l=$('ed-list'); if(!ED.feats.length){ l.innerHTML='<div class="zsb">Nothing yet.</div>'; return; }
-  l.innerHTML=ED.feats.slice().reverse().map(function(f){ var p=f.properties; return '<div class="zrr" onclick="edSelect(\''+p.uid+'\')"><span class="zd" style="background:'+({service:'#1FC9B7',feature:'#8A4DEB',view:'#FFC53D',move:'#FFC53D'}[p.edit_kind]||'#FF4D9D')+'"></span><span class="znm">'+esc(p.name||p.app_name||p.ref_id||p.zone_id||'')+'<div class="zsb">'+esc(p.edit_kind+(p.kind?' · '+p.kind:'')+(p.service_subtype?' · '+p.service_subtype:'')+(p.feature_type?' · '+p.feature_type+'/'+p.feature_subtype:'')+(p.derivation_method?' · '+p.derivation_method:''))+'</div></span><button class="zx" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation();edDelete(\''+p.uid+'\')">✕</button></div>'; }).join(''); }
+  l.innerHTML=ED.feats.slice().reverse().map(function(f){ var p=f.properties; return '<div class="zrr" onclick="edSelect(\''+p.uid+'\')"><span class="zd" style="background:'+({service:'#1FC9B7',feature:'#8A4DEB',view:'#FFC53D',move:'#FFC53D',split:'#FFC53D',merge:'#FFC53D'}[p.edit_kind]||'#FF4D9D')+'"></span><span class="znm">'+esc(p.name||p.app_name||p.ref_id||p.zone_id||'')+'<div class="zsb">'+esc(p.edit_kind+(p.kind?' · '+p.kind:'')+(p.service_subtype?' · '+p.service_subtype:'')+(p.feature_type?' · '+p.feature_type+'/'+p.feature_subtype:'')+(p.derivation_method?' · '+p.derivation_method:''))+'</div></span><button class="zx" style="width:28px;height:28px;font-size:13px" onclick="event.stopPropagation();edDelete(\''+p.uid+'\')">✕</button></div>'; }).join(''); }
 function edSelect(uid){ var f=ED.feats.filter(function(x){return x.properties.uid===uid;})[0]; if(!f)return; ED.sel=uid;
   if(f.geometry){ var c=f.geometry.type==='Point'?f.geometry.coordinates:f.geometry.type==='Polygon'?f.geometry.coordinates[0][0]:f.geometry.coordinates[0]; map.easeTo({center:c,duration:500}); }
   edForm(f,true); }
+function edForget(f){ var p=f.properties; if(p.edit_kind==='hide')delete ED.hidden[p.ref_id]; if(p.edit_kind==='move'||p.edit_kind==='split'||p.edit_kind==='merge')delete ED.moved[p.ref_id]; if(p.edit_kind==='merge')delete ED.hidden[p.ref_id_other]; if(['hide','move','split','merge'].indexOf(p.edit_kind)>=0)edRebuildRibbons(); }
 function edDelete(uid){ var f=ED.feats.filter(function(x){return x.properties.uid===uid;})[0]; ED.feats=ED.feats.filter(function(x){return x.properties.uid!==uid;});
-  if(f&&f.properties.edit_kind==='hide'){ delete ED.hidden[f.properties.ref_id]; edRebuildRibbons(); } if(f&&f.properties.edit_kind==='move'){ delete ED.moved[f.properties.ref_id]; edRebuildRibbons(); }
+  if(f)edForget(f);
   edStore(); toast('Removed'); }
-function edUndo(){ if(ED.draft.length){ ED.draft.pop(); edRefresh(); return; } var f=ED.feats.pop(); if(f){ if(f.properties.edit_kind==='hide'){ delete ED.hidden[f.properties.ref_id]; edRebuildRibbons(); } if(f.properties.edit_kind==='move'){ delete ED.moved[f.properties.ref_id]; edRebuildRibbons(); } edStore(); toast('Undone: '+(f.properties.name||f.properties.edit_kind)); } }
+function edUndo(){ if(ED.draft.length){ ED.draft.pop(); edRefresh(); return; } var f=ED.feats.pop(); if(f){ edForget(f); edStore(); toast('Undone: '+(f.properties.name||f.properties.edit_kind)); } }
 
 /* ---------- clicks ---------- */
 function edClick(ev){
   if(!EDIT)return false;
   var ll=[+ev.lngLat.lng.toFixed(6),+ev.lngLat.lat.toFixed(6)], p=ev.point, box=[[p.x-10,p.y-10],[p.x+10,p.y+10]];
+  if(ED.cutPick){ ED.cutPick(ll); return true; }
+  if(ED.joinPick){ var hj=map.queryRenderedFeatures(box,{layers:['runs-hit']}); if(hj.length){ ED.joinPick(hj[0].properties.ref_id); } else toast('Tap the other run'); return true; }
   if(ED.anchorPick){ var h=map.queryRenderedFeatures(box,{layers:['runs-hit','lifts-hit']}); if(h.length){ ED.anchorPick(h[0].properties.ref_id, NAMES.lifts[h[0].properties.ref_id]?'lift':'run'); } else toast('Tap a ribbon'); return true; }
   if(ED.mode==='select'){ var e=map.queryRenderedFeatures(box,{layers:['ed-pt','ed-line','ed-fill']}); if(e.length){ edSelect(e[0].properties.uid); return true; } return false; }
   if(ED.mode==='view'){ return false; }
@@ -1039,7 +1048,7 @@ function edDone(){
 function edWanted(){ try{ return PARTS['wanted.json']?JSON.parse(new TextDecoder().decode(PARTS['wanted.json'])):[]; }catch(e){ return []; } }
 function edOpt(list,cur,labels){ return list.map(function(v,i){ var lab=labels?labels[i]:v; return '<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(lab)+'</option>'; }).join(''); }
 function edForm(f,existing){
-  var p=f.properties, k=p.edit_kind, box=$('ed-form'), h='<b>'+({add:'New line',area:'New area',service:'Service',feature:'Huck feature',view:'Bookmark',move:'Moved line',rename:'Rename',alias:'Alias',hide:'Hidden line'}[k]||k)+'</b>';
+  var p=f.properties, k=p.edit_kind, box=$('ed-form'), h='<b>'+({add:'New line',area:'New area',service:'Service',feature:'Huck feature',view:'Bookmark',move:'Moved line',rename:'Rename',alias:'Alias',hide:'Hidden line',split:'Cut in two',merge:'Joined'}[k]||k)+'</b>';
   var W=edWanted(), zones=Object.keys(NAMES.zones||{}).filter(function(z){return (NAMES.zones[z].level||'zone')!=='area';});
   /* the name picker: the still-wanted app runs first (with pick number, zone and difficulty), then every name already on the map (once each) */
   function wantedList(){ var seen={}; W.forEach(function(w){seen[w.name.toLowerCase()]=1;});
@@ -1068,7 +1077,10 @@ function edForm(f,existing){
     h+='<label>Zone '+zoneSel(p.zone_id||ZONE||M)+'</label><div class="zsb">zoom '+p.zoom+' · pitch '+p.pitch+' · bearing '+p.bearing+'</div>';
   } else if(k==='rename'){ h+='<label>New name <input id="f-name" value="'+esc(p.name||'')+'"></label>'; }
   else if(k==='alias'){ h+=wantedList()+'<label>This line IS the app\'s <input id="f-app" list="ed-names" value="'+esc(p.app_name||'')+'"></label><label>Zone '+zoneSel(p.zone_id||ZONE||'')+'</label>'; }
+  else if(k==='split'){ h+='<div class="zsb">'+esc(p.name||p.ref_id)+' cut into two pieces ('+p.upper_m+' m above the cut, '+p.lower_m+' m below). Both keep the name — use Rename on either half after the next build if they should differ.</div>'; }
+  else if(k==='merge'){ h+='<label>Name for the joined run <select id="f-name">'+edOpt([p.name_a,p.name_b].filter(function(x,i,a){return x&&a.indexOf(x)===i;}),p.name||p.name_a)+'</select></label><div class="zsb">'+esc(p.name_a||p.ref_id)+' + '+esc(p.name_b||p.ref_id_other)+(p.gap_m>ED.JOIN_TOUCH_M?' — '+p.gap_m+' m gap walked down the fall line':' — ends touch')+'</div>'; }
   else { h+='<div class="zsb">'+esc(p.ref_id||'')+'</div>'; }
+  h+='<label>Notes for Claude <textarea id="f-cn" rows="2" placeholder="anything the form can\'t say — e.g. every separate glade in this box is this run">'+esc(p.claude_note||'')+'</textarea></label>';
   h+='<label>Your name <input id="f-editor" value="'+esc(ED.editor||'')+'" placeholder="who is editing"></label>';
   h+='<div class="tog"><button class="btn pri" onclick="edCommit()">'+(existing?'Update':'Keep it')+'</button><button class="btn" onclick="edCancel()">'+(existing?'Close':'Discard')+'</button>'+(existing?'<button class="btn" onclick="edDelete(\''+p.uid+'\');edCancel()">Delete</button>':'')+'</div>';
   box.innerHTML=h; box.style.display=''; ED.pending=f; ED.pendingExisting=!!existing; setTimeout(function(){ var n=$('f-name'); if(n&&!existing)n.focus(); },50);
@@ -1104,12 +1116,16 @@ function edCommit(){
   else if(k==='view'){ p.zone_id=v('f-zone')||M; }
   else if(k==='rename'){ p.name=v('f-name'); if(!p.name){ toast('Type the new name'); return; } }
   else if(k==='alias'){ p.app_name=v('f-app'); if(!p.app_name){ toast('Pick the app run'); return; } p.zone_id=v('f-zone')||''; }
+  else if(k==='merge'){ p.name=v('f-name')||p.name_a; }
+  p.claude_note=v('f-cn')||undefined;
   p.edited=edNow(); p.editor=ED.editor; p.status='ok';
   if(!ED.pendingExisting) ED.feats.push(f);
   ED.pending=null; ED.draft=[]; $('ed-form').style.display='none'; edStore(); toast((ED.pendingExisting?'Updated ':'Kept ')+(p.name||p.app_name||k));
   if(ED.mark&&(k==='add'||k==='area')){ ED.mark=null; var hh=$('ed-hint'); if(hh)hh.innerHTML='Marked '+esc(p.name)+'. <a href="mark.html?m='+M+'#'+encodeURIComponent(p.name)+'" style="color:var(--pr-accent);font-weight:700">Back to the list ›</a> or keep drawing here.'; }
   if(k==='hide'){ ED.hidden[p.ref_id]=true; edRebuildRibbons(); }
   if(k==='move'){ ED.moved[p.ref_id]=f.geometry.coordinates; edRebuildRibbons(); }
+  if(k==='split'){ ED.moved[p.ref_id]=f.geometry.coordinates[0]; edRebuildRibbons(); }   /* the upper half stays on the ribbon; the lower half shows as a pink edit line */
+  if(k==='merge'){ ED.moved[p.ref_id]=f.geometry.coordinates; ED.hidden[p.ref_id_other]=true; edRebuildRibbons(); }
 }
 
 /* ---------- fixing an existing line (from the drawer) ---------- */
@@ -1118,7 +1134,7 @@ function edFixHtml(ref){
   var isLift=!!NAMES.lifts[ref];
   return '<div class="zlab">Edit this line</div><div class="tog">'
     +'<button class="btn" onclick="edFix(\'rename\')">Rename</button>'+(isLift?'':'<button class="btn" onclick="edFix(\'alias\')">It IS an app run…</button>')
-    +'<button class="btn" onclick="edFix(\'hide\')">Hide</button><button class="btn" onclick="edFix(\'move\')">Move points</button>'+(isLift?'':'<button class="btn" onclick="edFix(\'reroute\')">Re-route fall line</button>')+'</div>';
+    +'<button class="btn" onclick="edFix(\'hide\')">Hide</button><button class="btn" onclick="edFix(\'move\')">Move points</button>'+(isLift?'':'<button class="btn" onclick="edFix(\'reroute\')">Re-route fall line</button><button class="btn" onclick="edFix(\'cut\')">Cut in two</button><button class="btn" onclick="edFix(\'join\')">Join with…</button>')+'</div>';
 }
 function edFix(what){
   var ref=SEL; if(!ref)return; var g=GEOM.runs[ref]||GEOM.lifts[ref]; if(!g&&what!=='rename'&&what!=='alias'&&what!=='hide')return;
@@ -1127,6 +1143,8 @@ function edFix(what){
   if(what==='alias'){ edForm({type:'Feature',properties:Object.assign(base,{edit_kind:'alias'}),geometry:null}); return; }
   if(what==='hide'){ var f={type:'Feature',properties:Object.assign(base,{edit_kind:'hide',edited:edNow(),editor:ED.editor,status:'ok'}),geometry:null}; ED.feats.push(f); ED.hidden[ref]=true; edRebuildRibbons(); edStore(); toast('Hidden — Undo to bring it back'); select(null); return; }
   var coords=g.map(function(q){return [q[0],q[1]];});
+  if(what==='cut'){ edCutStart(ref,coords,base); return; }
+  if(what==='join'){ edJoinStart(ref,coords,base); return; }
   if(what==='reroute'){ coords=edFallLine(coords[0],coords[coords.length-1]); toast('Re-routed down the fall line'); }
   var mf={type:'Feature',properties:Object.assign(base,{edit_kind:'move',edited:edNow(),editor:ED.editor,status:'ok'}),geometry:{type:'LineString',coordinates:coords}};
   ED.feats.push(mf); ED.moved[ref]=coords; edRebuildRibbons(); edStore(); ED.sel=mf.properties.uid;
@@ -1146,13 +1164,47 @@ function edDragInit(){
 function edVertexDone(){ var mf=ED.dragFeat; mf.geometry.coordinates=ED.draft.slice(); ED.moved[mf.properties.ref_id]=mf.geometry.coordinates; ED.dragFeat=null; ED.draft=[]; edRebuildRibbons(); edStore(); edMode('select'); toast('Shape kept'); }
 function edRebuildRibbons(){ if(!ribbons||!ribbons.gl)return; ribbons.overrides={}; Object.keys(ED.hidden).forEach(function(r){ribbons.overrides[r]=null;}); Object.keys(ED.moved).forEach(function(r){ ribbons.overrides[r]=ED.moved[r].map(function(c){ var z=edElev(c); return [c[0],c[1],z==null?0:z/ (EXAG||1)]; }); }); ribbons.build(ribbons.gl); ribbons.buildLabels(ribbons.gl); if(map)map.triggerRepaint(); }
 
+/* ---------- cut one run into two (Tanner, Sep 5) ----------
+   Tap the ribbon where the cut goes; the tap is snapped onto the line. The edit carries BOTH halves as a MultiLineString
+   (upper first) and the loader replaces the one row with two rows of the same name. */
+function edSnapToLine(coords,ll){ var best=null,bd=1e9,bi=0;
+  for(var i=1;i<coords.length;i++){ var a=coords[i-1],b=coords[i],dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy,t=L?Math.max(0,Math.min(1,((ll[0]-a[0])*dx+(ll[1]-a[1])*dy)/L)):0,q=[a[0]+dx*t,a[1]+dy*t],d=edDistM(q,ll); if(d<bd){bd=d;best=q;bi=i;} }
+  return {pt:best,seg:bi,dist:bd}; }
+function edLineLenM(c){ var L=0; for(var i=1;i<c.length;i++)L+=edDistM(c[i-1],c[i]); return L; }
+function edCutStart(ref,coords,base){
+  select(null); edHint('Tap the run where it should be cut.'); toast('Tap the cut point');
+  ED.cutPick=function(ll){ var s=edSnapToLine(coords,ll); if(s.dist>40){ toast('Tap ON the run ('+Math.round(s.dist)+' m off)'); return; }
+    var upper=coords.slice(0,s.seg).concat([s.pt]), lower=[s.pt].concat(coords.slice(s.seg));
+    if(upper.length<2||lower.length<2||edLineLenM(upper)<20||edLineLenM(lower)<20){ toast('Too close to an end — tap further along'); return; }
+    var za=edElev(coords[0]),zb=edElev(coords[coords.length-1]); if(za!=null&&zb!=null&&zb>za){ var t=upper; upper=lower.slice().reverse(); lower=t.slice().reverse(); }   /* upper = the high half whichever way the line was drawn */
+    ED.cutPick=null;
+    edForm({type:'Feature',properties:Object.assign(base,{edit_kind:'split',upper_m:Math.round(edLineLenM(upper)),lower_m:Math.round(edLineLenM(lower))}),geometry:{type:'MultiLineString',coordinates:[upper,lower]}}); };
+}
+/* ---------- join two runs into one (Tanner, Sep 5) ----------
+   Select the first, Join with…, tap the second. The two lines are put end to end whichever way round brings their ends
+   closest; a gap wider than JOIN_TOUCH_M is walked down the fall line (the Line tool's walker); wider than JOIN_MAX_GAP_M
+   is refused so a mis-tap can't glue two unrelated runs. The result runs from the higher end down. */
+function edJoinStart(ref,coords,base){
+  select(null); edHint('Tap the run to join it with.'); toast('Tap the other run');
+  ED.joinPick=function(other){ if(other===ref){ toast('That is the same run'); return; } var g2=GEOM.runs[other]; if(!g2){ toast('Only runs can be joined'); return; }
+    var B=g2.map(function(q){return [q[0],q[1]];}), A=coords, best=null;
+    [[A,B],[A.slice().reverse(),B],[A,B.slice().reverse()],[A.slice().reverse(),B.slice().reverse()]].forEach(function(o){ var d=edDistM(o[0][o[0].length-1],o[1][0]); if(!best||d<best.d)best={d:d,a:o[0],b:o[1]}; });
+    if(best.d>ED.JOIN_MAX_GAP_M){ toast('Those ends are '+Math.round(best.d)+' m apart — too far to join'); return; }
+    var bridge=best.d>ED.JOIN_TOUCH_M?edFallLine(best.a[best.a.length-1],best.b[0]).slice(1,-1):[];
+    var line=best.a.concat(bridge,best.b);
+    var z0=edElev(line[0]),z1=edElev(line[line.length-1]); if(z0!=null&&z1!=null&&z1>z0)line=line.slice().reverse();
+    ED.joinPick=null;
+    var nb=runLabel(other)||other;
+    edForm({type:'Feature',properties:Object.assign(base,{edit_kind:'merge',ref_id_other:other,name_a:base.name,name_b:nb,gap_m:Math.round(best.d)}),geometry:{type:'LineString',coordinates:line}}); };
+}
+
 /* ---------- save / share / import ---------- */
 function edFileName(){ return M+'-edits.geojson'; }
 function edSave(){ var blob=new Blob([JSON.stringify(edCollection(),null,1)],{type:'application/geo+json'}), a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=edFileName(); document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500); toast('Saved '+edFileName()+' — put it in zone-maps-geo/'); }
 function edShare(){ var json=JSON.stringify(edCollection(),null,1);
   try{ var file=new File([json],edFileName(),{type:'application/geo+json'}); if(navigator.canShare&&navigator.canShare({files:[file]})){ navigator.share({files:[file],title:edFileName()}).then(function(){toast('Shared');}).catch(function(){}); return; } }catch(e){}
   try{ navigator.clipboard.writeText(json); toast('No share sheet here — copied the file to the clipboard'); }catch(e){ toast('Use Save'); } }
-function edImport(file){ if(!file)return; var rd=new FileReader(); rd.onload=function(){ try{ var fc=JSON.parse(rd.result), have={}; ED.feats.forEach(function(f){have[f.properties.uid]=1;}); var n=0; (fc.features||[]).forEach(function(f){ if(!f.properties.uid)f.properties.uid=edUid(); if(!have[f.properties.uid]){ ED.feats.push(f); n++; if(f.properties.edit_kind==='hide')ED.hidden[f.properties.ref_id]=true; if(f.properties.edit_kind==='move')ED.moved[f.properties.ref_id]=f.geometry.coordinates; } }); edRebuildRibbons(); edStore(); toast('Imported '+n+' edit'+(n===1?'':'s')); }catch(e){ toast('Not an edits file'); } }; rd.readAsText(file); }
+function edImport(file){ if(!file)return; var rd=new FileReader(); rd.onload=function(){ try{ var fc=JSON.parse(rd.result), have={}; ED.feats.forEach(function(f){have[f.properties.uid]=1;}); var n=0; (fc.features||[]).forEach(function(f){ if(!f.properties.uid)f.properties.uid=edUid(); if(!have[f.properties.uid]){ ED.feats.push(f); n++; if(f.properties.edit_kind==='hide')ED.hidden[f.properties.ref_id]=true; if(f.properties.edit_kind==='move')ED.moved[f.properties.ref_id]=f.geometry.coordinates; if(f.properties.edit_kind==='split')ED.moved[f.properties.ref_id]=f.geometry.coordinates[0]; if(f.properties.edit_kind==='merge'){ ED.moved[f.properties.ref_id]=f.geometry.coordinates; ED.hidden[f.properties.ref_id_other]=true; } } }); edRebuildRibbons(); edStore(); toast('Imported '+n+' edit'+(n===1?'':'s')); }catch(e){ toast('Not an edits file'); } }; rd.readAsText(file); }
 
 /* ---------- the aerial underlay (editor only): maps/3d/<m>-aerial.pmtiles, fetched whole into memory ---------- */
 function edAerial(){
@@ -1174,7 +1226,8 @@ function edGps(){ if(!navigator.geolocation)return; try{ navigator.geolocation.w
 /* ---------- start ---------- */
 function edInit(){
   if(!EDIT)return; edLoad(); edLayers(); edPanel(); edDragInit(); edGps();
-  ED.feats.forEach(function(f){ if(f.properties.edit_kind==='hide')ED.hidden[f.properties.ref_id]=true; if(f.properties.edit_kind==='move'&&f.geometry)ED.moved[f.properties.ref_id]=f.geometry.coordinates; });
+  ED.feats.forEach(function(f){ var p=f.properties; if(p.edit_kind==='hide')ED.hidden[p.ref_id]=true; if(p.edit_kind==='move'&&f.geometry)ED.moved[p.ref_id]=f.geometry.coordinates;
+    if(p.edit_kind==='split'&&f.geometry)ED.moved[p.ref_id]=f.geometry.coordinates[0]; if(p.edit_kind==='merge'&&f.geometry){ ED.moved[p.ref_id]=f.geometry.coordinates; ED.hidden[p.ref_id_other]=true; } });
   if(Object.keys(ED.hidden).length||Object.keys(ED.moved).length) edRebuildRibbons();
   edRefresh();
   var od=edDone; edDone=function(){ if(ED.mode==='vertex'){ edVertexDone(); return; } od(); };
