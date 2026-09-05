@@ -93,6 +93,20 @@ function normName(x){return (x||'').toLowerCase().split(/\s+/).filter(Boolean).j
 function b64d(x){var b=atob(x),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show');},1800);}
 var Q=new URLSearchParams(location.search), INDEX=[], W={}, M=null, FILTER='all';
+/* "Refresh from the server" (Tanner, Sep 5: "can you add a cache clear into the mark & edits apps?"). The app's service
+   worker keeps this page stale-first and everything under /maps/ cache-first, so after a rebuild the phone can keep showing
+   the old page and the old list. This drops ONLY the 3D map's own entries from the cache — this page, 3d.html, and the
+   sealed bundles under /maps/3d/ — never the crew's saved trail maps or the app shell — then reloads. Edits stay: they live
+   in localStorage, which is not touched. */
+async function pr3dRefresh(btn){
+  if(btn){ btn.disabled=true; btn.textContent='Refreshing…'; }
+  var n=0;
+  try{ if(window.caches){ var keys=await caches.keys(); for(var k=0;k<keys.length;k++){ var c=await caches.open(keys[k]), reqs=await c.keys();
+    for(var i=0;i<reqs.length;i++){ var u=reqs[i].url; if(u.indexOf('/maps/3d/')>=0||/\/(3d|mark)\.html(\?|$)/.test(u)){ await c.delete(reqs[i]); n++; } } } } }catch(e){}
+  try{ if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){ var reg=await navigator.serviceWorker.getRegistration(); if(reg)reg.update(); } }catch(e){}
+  location.replace(location.pathname+location.search.replace(/[?&]r=\d+/,'')+(location.search?'&':'?')+'r='+Date.now()+location.hash);
+}
+
 
 async function fetchBundle(){
   /* /maps/ is cache-first in the service worker; an hourly stamp on the address gets a fresh list without a version plumbed through */
@@ -145,8 +159,8 @@ function render(){
   var kids=$('chips').children; for(var i=0;i<kids.length;i++)kids[i].className=kids[i].dataset.id===M?'on':'';
   var fk=$('filters').children; for(var j=0;j<fk.length;j++)fk[j].className=fk[j].dataset.f===FILTER?'on':'';
   var list=W[M]||[], d=drawnNames(M), n=edits(M).length, left=list.filter(function(w){return !d[w.name.toLowerCase()];}).length, info=INDEX.filter(function(x){return x.id===M;})[0]||{};
-  $('summary').innerHTML='<b>'+esc(info.name||M)+'</b> · '+list.length+' unmarked'+(left!==list.length?' · <span style="color:var(--pr-lime-text)">'+(list.length-left)+' drawn on this phone</span>':'')+(n?' · '+n+' edit'+(n===1?'':'s')+' pending here':'')+(finals(M).length?' · '+finals(M).length+' in the map ✓':'');
-  $('tools').innerHTML='<a class="btn" href="3d.html?m='+M+'&edit=1">Open the editor</a>'+(n?'<button class="btn pri" onclick="save(\''+M+'\')">Save '+n+' edit'+(n===1?'':'s')+'</button><button class="btn" onclick="share(\''+M+'\')">Share</button>':'')+'<a class="btn" href="index.html">← App</a>';
+  $('summary').innerHTML='<b>'+esc(info.name||M)+'</b> · '+list.length+' unmarked'+(info.built?' · list built '+esc(String(info.built).slice(0,16).replace('T',' '))+' UTC':'')+(left!==list.length?' · <span style="color:var(--pr-lime-text)">'+(list.length-left)+' drawn on this phone</span>':'')+(n?' · '+n+' edit'+(n===1?'':'s')+' pending here':'')+(finals(M).length?' · '+finals(M).length+' in the map ✓':'');
+  $('tools').innerHTML='<a class="btn" href="3d.html?m='+M+'&edit=1">Open the editor</a>'+(n?'<button class="btn pri" onclick="save(\''+M+'\')">Save '+n+' edit'+(n===1?'':'s')+'</button><button class="btn" onclick="share(\''+M+'\')">Share</button>':'')+'<button class="btn" onclick="pr3dRefresh(this)" title="drop the cached copy of this page and the lists, then reload">↻ Refresh</button><a class="btn" href="index.html">← App</a>';
   var byZone={}, order=[];
   list.forEach(function(w){ var isD=!!d[w.name.toLowerCase()];
     if(FILTER==='todo'&&isD)return; if(FILTER==='done'&&!isD)return; if(FILTER==='pick'&&!w.pick)return; if(FILTER==='area'&&w.kind!=='area')return;

@@ -295,6 +295,7 @@ async function fetchBundle(){
   var got=0, total=0; function tick(n){ got+=n; if(total)$('prog').firstChild.style.width=Math.round(100*got/total)+'%'; $('gsub').textContent='Downloading the mountain… '+(got/1e6).toFixed(1)+(total?' of '+(total/1e6).toFixed(1):'')+' MB'; }
   var first=await fetchPiece('maps/3d/'+M+'.bundle',tick);
   var n=new DataView(first.buffer).getUint32(0,true), hdr=JSON.parse(new TextDecoder().decode(first.subarray(4,4+n)));
+  window.BUNDLE_BUILT=hdr.built||'';   /* when this mountain was sealed — the editor shows it, so a stale cache is obvious */
   total=(hdr.totalBytes||0)+4+n;
   var pieces=[first.subarray(4+n)];
   for(var i=1;i<(hdr.chunks||[]).length;i++) pieces.push(await fetchPiece('maps/3d/'+hdr.chunks[i],tick));
@@ -955,6 +956,20 @@ var AREA_KINDS=['glade','bowl','pocket','face','chutes','trees','stash','zone'];
 var ED={mode:'select',sub:'point',fallLine:true,follow:false,draft:[],feats:[],undo:[],sel:null,flat:false,aerial:false,gps:null,editor:'',anchorPick:null,dragging:null,hidden:{},moved:{},savedPitch:null,
   STEP_M:12, MAX_STEPS:400, GPS_NEAR_M:50, JOIN_MAX_GAP_M:150, JOIN_TOUCH_M:15, cutPick:null, joinPick:null};
 
+/* "Refresh from the server" (Tanner, Sep 5: "can you add a cache clear into the mark & edits apps?"). The app's service
+   worker keeps this page stale-first and everything under /maps/ cache-first, so after a rebuild the phone can keep showing
+   the old page and the old list. This drops ONLY the 3D map's own entries from the cache — this page, 3d.html, and the
+   sealed bundles under /maps/3d/ — never the crew's saved trail maps or the app shell — then reloads. Edits stay: they live
+   in localStorage, which is not touched. */
+async function pr3dRefresh(btn){
+  if(btn){ btn.disabled=true; btn.textContent='Refreshing…'; }
+  var n=0;
+  try{ if(window.caches){ var keys=await caches.keys(); for(var k=0;k<keys.length;k++){ var c=await caches.open(keys[k]), reqs=await c.keys();
+    for(var i=0;i<reqs.length;i++){ var u=reqs[i].url; if(u.indexOf('/maps/3d/')>=0||/\/(3d|mark)\.html(\?|$)/.test(u)){ await c.delete(reqs[i]); n++; } } } } }catch(e){}
+  try{ if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){ var reg=await navigator.serviceWorker.getRegistration(); if(reg)reg.update(); } }catch(e){}
+  location.replace(location.pathname+location.search.replace(/[?&]r=\d+/,'')+(location.search?'&':'?')+'r='+Date.now()+location.hash);
+}
+
 /* ---------- storage ---------- */
 function edKey(){ return 'pr3d-edits-'+M; }
 function edFinalKey(){ return 'pr3d-edits-'+M+'-final'; }
@@ -1032,6 +1047,7 @@ function edPanel(){
     +'<div id="ed-opts"></div>'
     +'<div id="ed-actions"><button class="btn" onclick="edDone()" id="ed-done">Done</button><button class="btn" onclick="edUndo()">Undo</button>'
     +'<button class="btn" onclick="edToggleList()">List <span id="ed-count"></span></button><button class="btn" onclick="edFlat()" id="ed-flat">Flat</button><button class="btn" onclick="edAerial()" id="ed-aerial">Aerial</button>'
+    +'<button class="btn" onclick="pr3dRefresh(this)" title="drop the cached copy of this page and this mountain, then reload">↻ Refresh</button>'
     +'<button class="btn pri" onclick="edSave()">Save</button><button class="btn" onclick="edShare()">Share</button><label class="btn">Import<input type="file" accept=".geojson,.json" style="display:none" onchange="edImport(this.files[0])"></label></div>'
     +'<div id="ed-list" style="display:none"></div><div id="ed-form" style="display:none"></div><div id="ed-hint"></div>';
   document.body.appendChild(d);
@@ -1291,7 +1307,7 @@ function edInit(){
   if(Object.keys(ED.hidden).length||Object.keys(ED.moved).length||ED.feats.some(function(f){return f.properties.edit_kind==='split'||f.properties.edit_kind==='add'||f.properties.edit_kind==='rename';})) edRebuildRibbons();
   edRefresh();
   var od=edDone; edDone=function(){ if(ED.mode==='vertex'){ edVertexDone(); return; } od(); };
-  toast('Edit mode — your changes stay on this phone until you Save or Share');
+  toast('Edit mode — map sealed '+((window.BUNDLE_BUILT||'').slice(0,16).replace('T',' ')||'?')+' UTC · edits stay on this phone until you Save or Share');
   edMarkStart();
 }
 /* Opened from mark.html (the "mark the unmarked" list, Sep 4): &mark=<name>&kind=<run|area> jumps to that name's zone,
