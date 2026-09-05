@@ -231,7 +231,9 @@ var PAD_BOTTOM_PX=(/[?&]embed=1/.test(location.search))?12:148, PAD_TOP_PX=64;  
 /* Colours — Powder Run tokens, not Huck's. Runs keep trail-map convention; the lift is the brand pink
    (the one thing on the map allowed to shout); the highlight is the app's pulsing yellow. */
 var COL={ run:{green:hex('#7BB800'), blue:hex('#1E8FCB'), black:hex('#241E2C'), double:hex('#241E2C'), unknown:hex('#8C8496')},   // unknown = an OSM line with no difficulty (a touring trail, an unrated track): muted, never blue
-          lift:hex('#FF4D9D'), area:hex('#FBF6EC',0.9), highlight:hex('#FFC53D') };
+          lift:hex('#FF4D9D'), area:hex('#FBF6EC',0.9), highlight:hex('#FFC53D'),
+          bootpack:hex('#F5E7C4'),   /* a hike up (Tanner, Sep 5: "this is a bootpack") — a cream footpath, no towers, an access to the model */
+          closure:hex('#E5484D') };  /* a PERMANENT closure (trail-map, never daily status): a red outline, no glow, nothing inside it is picked */
 /* Themes — Huck style.ts (Tanner 2026-09-02): night dims the MOUNTAIN (brightness-max 0.45, contrast 0.1);
    paper lifts the texture's darkest tone toward white by 0.14 ("the snow on the light version is a little too dark"). */
 var NIGHT_TEXTURE_BRIGHTNESS=0.45, NIGHT_CONTRAST=0.1, PAPER_TEXTURE_LIFT=0.14, THEME_DEFAULT='paper';
@@ -480,13 +482,14 @@ function setExag(x){   /* kept for the console / &lab work; the drawer no longer
 
 /* ====================== ZONES + DRAWER ====================== */
 function zoneName(id){ var z=NAMES.zones[id]; return z?z.name.replace(/\s*\((gated|mellow)\)\s*$/,''):id; }
-function runLabel(ref){ var n=NAMES.runs[ref]||{}; return n.pr||n.osm||'(unnamed run)'; }
+function runLabel(ref){ var n=NAMES.runs[ref]||{}; return n.label||n.pr||n.osm||'(unnamed run)'; }   /* label = a rename over an app-joined line; pr = the app's name; osm = the line's own */
 /* A glade's centreline (load_osm_areas.py / load_edits.py areas) is a tool: it gives the glade a list entry and a reach answer, but the
    crew sees the OUTLINE, never the line (Tanner, Sep 4: "I don't want those on the map, they're only a tool for you"). */
 function isCentreline(ref){ var n=NAMES.runs[ref]||{}; return /centreline/.test(n.src||''); }
 function areaOfRun(ref){ var r=MAN.runs.filter(function(x){return x.ref_id===ref;})[0]; return r&&r.area?r.area:null; }
 function runOfArea(aid){ return MAN.runs.filter(function(x){return x.area===aid&&isCentreline(x.ref_id);})[0]||MAN.runs.filter(function(x){return x.area===aid;})[0]||null; }
 function areaLabel(aid){ var z=(NAMES.zones||{})[aid]||{}; return z.name||aid; }
+function areaKind(aid){ var a=(MAN.areas||[]).filter(function(x){return x.id===aid;})[0]; return a?a.kind:null; }
 function buildChips(){
   var box=$('chips'); box.innerHTML='';
   MAN.views.forEach(function(v){ var b=document.createElement('button'); b.textContent=v.level==='mountain'?'Whole hill':zoneName(v.id); b.dataset.id=v.level==='mountain'?'':v.id; b.onclick=function(){openZone(v.level==='mountain'?null:v.id,true);}; box.appendChild(b); });
@@ -516,8 +519,8 @@ function renderDrawer(){
     var isLift=!!NAMES.lifts[SEL], n=isLift?NAMES.lifts[SEL]:(NAMES.runs[SEL]||{}), r=MAN.runs.filter(function(x){return x.ref_id===SEL;})[0];
     $('dtitle').textContent=isLift?(n.name||'Lift'):runLabel(SEL);
     $('dkind').style.display=''; $('dkind').className='pill '+(isLift?'lift':'');
-    $('dkind').textContent=isLift?(n.type||'lift').replace('_',' '):(r?{green:'green',blue:'blue',black:'black',double:'double black'}[r.difficulty]:'run');
-    var bits=[]; if(!isLift){ if(n.zone)bits.push(zoneName(n.zone)); if(n.osm&&n.pr&&n.osm!==n.pr)bits.push('map name: '+n.osm); if(isCentreline(SEL)){ var ak=((NAMES.zones||{})[areaOfRun(SEL)]||{}).kind; bits.push((ak||'glade')+(/osm-polygon/.test(n.src)?' · outline from OpenStreetMap':' · outline drawn in edit mode')); } else if(n.src&&n.src!=='osm')bits.push('line: '+n.src+(n.fidelity?' · '+n.fidelity.toLowerCase():'')); if(n.grooming)bits.push(n.grooming); }
+    $('dkind').textContent=isLift?(n.type||'lift').replace('_',' '):(r?({green:'green',blue:'blue',black:'black',double:'double black',unknown:'unrated'}[r.difficulty]||'run'):'run');
+    var bits=[]; if(!isLift){ if(n.zone)bits.push(zoneName(n.zone)); if(n.label&&n.pr)bits.push('in the app: '+n.pr); else if(n.osm&&n.pr&&n.osm!==n.pr)bits.push('map name: '+n.osm); if(isCentreline(SEL)){ var ak=((NAMES.zones||{})[areaOfRun(SEL)]||{}).kind; bits.push((ak||'glade')+(/osm-polygon/.test(n.src)?' · outline from OpenStreetMap':' · outline drawn in edit mode')); } else if(n.src&&n.src!=='osm')bits.push('line: '+n.src+(n.fidelity?' · '+n.fidelity.toLowerCase():'')); if(n.grooming)bits.push(n.grooming); }
     $('dsub').textContent=bits.join(' · ');
     h+='<div class="tog"><button class="btn" onclick="zoomSel()">Zoom to it</button><button class="btn" onclick="select(null)">Clear</button></div>';
     if(typeof edFixHtml==='function') h+=edFixHtml(SEL);
@@ -773,16 +776,21 @@ Ribbons3D.prototype.build=function(gl){
   Object.keys(this.geom.runs).forEach(function(ref){ if(ref in ov&&ov[ref]===null)return; if(typeof isCentreline==='function'&&isCentreline(ref))return; var pts=local(ref in ov?ov[ref]:self.geom.runs[ref]), id=idOf(ref), d=self.diffOf(ref);
     ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
     ribbon(opaque,pts,RUN_WIDTH_M,RUN_LIFT_M+extra,self.colours.run[d]||self.colours.run.unknown,id);
-    var n=(typeof NAMES!=='undefined'&&NAMES.runs[ref])||{}, nm=(self.nameOverrides&&self.nameOverrides[ref])||n.pr||n.osm||''; pins(ref,pts,d in LABELS.ink?d:'unknown',nm,RUN_LIFT_M+extra,id); });
+    var n=(typeof NAMES!=='undefined'&&NAMES.runs[ref])||{}, nm=(self.nameOverrides&&self.nameOverrides[ref])||n.label||n.pr||n.osm||''; pins(ref,pts,d in LABELS.ink?d:'unknown',nm,RUN_LIFT_M+extra,id); });
   /* edit mode: extra ribbons that are not (yet) in the package — the lower half of a cut run, drawn like its parent so it doesn't look deleted */
   Object.keys(self.extras||{}).forEach(function(key){ var x=self.extras[key], pts=local(x.pts), id=idOf(x.ref), d=x.d||'unknown';
     ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
     ribbon(opaque,pts,RUN_WIDTH_M,RUN_LIFT_M+extra,self.colours.run[d]||self.colours.run.unknown,id);
     if(x.label)pins(x.ref,pts,d in LABELS.ink?d:'unknown',x.label,RUN_LIFT_M+extra,id); });
   Object.keys(this.geom.lifts).forEach(function(ref){ if(ref in ov&&ov[ref]===null)return; var pts=local(ref in ov?ov[ref]:self.geom.lifts[ref]), id=idOf(ref);
+    var ln=(typeof NAMES!=='undefined'&&NAMES.lifts[ref])||{};
+    if(ln.type==='bootpack'){   /* a hike up: a narrow cream ribbon hugging the snow like a run, no cable, no towers; its label in the run ink */
+      ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
+      ribbon(opaque,pts,RUN_WIDTH_M-1,RUN_LIFT_M+extra,self.colours.bootpack,id);
+      pins(ref,pts,'unknown',(ln.pr||ln.name||'')+' · bootpack',RUN_LIFT_M+extra,id); return; }
     ribbon(shadow,pts,LIFT_WIDTH_M,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_LIFT_OFFSET_M,SHADOW_LIFT_OFFSET_M);
     ribbon(opaque,pts,LIFT_WIDTH_M,LIFT_LIFT_M+extra,self.colours.lift,id);
-    var ln=(typeof NAMES!=='undefined'&&NAMES.lifts[ref])||{}; pins(ref,pts,'lift',ln.pr||ln.name||'',LIFT_LIFT_M+extra,id);
+    pins(ref,pts,'lift',ln.pr||ln.name||'',LIFT_LIFT_M+extra,id);
     if(ln.type==='snowcat')return;   /* a cat road is a lift to the model (RED's Kirkup cat) but has no towers to draw */
     var carry=TOWER_EVERY_M/2;
     for(var i=1;i<pts.length;i++){ var a=pts[i-1],b=pts[i],seg=Math.hypot(b[0]-a[0],b[1]-a[1]); if(!seg)continue; var dx=(b[0]-a[0])/seg,dy=(b[1]-a[1])/seg,d=carry;
@@ -794,6 +802,9 @@ Ribbons3D.prototype.build=function(gl){
   Object.keys(this.geom.areas||{}).forEach(function(ref){ var raw=self.geom.areas[ref], rings=(raw.length&&raw[0].length&&typeof raw[0][0]!=='number')?raw:[raw];   /* one ring, or several (a glade in separate stands) */
     var run=(typeof runOfArea==='function')?runOfArea(ref):null, d=run?run.difficulty:null, col=(d&&self.colours.run[d])||self.colours.area, id=idOf(ref);
     var label=(run&&typeof runLabel==='function')?runLabel(run.ref_id):((typeof areaLabel==='function')?areaLabel(ref):'');
+    if(typeof areaKind==='function'&&areaKind(ref)==='closure'){   /* a permanent closure: a solid red outline, no glow, "CLOSED" along it */
+      rings.forEach(function(ring,ri){ var pts=local(ring); ribbon(opaque,pts,AREA_WIDTH_M+1,AREA_LIFT_M+extra,self.colours.closure,-2);
+        if(ri===0)pins(ref,pts,'unknown','PERMANENT CLOSURE · '+(label||''),AREA_LIFT_M+extra,-2); }); return; }
     rings.forEach(function(ring,ri){ var pts=local(ring);
       ribbon(shadow,pts,AREA_WIDTH_M,AREA_LIFT_M+extra,pre(col,AREA_EDGE_ALPHA),-2);
       band(glow,pts,AREA_GLOW_M,AREA_LIFT_M+extra-HI_RAISE_M,pre(self.colours.highlight,AREA_GLOW_ALPHA),pre(self.colours.highlight,0),id,ringSign(pts));   /* minus the pick raise, so the band sits on the tinted ground, not above it */
