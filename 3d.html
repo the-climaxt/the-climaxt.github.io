@@ -1210,7 +1210,9 @@ function edFixHtml(ref){
 }
 function edFix(what){
   var ref=SEL; if(!ref)return; var g=GEOM.runs[ref]||GEOM.lifts[ref]; if(!g&&what!=='rename'&&what!=='alias'&&what!=='hide')return;
-  var base={ref_id:ref,uid:edUid(),name:runLabel(ref)||(NAMES.lifts[ref]||{}).name||''};
+  /* ref_name = the row's own name at the time of the edit. A from-scratch rebuild renumbers every ref_id (the other chat's
+     "ref-id trap", Sep 6), so the loader falls back to this name when the id no longer points at the same row */
+  var base={ref_id:ref,ref_name:((NAMES.runs[ref]||{}).osm||(NAMES.lifts[ref]||{}).name||runLabel(ref)||''),uid:edUid(),name:runLabel(ref)||(NAMES.lifts[ref]||{}).name||''};
   if(what==='rename'){ edForm({type:'Feature',properties:Object.assign(base,{edit_kind:'rename'}),geometry:null}); return; }
   if(what==='alias'){ edForm({type:'Feature',properties:Object.assign(base,{edit_kind:'alias'}),geometry:null}); return; }
   if(what==='hide'){ var f={type:'Feature',properties:Object.assign(base,{edit_kind:'hide',edited:edNow(),editor:ED.editor,status:'ok'}),geometry:null}; ED.feats.push(f); ED.hidden[ref]=true; edRebuildRibbons(); edStore(); toast('Hidden — Undo to bring it back'); select(null); return; }
