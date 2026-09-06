@@ -233,7 +233,8 @@ var PAD_BOTTOM_PX=(/[?&]embed=1/.test(location.search))?12:148, PAD_TOP_PX=64;  
 var COL={ run:{green:hex('#7BB800'), blue:hex('#1E8FCB'), black:hex('#241E2C'), double:hex('#241E2C'), unknown:hex('#8C8496')},   // unknown = an OSM line with no difficulty (a touring trail, an unrated track): muted, never blue
           lift:hex('#FF4D9D'), area:hex('#FBF6EC',0.9), highlight:hex('#FFC53D'),
           bootpack:hex('#F5E7C4'),   /* a hike up (Tanner, Sep 5: "this is a bootpack") — a cream footpath, no towers, an access to the model */
-          closure:hex('#E5484D') };  /* a PERMANENT closure (trail-map, never daily status): a red outline, no glow, nothing inside it is picked */
+          closure:hex('#E5484D'),    /* a PERMANENT closure (trail-map, never daily status): a red outline, no glow, nothing inside it is picked */
+          oob:hex('#F5A524') };      /* out of bounds but open (Whitewater's Glory backside): an amber outline, "not patrolled" along it */
 /* Themes — Huck style.ts (Tanner 2026-09-02): night dims the MOUNTAIN (brightness-max 0.45, contrast 0.1);
    paper lifts the texture's darkest tone toward white by 0.14 ("the snow on the light version is a little too dark"). */
 var NIGHT_TEXTURE_BRIGHTNESS=0.45, NIGHT_CONTRAST=0.1, PAPER_TEXTURE_LIFT=0.14, THEME_DEFAULT='paper';
@@ -802,9 +803,11 @@ Ribbons3D.prototype.build=function(gl){
   Object.keys(this.geom.areas||{}).forEach(function(ref){ var raw=self.geom.areas[ref], rings=(raw.length&&raw[0].length&&typeof raw[0][0]!=='number')?raw:[raw];   /* one ring, or several (a glade in separate stands) */
     var run=(typeof runOfArea==='function')?runOfArea(ref):null, d=run?run.difficulty:null, col=(d&&self.colours.run[d])||self.colours.area, id=idOf(ref);
     var label=(run&&typeof runLabel==='function')?runLabel(run.ref_id):((typeof areaLabel==='function')?areaLabel(ref):'');
-    if(typeof areaKind==='function'&&areaKind(ref)==='closure'){   /* a permanent closure: a solid red outline, no glow, "CLOSED" along it */
-      rings.forEach(function(ring,ri){ var pts=local(ring); ribbon(opaque,pts,AREA_WIDTH_M+1,AREA_LIFT_M+extra,self.colours.closure,-2);
-        if(ri===0)pins(ref,pts,'unknown','PERMANENT CLOSURE · '+(label||''),AREA_LIFT_M+extra,-2); }); return; }
+    var ak=(typeof areaKind==='function')?areaKind(ref):null;
+    if(ak==='closure'||ak==='oob'){   /* a permanent closure (red) or an out-of-bounds-but-open area (amber): a solid outline, no glow, the word along it */
+      var oc=(ak==='oob')?self.colours.oob:self.colours.closure, ow=(ak==='oob')?'OUT OF BOUNDS · not patrolled · ':'PERMANENT CLOSURE · ';
+      rings.forEach(function(ring,ri){ var pts=local(ring); ribbon(opaque,pts,AREA_WIDTH_M+1,AREA_LIFT_M+extra,oc,-2);
+        if(ri===0)pins(ref,pts,'unknown',ow+(label||''),AREA_LIFT_M+extra,-2); }); return; }
     rings.forEach(function(ring,ri){ var pts=local(ring);
       ribbon(shadow,pts,AREA_WIDTH_M,AREA_LIFT_M+extra,pre(col,AREA_EDGE_ALPHA),-2);
       band(glow,pts,AREA_GLOW_M,AREA_LIFT_M+extra-HI_RAISE_M,pre(self.colours.highlight,AREA_GLOW_ALPHA),pre(self.colours.highlight,0),id,ringSign(pts));   /* minus the pick raise, so the band sits on the tinted ground, not above it */
