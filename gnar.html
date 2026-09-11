@@ -32,7 +32,9 @@
   - A "ski day" runs 3 am to 3 am, so a claim logged at 12:30 am after the meeting lands on the right day.
 
   CHANGING THE GAME
-  Every item lives in the ITEMS list below (code, group, name, detail, points, how often). Edit the number,
+  Every item lives in the ITEMS list below (code, group, name, detail, points, how often). Where it shows on
+  the Claim tab (which pill, which head, next to what) is the LAYOUT block right after ITEMS — put a new code
+  there too, or it lands in "More" under Crew. Edit the number,
   encrypt nothing (this page holds no secrets), commit, push. Vote points and the Super Bowl props are in
   gnar-score.js. 04-app-build/gnar/README.md walks through it.
 -->
@@ -98,6 +100,7 @@ svg.ic{width:14px;height:14px;fill:currentColor;vertical-align:-2px;flex:0 0 aut
 .row .nm small.t2{color:var(--pr-text-2)}
 .row .pts{font-family:var(--pr-font-app-display);font-size:18px;letter-spacing:.5px;min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
 .row .pts.neg{color:var(--pr-danger-text)}
+.zone.zc{cursor:pointer;padding:10px 0;border-bottom:1px solid var(--pr-hairline);-webkit-tap-highlight-color:transparent}
 .zone{margin:14px 0 4px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--pr-text-muted);display:flex;justify-content:space-between;align-items:center}
 .hair{border-top:1px solid var(--pr-hairline);margin:10px 0}
 .between{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -815,9 +818,64 @@ var RULES=[
  'Super Bowl Sunday has props. They show up on the Board that day. Picks lock when you confirm them.',
  'Last place buys. Decide what at the first business meeting.'
 ];
-var GROUPS=[['line','Lines'],['hill','On hill'],['prep','Prep'],['town','Meetings'],['road','Road'],['stick','Stickers'],['bonus','Bonuses'],['pen','Penalties']];
+/* =====================================================================================
+   1b. WHERE THINGS SHOW ON THE CLAIM TAB (Sep 11 2026)
+      Six pills. Under each, a few heads; inside a head, items sit in the order written here —
+      a penalty right under the bonus it undoes (first chair → missed first chair). This is
+      display only: scoring still uses each item's g. The same code can sit under two heads
+      (curling is under Golden and under Party — same item, same once rule, two doorways).
+      A new item with points that is not listed here lands in "More" at the bottom of Crew,
+      so it is never lost — but put it where it belongs.
+      Hills: the resort chips stay. Under a hill it reads lines → storied → sets → "Also at
+      <hill>" (that hill's own stuff + the per-resort ones) → the three any-day heads,
+      collapsed by default (tap the head; it stays open as you move between hills).
+   ===================================================================================== */
+var GROUPS=[['hill','Hills'],['town','Town'],['party','Party'],['road','Road'],['animal','Animals'],['crew','Crew']];
+var LAYOUT={
+ hill:{
+  every:['CB','SUM','SGN','SK'],                        /* under every hill's "Also at" */
+  at:{ sunshine:['SKIOUT','STAIRS','SKG'], louise:['LIFT1'], norquay:['BIGC','TP'], panorama:['MX','TP'], kickinghorse:['HDY','TP'],
+       revelstoke:['RS1','RS','GNOME','GNORM','GNOME3'], whitewater:['FTC','NOCELL'], red:['CAT1','NITE','DOR'], schweitzer:['OB','TOT','LIFT1'] },
+  heads:[
+   ['Showing up & staying out',['CBF','FCP','FC','MF','BR','WG','BB','BB5','EL','GS','DE','TE','LS'],1],
+   ['Out there',['PTR','YEW','FS','SC','CT','TT','PSL','SPR','PO2','SNOW','PSURF','ST','LN','DRW','FXB2','LNM','LFC','SNG','NEO','BCN','BCN2','NB','HLM','CUT','RD','NP','CHT','LST','WBA'],1],
+   ['Kit & falls',['SOX','LENS2','RAD2','WET','GOG','GLV','BTS','DRP','DRP2','GG','WH','BPK','LLF','MCP','BUCK','LDG','CR','GH','GH2','YS','TH','FJ'],1]
+  ]},
+ town:{ heads:[
+   ['Banff & Canmore',['R873','TBL','NRS','PWD','SPA','SK8']],
+   ['Invermere',['TST','SK8','HS']],
+   ['Golden',['SH','SHF','DEP','CU','WLF']],
+   ['Revelstoke',['MG','LSL','AXE','AXE2','WDH','NNJ','RLM','TST','SBL','CU']],
+   ['Nelson',['DFB','MUR','HS','SAU','CU','KLM']],
+   ['Rossland & Trail',['HKY','HKY2','CU']],
+   ['Sandpoint',['LBR','K9','MM','SAU']],
+   ['Around town',['ICE','ICE2','MRC','TIM','GSX','GAL','SKB']],
+   ['Dinner',['BIG','HRL','CAN','SAL','PTN','BDY','BDY2']],
+   ['Hotel',['HT2','WXR','WAX','LDRY','LDRY2','STNK','KEY','KEY2','LH','PPT','SNR','ALM','BFT','BTH']]
+  ]},
+ party:{ heads:[
+   ['Business meetings',['BM','MIN','FM','SLP']],
+   ['At the bar',['LB','BT','HH','CBF','SPL','SPL2','BDY','BDY2']],
+   ['Singing & games',['OM','DJ2','CU','CU2','TR','TR2','AXE','AXE2','BWL1','BWL2','BWL3','HKY','HKY2']]
+  ]},
+ road:{ heads:[
+   ['Driving',['TRK','LT','SNK','CFE','DJ2','CAR','LCK','STK','STK2','GAL','FP','FP2','PHS']],
+   ['Driving sights, in route order',['WD','BH','OP','CD','DMF','MC','RB','PA','SS','RP','RGP','HW','HAL','TS','WOW','LBR']],
+   ['Ferry & border',['FRY','FB2','FB','FE','RGP2','JOKE','PPT']]
+  ]},
+ animal:{ heads:[
+   ['Sightings',['WLD1','WLD2','RB','WLD3','WLD4','WLD5','WD','WLF','KLM','BGF']]
+  ]},
+ crew:{ heads:[
+   ['Fitting in',['BUD','BUD2','SRY','EH','CO','FXR']],
+   ['Head in the trip',['WK','WKM','WKC','PHD','PHD2','CHG','VAL']],
+   ['Stickers & photos',['SK','SK9','SKB','SUM','SUM9','SGN']],
+   ['Messing with each other',['SNOW','PSURF','PSL','CHT']]
+  ]}
+};
 var GROUP_TINT={line:'terrain',set:'terrain',hill:'snow',prep:'money',town:'meeting',road:'',stick:'todo',bonus:'stash',pen:'alertcard'};
 var ICONS={ /* the app's own icon set, same paths as index.html */
+ trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',
  mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',
  snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',
  car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',
@@ -834,7 +892,7 @@ var ICONS={ /* the app's own icon set, same paths as index.html */
  ticket:'<path fill-rule="evenodd" d="M3 6.6A1.6 1.6 0 0 1 4.6 5h14.8A1.6 1.6 0 0 1 21 6.6v3a2.4 2.4 0 0 0 0 4.8v3a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 17.4v-3a2.4 2.4 0 0 0 0-4.8v-3Zm6 1.2v8.4h1.6V7.8H9Z"/>'
 };
 function ic(n,s){ s=s||14; var g=ICONS[n]; if(!g)return ''; return '<svg class="ic" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" style="width:'+s+'px;height:'+s+'px" aria-hidden="true">'+g+'</svg>'; }
-var GROUP_ICON={line:'mountain',set:'mountain',hill:'snowflake',prep:'checklist',town:'meeting',road:'car',stick:'ticket',bonus:'tip',pen:'alert'};
+var GROUP_ICON={hill:'mountain',town:'pin',party:'cheers',road:'car',animal:'trees',crew:'skier', line:'mountain',set:'mountain',prep:'checklist',stick:'ticket',bonus:'tip',pen:'alert'};
 
 /* =====================================================================================
    2. SMALL HELPERS
@@ -1033,7 +1091,9 @@ function recordResult(code,val){ if(!ME){ toast('Pick your name first'); return;
 /* =====================================================================================
    7. VIEWS
    ===================================================================================== */
-var TAB='board', CAT='line', RID=null, Q='';
+var TAB='board', CAT='hill', RID=null, Q='';
+var OPEN=lsGet('gnar-open',{});   /* which collapsible heads are open, by key — remembered on this phone */
+function toggleZone(k,dflt){ var cur=(OPEN[k]!==undefined)?OPEN[k]:dflt; OPEN[k]=!cur; lsSet('gnar-open',OPEN); $('clist').innerHTML=claimList(); }
 function render(){ renderTabs(); var v=$('view');
   if(TAB==='board')v.innerHTML=vBoard(); else if(TAB==='claim')v.innerHTML=vClaim(); else if(TAB==='log')v.innerHTML=vLog(); else v.innerHTML=vRules(); }
 function renderTabs(){ var t=[['board','Board','huck'],['claim','Claim','checklist'],['log','Log','pin'],['rules','Rules','tip']];
@@ -1085,13 +1145,14 @@ function vClaim(){
   if(!ME) return '<div class="card"><div class="sm muted">Pick your name at the top first.</div></div>';
   var h='<div class="chips">'+GROUPS.map(function(g){ return '<button class="'+(CAT===g[0]?'on':'')+'" onclick="CAT=\''+g[0]+'\';render()">'+ic(GROUP_ICON[g[0]],13)+' '+g[1]+'</button>'; }).join('')+'</div>';
   h+='<input class="inp" placeholder="Search everything…" value="'+esc(Q)+'" oninput="Q=this.value;$(\'clist\').innerHTML=claimList()">';
+  h+='<div class="xs muted" style="margin:-4px 0 8px">Penalties sit next to the thing they undo. Log one on anyone — the claim shows who logged it.</div>';
   return h+'<div id="clist">'+claimList()+'</div>';
 }
 function claimList(){ var h='';
   var q=Q.trim().toLowerCase();
   if(q){ var hits=ITEMS.filter(function(it){ return (it.n+' '+it.d+' '+it.c).toLowerCase().indexOf(q)>=0&&it.g!=='lx'&&it.g!=='trick'&&it.sub!=='crash'; });
     return hits.length?hits.map(rowHtml).join(''):'<div class="sm muted">Nothing. Try a resort, a bar, a body part.</div>'; }
-  if(CAT==='line'){
+  if(CAT==='hill'){
     var rids=Object.keys(D.resorts||{}), tr=todayResort(); if(!RID) RID=tr||rids[0];
     if(tr&&rids.indexOf(tr)>0){ rids.splice(rids.indexOf(tr),1); rids.unshift(tr); }
     h+='<div class="chips">'+rids.map(function(r){ return '<button class="'+(RID===r?'on':'')+'" onclick="RID=\''+r+'\';render()">'+esc(resortName(r))+(r===tr?' <small>today</small>':'')+'</button>'; }).join('')+'</div>';
@@ -1099,13 +1160,24 @@ function claimList(){ var h='';
     h+=ITEMS.filter(function(it){ return it.g==='line'&&it.r===RID&&!it.st; }).map(rowHtml).join('');
     var st=ITEMS.filter(function(it){ return it.g==='line'&&it.r===RID&&it.st; }); if(st.length) h+='<div class="zone">Storied — not hard, you just have to have done it</div>'+st.map(rowHtml).join('');
     var se=ITEMS.filter(function(it){ return it.g==='set'&&it.r===RID; }); if(se.length) h+='<div class="zone">Sets — several in one day, scored once</div>'+se.map(rowHtml).join('');
+    h+=zoneHtml('hill:also','Also at '+resortName(RID),(LAYOUT.hill.at[RID]||[]).concat(LAYOUT.hill.every),false);
+    LAYOUT.hill.heads.forEach(function(z,i){ h+=zoneHtml('hill:'+i,z[0],z[1],!!z[2]); });
     h+='<div class="card alertcard" style="margin-top:12px"><h2>'+ic('alert',13)+' Zero, always</h2><div class="sm">Montana Bowl gate, the Chuting Project, Ymir ridge sidecountry, Silver Sheep / Record Ridge, Mt Roberts, Canyon Creek. Not up for a vote.</div></div>';
     return h;
   }
-  var list=ITEMS.filter(function(it){ return it.g===CAT&&it.sub!=='crash'; });
-  if(CAT==='pen'){ h+='<div class="xs muted" style="margin:0 0 6px">Log these on anyone. The claim shows who logged it.</div>';
-    h+='<div class="zone">Crashes, on their own</div>'+ITEMS.filter(function(it){ return it.sub==='crash'; }).map(rowHtml).join('')+'<div class="zone">Everything else</div>'; }
-  return h+list.map(rowHtml).join('');
+  var L=LAYOUT[CAT]; if(!L) return h;
+  L.heads.forEach(function(z,i){ h+=zoneHtml(CAT+':'+i,z[0],z[1],!!z[2]); });
+  if(CAT==='crew'){ var placed={}; Object.keys(LAYOUT).forEach(function(p){ (LAYOUT[p].every||[]).forEach(function(c){ placed[c]=1; }); Object.keys(LAYOUT[p].at||{}).forEach(function(r){ LAYOUT[p].at[r].forEach(function(c){ placed[c]=1; }); }); LAYOUT[p].heads.forEach(function(z){ z[1].forEach(function(c){ placed[c]=1; }); }); });
+    var more=ITEMS.filter(function(it){ return !placed[it.c]&&it.g!=='line'&&it.g!=='set'&&it.g!=='lx'&&it.g!=='trick'; }).map(function(it){ return it.c; });
+    if(more.length) h+=zoneHtml('crew:more','More — not filed under a head yet',more,false); }
+  return h;
+}
+/* one head on the Claim tab: a tappable title with a count, then its rows when open.
+   dflt = collapsed by default (the any-day heads under each hill); the phone remembers what you opened. */
+function zoneHtml(key,title,codes,collapsed){
+  var items=codes.map(byCode).filter(Boolean); if(!items.length) return '';
+  var open=(OPEN[key]!==undefined)?OPEN[key]:!collapsed;
+  return '<div class="zone zc" onclick="toggleZone(\''+key+'\','+(!collapsed)+')"><span>'+esc(title)+'</span><span>'+items.length+' '+(open?'▾':'▸')+'</span></div>'+(open?items.map(rowHtml).join(''):'');
 }
 function rowHtml(it){ var used=usedUp(it,ME);
   return '<div class="row'+(used?' done':'')+'" onclick="openClaim(\''+it.c+'\')"><div class="nm">'+esc(it.n)+(it.st?' <span class="pill gray">storied</span>':'')+(it.g==='set'?' <span class="pill info">set</span>':'')+(it.d?'<small>'+esc(it.d)+'</small>':'')+(it.o?'<small class="t2">Feb: '+esc(it.o)+'</small>':'')+'<small class="t2">'+[(it.g==='line'||it.g==='set')?'':freqText(it),needsWitness(it)?'witness':'',used?'claimed':''].filter(Boolean).join(' · ')+'</small></div><div class="pts'+(it.p<0?' neg':'')+'">'+fmtPts(it.p)+'</div></div>'; }
