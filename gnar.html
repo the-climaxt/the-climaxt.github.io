@@ -1157,9 +1157,10 @@ function claimList(){ var h='';
     if(tr&&rids.indexOf(tr)>0){ rids.splice(rids.indexOf(tr),1); rids.unshift(tr); }
     h+='<div class="chips">'+rids.map(function(r){ return '<button class="'+(RID===r?'on':'')+'" onclick="RID=\''+r+'\';render()">'+esc(resortName(r))+(r===tr?' <small>today</small>':'')+'</button>'; }).join('')+'</div>';
     h+='<div class="xs muted" style="margin:0 0 6px">Tap a line, tick what stacked on it. Once per day, first attempt, crash or not. Plan tonight from the odds under each one.</div>';
-    h+=ITEMS.filter(function(it){ return it.g==='line'&&it.r===RID&&!it.st; }).map(rowHtml).join('');
-    var st=ITEMS.filter(function(it){ return it.g==='line'&&it.r===RID&&it.st; }); if(st.length) h+='<div class="zone">Storied — not hard, you just have to have done it</div>'+st.map(rowHtml).join('');
-    var se=ITEMS.filter(function(it){ return it.g==='set'&&it.r===RID; }); if(se.length) h+='<div class="zone">Sets — several in one day, scored once</div>'+se.map(rowHtml).join('');
+    var codesOf=function(f){ return ITEMS.filter(f).map(function(it){ return it.c; }); };   /* every head is collapsible; lines start open */
+    h+=zoneHtml('hill:lines','Lines',codesOf(function(it){ return it.g==='line'&&it.r===RID&&!it.st; }),false);
+    h+=zoneHtml('hill:storied','Storied — not hard, you just have to have done it',codesOf(function(it){ return it.g==='line'&&it.r===RID&&it.st; }),false);
+    h+=zoneHtml('hill:sets','Sets — several in one day, scored once',codesOf(function(it){ return it.g==='set'&&it.r===RID; }),false);
     h+=zoneHtml('hill:also','Also at '+resortName(RID),(LAYOUT.hill.at[RID]||[]).concat(LAYOUT.hill.every),false);
     LAYOUT.hill.heads.forEach(function(z,i){ h+=zoneHtml('hill:'+i,z[0],z[1],!!z[2]); });
     h+='<div class="card alertcard" style="margin-top:12px"><h2>'+ic('alert',13)+' Zero, always</h2><div class="sm">Montana Bowl gate, the Chuting Project, Ymir ridge sidecountry, Silver Sheep / Record Ridge, Mt Roberts, Canyon Creek. Not up for a vote.</div></div>';
