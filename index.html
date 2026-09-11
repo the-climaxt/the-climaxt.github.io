@@ -587,6 +587,16 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
     is right there in the top bar, and the route card has its own link */
  #v-home .sect>.btn.pri{display:none}
 }
+/* the G.N.A.R. board on Home — same rows as gnar.html */
+.gnr{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--pr-hairline)}
+.gnrs .gnr:last-child{border-bottom:0}
+.gnr .rank{font-family:var(--pr-font-app-display);font-size:16px;color:var(--pr-text-muted);width:22px}
+.gnr .who{flex:1;min-width:0}
+.gnr .who .b{font-size:16px;font-weight:700}
+.gnr .who small{display:block;color:var(--pr-text-2);font-size:11.5px;margin-top:2px}
+.gnr .gf{font-family:var(--pr-font-app-display);font-size:30px;font-weight:400;letter-spacing:1px;line-height:1;text-shadow:3px 3px 0 var(--pr-pink);font-variant-numeric:tabular-nums}
+.gnr.first .gf{font-size:38px}
+.gnr .today{font-size:12px;font-weight:700;color:var(--pr-text-2);text-align:right;min-width:44px}
 </style>
 </head>
 <body>
@@ -655,6 +665,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 
 <div class="toast" id="toast"></div>
 
+<script src="gnar-score.js"></script>
 <script>
 var ZRT=-1;
 var D=null, EMB=null, GATEKEY=null, DATAKEY=null, LEGACYKEY=null, CUR='home', SCENE_TOWN=null, TMODE={}, PAST_OPEN={}, DS_N=0, GEOW=null, GEOPOS=null;
@@ -1949,20 +1960,43 @@ function fillPicks(){ var el=$('hpicks'); if(!el||!D.runsUrl)return;
 
 /* ---- 9. Playlist / group chat / G.N.A.R. ----
    A row of buttons, only for the keys that exist in trip-data.json meta:
-   playlistUrl and chatUrl open in a new tab; gnarUrl (the G.N.A.R. scoreboard,
-   gnar.html — built separately) opens in the same tab. No keys → no row. */
+   playlistUrl and chatUrl open in a new tab. No keys → no row. gnarUrl (the G.N.A.R. game,
+   gnar.html) gets its own board card on Home (9b) and a row on More (gnarCard). */
 function gnarOn(){ var g=(D.meta||{}).gnarUrl; return (typeof g==='string'&&g.trim())?g.trim():''; }
-function linkRow(){ var m=D.meta||{}, b='', g=gnarOn();
+function linkRow(){ var m=D.meta||{}, b='';
   if(m.playlistUrl)b+='<a class="btn" href="'+esc(m.playlistUrl)+'" target="_blank">'+ic('music',14)+' Trip playlist ↗</a>';
   if(m.chatUrl)b+='<a class="btn" href="'+esc(m.chatUrl)+'" target="_blank">'+ic('chat',14)+' Group chat ↗</a>';
-  if(g)b+='<a class="btn" href="'+esc(g)+'">'+ic('skier',14)+' G.N.A.R. scoreboard</a>';
   return b?'<div class="linkrow">'+b+'</div>':''; }
+/* ---- 9b. The G.N.A.R. board on Home ----
+   One card between "What needs doing" and "Snow & mountains": the four full-trip riders ranked by
+   GNAR Factor, today's points beside each, tap → gnar.html. gnar-score.js does the maths (the game
+   page loads the same file, so the two boards can never disagree). Shows what this phone knows
+   first (the sheet cache + any unsent claims), then asks the sheet. Nothing when meta.gnarUrl is
+   absent. */
+function gnarSlot(){ return gnarOn()?sec('G.N.A.R.')+'<div id="gnarslot">'+gnarBoardHtml(null)+'</div>':''; }
+function fillGnar(){ if(!gnarOn()||!$('gnarslot')||!D.runsUrl)return;
+  gnarFetch(D.runsUrl,function(ok){ var el=$('gnarslot'); if(el)el.innerHTML=gnarBoardHtml(ok); }); }
+function gnarSkiDay(){ var x=new Date(getNow().getTime()-3*3600*1000);   /* a ski day runs 3 am to 3 am, same as the game */
+  return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+function gnarBoardHtml(fresh){
+  var g=gnarOn(), players=gnarPlayers(D), cl=gnarClaims(), sc=gnarScores(cl,players,gnarSkiDay()), me='';
+  try{ me=localStorage.getItem('me')||''; }catch(e){}
+  var order=players.slice().sort(function(a,b){ return sc[b].total-sc[a].total; });
+  var h='<div class="card"><h2>'+ic('huck',13)+' GNAR Factor</h2><div class="gnrs">';
+  order.forEach(function(p,i){ var s=sc[p], tie=i>0&&sc[order[i-1]].total===s.total;
+    h+='<div class="gnr'+(i===0?' first':'')+'"><div class="rank">'+(tie?'=':(i+1))+'</div><div class="who"><div class="b">'+esc(p)+(p===me?' <span class="pill muted">you</span>':'')+'</div><small>'+s.n+' claim'+(s.n===1?'':'s')+(s.pen?' · penalties '+s.pen:'')+(s.votes?' · votes +'+s.votes:'')+(s.props?' · props +'+s.props:'')+'</small></div>'
+      +'<div class="today">'+(s.today?(s.today>0?'+':'')+s.today+'<br><span class="xs muted" style="font-weight:400">today</span>':'')+'</div><div class="gf">'+s.total+'</div></div>'; });
+  h+='</div>';
+  if(!cl.length) h+='<div class="sm muted" style="margin-top:8px">Nothing on the board yet. First chair is Feb 6. Don\u2019t be the guy we wait for.</div>';
+  else if(fresh===false) h+='<div class="xs muted" style="margin-top:8px">No signal \u2014 showing what this phone last saw.</div>';
+  h+='<a class="lk" href="'+esc(g)+'" style="color:inherit;margin:10px 0 0"><div style="flex:1">Open the board<small>claim your points, dock your buddies</small></div><span>\u203a</span></a></div>';
+  return h; }
 /* gnarCard() — the same scoreboard as a row on More; nothing when meta.gnarUrl is absent */
 function gnarCard(){ var g=gnarOn(); if(!g)return '';
   return '<div class="card"><h2>'+ic('skier',13)+' Crew games</h2><a class="lk" href="'+esc(g)+'" style="color:inherit"><div style="flex:1">G.N.A.R. scoreboard<small>claim your points, dock your buddies</small></div><span>›</span></a></div>'; }
 
 /* rHome() — the Home tab. Phone order, pre-trip: hero → countdown (+milestones)
-   → stats → powder alert (if any) → get-ready one-liner → snow so far → the
+   → stats → powder alert (if any) → get-ready one-liner → G.N.A.R. board → snow so far → the
    route → did you know → crew → latest picks → deadlines & money → playlist /
    chat → full itinerary. On trip days the today cards (snow today & tomorrow,
    secret stash, tonight's guide, tonight's base, emergency) sit where they
@@ -1986,6 +2020,7 @@ function rHome(){
     if(tstop)h+=emergencyCard(tstop);
   }
   else h+=homeSnowCard(); /* pre-trip this is empty, except for the Jul 4 demo */
+  h+=gnarSlot();      /* the G.N.A.R. board: this phone's copy now, the sheet's in a moment (fillGnar) */
   h+=sec('Snow &amp; mountains')+snowSoFarCard();
   h+=sec('The route',(D.stops||[]).length+' stops \u00b7 '+(D.days.length-1)+' nights');
   h+='<div class="plabel phoneonly">'+ic('bed',12)+' The route \u00b7 '+(D.stops||[]).length+' stops \u00b7 '+(D.days.length-1)+' nights</div>'+routeStrip();
@@ -1997,7 +2032,7 @@ function rHome(){
   h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div></div>';
   var lr=linkRow(); if(lr)h+=sec('Crew links')+lr;
   h+='<div class="btn pri" style="width:100%;justify-content:center" onclick="sw(\'days\')">'+ic('calendar',14)+' Full itinerary</div>';
-  setView('v-home',h); initFx(); fillPow(); fillSnowSoFar(); fillPicks(); scrollMilestones(); scrollRoute();
+  setView('v-home',h); initFx(); fillPow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
   /* widths shift a few px once the webfonts land — re-run the two strip scrolls then (both are no-ops once correct) */
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){ if(CUR==='home'){ scrollMilestones(); scrollRoute(); } });
 }

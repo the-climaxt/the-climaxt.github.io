@@ -15,7 +15,9 @@
   ours: every run, bar, sight and stash below is a real name from trip-data.json.
 
   HOW IT IS WIRED
-  - Its own page, like 3d.html and mark.html. It never touches index.html.
+  - Its own page, like 3d.html and mark.html. The scoring maths (votes, props, totals) sit in
+    gnar-score.js, which index.html also loads for the Home-tab scoreboard card — one copy, so the two
+    boards can never disagree. This page adds the item list and the claim UI on top.
   - Same gate as the app: the trip name + password the phone already saved (localStorage gname / gpw)
     unlock trip-data.json with the app's own recipe (PBKDF2, 150,000 rounds → AES-GCM). The code below is
     a copy of gateTry() in index.html.
@@ -31,7 +33,8 @@
 
   CHANGING THE GAME
   Every item lives in the ITEMS list below (code, group, name, detail, points, how often). Edit the number,
-  encrypt nothing (this page holds no secrets), commit, push. 04-app-build/gnar/README.md walks through it.
+  encrypt nothing (this page holds no secrets), commit, push. Vote points and the Super Bowl props are in
+  gnar-score.js. 04-app-build/gnar/README.md walks through it.
 -->
 <style>
 @font-face{font-family:"Space Grotesk";font-weight:400;src:url(fonts/space-grotesk-latin-400-normal.woff2) format("woff2");font-display:swap}
@@ -165,6 +168,7 @@ table.rl td.p.neg{color:var(--pr-danger-text)}
   <button class="btn pri wide" id="gok">Unlock</button></div>
   <div class="err" id="gerr"></div></div></div>
 
+<script src="gnar-score.js"></script>
 <script>
 /* =====================================================================================
    1. THE GAME — every item, in one list. Edit numbers here.
@@ -796,8 +800,7 @@ var ITEMS=[
 {c:'BR',g:'pen',n:'Bathroom stop at first chair while the crew waits',d:'',p:-3,f:'unl'},
 {c:'CHG',g:'pen',n:'Complained something was dead after not charging it',d:'',p:-1,f:'unl'}
 ];
-/* The nightly votes are not items you claim — they are cast on the board. Winner gets these. */
-var VOTE_PTS={LOTD:5,COTD:3};
+/* The nightly votes are not items you claim — they are cast on the board. VOTE_PTS lives in gnar-score.js. */
 /* Witness rule: lines 7+ and extras 5+ need a crew name on the claim. Penalties never do. */
 function needsWitness(it){ if(it.p<=0)return false; return it.g==='line'?it.p>=7:it.p>=5; }   /* sets, extras, bonuses: 5+ */
 /* The rules card, in the app's voice. */
@@ -886,8 +889,7 @@ async function boot(){
    ===================================================================================== */
 var PLAYERS=[], ME='';
 function loadPlayers(){
-  PLAYERS=(D.crew||[]).filter(function(c){ return /full/i.test(c.legs||''); }).map(function(c){ return c.name; });
-  if(!PLAYERS.length) PLAYERS=['Tanner','Zack','Dan','John'];   /* belt and braces */
+  PLAYERS=gnarPlayers(D);   /* crew with legs = Full trip; falls back to the four (gnar-score.js) */
   var me=''; try{ me=localStorage.getItem('me')||''; }catch(e){}
   ME=PLAYERS.indexOf(me)>=0?me:'';
 }
@@ -950,37 +952,15 @@ async function sync(silent){
   if(QUEUE.length) flush();
 }
 /* the sheet hands numbers back as strings sometimes — tidy each row */
-function normClaim(c){ return {id:String(c.id||''),ts:Number(c.ts)||0,day:String(c.day||''),who:String(c.who||''),item:String(c.item||''),pts:Number(c.pts)||0,by:String(c.by||''),witness:String(c.witness||''),note:String(c.note||''),parts:String(c.parts||''),target:String(c.target||'')}; }
+var normClaim=gnarNorm;   /* gnar-score.js */
 
 /* =====================================================================================
    6. SCORING
       GNAR Factor = every claim's pts for that player + the nightly vote awards.
       Votes: per ski day, each voter's LAST vote counts; most votes wins the award; a tie pays all.
    ===================================================================================== */
-function isMeta(c){ return /^(VOTE-|PICK-|RES-)/.test(c.item||''); }
-function voteAwards(claims){
-  var byDay={};
-  claims.forEach(function(c){ if(c.item!=='VOTE-LOTD'&&c.item!=='VOTE-COTD')return;
-    var k=c.day+'|'+c.item; byDay[k]=byDay[k]||{}; var cur=byDay[k][c.who]; if(!cur||c.ts>cur.ts)byDay[k][c.who]=c; });
-  var awards=[];   /* {day,kind,who,pts} */
-  Object.keys(byDay).forEach(function(k){ var day=k.split('|')[0], kind=k.split('|')[1].replace('VOTE-','');
-    var tally={}; Object.keys(byDay[k]).forEach(function(v){ var t=byDay[k][v].target; if(t)tally[t]=(tally[t]||0)+1; });
-    var max=0; Object.keys(tally).forEach(function(t){ if(tally[t]>max)max=tally[t]; });
-    if(max>0) Object.keys(tally).forEach(function(t){ if(tally[t]===max)awards.push({day:day,kind:kind,who:t,pts:VOTE_PTS[kind],votes:max}); });
-  });
-  return awards;
-}
-function scores(){
-  var cl=allClaims(), aw=voteAwards(cl), today=skiDay(), out={};
-  PLAYERS.forEach(function(p){ out[p]={total:0,today:0,lines:0,extras:0,pen:0,votes:0,props:0,n:0}; });
-  var byId={}; cl.forEach(function(c){ byId[c.id]=c; });
-  function cat(c){ if(c.item==='FIX'){ var o=byId[c.target]; return o?cat(o):'pen'; } var it=byCode(c.item); if(c.pts<0)return 'pen'; return it&&(it.g==='line'||it.g==='set')?'lines':'extras'; }
-  cl.forEach(function(c){ var s=out[c.who]; if(!s||isMeta(c))return; s.total+=c.pts; if(c.item!=='FIX')s.n++; if(c.day===today)s.today+=c.pts;
-    s[cat(c)]+=c.pts; });
-  aw.forEach(function(a){ var s=out[a.who]; if(!s)return; s.total+=a.pts; s.votes+=a.pts; if(a.day===today)s.today+=a.pts; });
-  propAwards(cl).forEach(function(a){ var s=out[a.who]; if(!s)return; s.total+=a.pts; s.props+=a.pts; if(a.day===today)s.today+=a.pts; });
-  return out;
-}
+var isMeta=gnarIsMeta, voteAwards=gnarVoteAwards;   /* the maths live in gnar-score.js, shared with the Home card */
+function scores(){ return gnarScores(allClaims(),PLAYERS,skiDay(),byCode); }
 /* how often can this item be claimed? used to grey out rows already used up */
 function usedUp(it,who){
   var cl=allClaims().filter(function(c){ return c.who===who&&c.item===it.c&&c.pts!==0; }), day=skiDay(), rid=todayResort();
@@ -1002,27 +982,11 @@ function usedUp(it,who){
       Stored as claims with no points: PICK-<code> (target = your pick) and RES-<code> (target = the result,
       or for the judged ones the names of who got it, joined with +). Latest result wins; first pick sticks.
    ===================================================================================== */
-var SB_DAY='2027-02-14';
-var PROPS=[
- {c:'SBCOIN',n:'Coin toss',kind:'pick',opts:['Heads','Tails'],p:1},
- {c:'SBFIRST',n:'First score',kind:'pick',opts:['Touchdown','Field goal','Safety or other'],p:1},
- {c:'SBGAT',n:'Gatorade colour',kind:'pick',opts:['Orange','Yellow','Blue','Red','Purple','Green','Clear','None'],p:3},
- {c:'SBANTH',n:'National anthem',kind:'seconds',p:3,d:'How long, in seconds. Closest wins.'},
- {c:'SBHALF',n:'Halftime opener',kind:'text',p:3,d:'First song. The room judges.'},
- {c:'SBWIN',n:'Winner and margin',kind:'text',p:2,d:'Team and points. Within 3 gets it.'}
-];
+/* SB_DAY and PROPS (the list of props and their points) live in gnar-score.js. */
 function propsOn(){ var d=skiDay(); return d>=SB_DAY&&d<=addDays(SB_DAY,2); }
 function addDays(s,n){ var d=new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function propPicks(cl,code){ var first={}; cl.filter(function(c){ return c.item==='PICK-'+code; }).sort(function(a,b){ return a.ts-b.ts; }).forEach(function(c){ if(!first[c.who])first[c.who]=c; }); return first; }
-function propResult(cl,code){ var r=null; cl.forEach(function(c){ if(c.item==='RES-'+code&&(!r||c.ts>r.ts))r=c; }); return r; }
-function propAwards(cl){ var out=[];
-  PROPS.forEach(function(p){ var res=propResult(cl,p.c); if(!res||!res.target)return; var picks=propPicks(cl,p.c);
-    if(p.kind==='pick'){ Object.keys(picks).forEach(function(w){ if(String(picks[w].target).toLowerCase()===String(res.target).toLowerCase())out.push({day:SB_DAY,who:w,pts:p.p,prop:p.c}); }); }
-    else if(p.kind==='seconds'){ var best=null; Object.keys(picks).forEach(function(w){ var d=Math.abs(parseFloat(picks[w].target)-parseFloat(res.target)); if(isNaN(d))return; if(best===null||d<best)best=d; });
-      if(best!==null) Object.keys(picks).forEach(function(w){ var d=Math.abs(parseFloat(picks[w].target)-parseFloat(res.target)); if(d===best)out.push({day:SB_DAY,who:w,pts:p.p,prop:p.c}); }); }
-    else { String(res.target).split('+').forEach(function(w){ w=w.trim(); if(w&&PLAYERS.indexOf(w)>=0&&picks[w])out.push({day:SB_DAY,who:w,pts:p.p,prop:p.c}); }); }
-  });
-  return out; }
+var propPicks=gnarPropPicks, propResult=gnarPropResult;
+function propAwards(cl){ return gnarPropAwards(cl,PLAYERS); }
 var SW={t0:0,acc:0,timer:null};
 function swTick(){ var e=SW.acc+(SW.t0?Date.now()-SW.t0:0); var el=$('swdisp'); if(el)el.textContent=(e/1000).toFixed(1)+' s'; }
 function swStart(){ if(SW.t0)return; SW.t0=Date.now(); SW.timer=setInterval(swTick,100); }
