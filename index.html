@@ -82,6 +82,7 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 7px;border:none;background:none;cursor:pointer;color:var(--pr-nav-idle)}
 .nb .ic{height:19px;line-height:1;display:flex;align-items:center}.nb span{font-size:9.5px;margin-top:3px;font-weight:600}
 .nb.on{color:var(--pr-nav-selected)}.nb.on span{font-weight:700}
+.nb.gone{display:none} /* the Get-ready tab once the trip is under way — see readyLive() */
 .toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:var(--pr-ink);color:#fff;font-size:13px;padding:9px 15px;border-radius:10px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 
@@ -450,8 +451,92 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 }
 
 /* section headers + the desktop-only Home cards: invisible on phones */
-.sechd,.deskonly,.hstats{display:none}
+.sechd,.deskonly{display:none}
 .sect{display:block}
+
+/* ===================== HOME (Sep 2026 redesign) =====================
+   Phone-first styles for the new Home cards. Everything here is flat: tint +
+   border, no shadows (design-system rule). Desktop tweaks live in the
+   min-width:900px block further down. */
+/* stats strip: on a phone it's a compact 4-up row on the paper, right under
+   the countdown (setView lifts it into .heroin on every width) */
+.hstats{display:flex;justify-content:space-between;align-items:flex-end;padding:0 10px 14px;color:var(--pr-ink)}
+.hstats .v{font-family:var(--pr-font-app-display);font-size:22px;line-height:1}
+.hstats .l{font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--pr-text-muted);margin-top:4px}
+/* milestones timeline under the countdown: a scrolling row of dots on a line */
+.milest{--m-line:var(--pr-border);--m-text:var(--pr-text-2);--m-ink:var(--pr-ink);--m-paper:var(--pr-paper);margin:0 0 12px}
+/* the row is the scroller: it runs edge to edge under the 16px page gutters, so an
+   item is only ever cut by the screen edge (a scroll cue), never by the gutter */
+.milest .mrow{display:flex;overflow-x:auto;margin:0 -16px;padding:2px 16px 6px;scrollbar-width:none}
+.milest .mi{flex:0 0 150px;width:150px;position:relative;padding:0 12px 0 0;color:var(--m-text)}
+.milest .mi::before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;background:var(--m-line)}
+.milest .mi:first-child::before{left:7px}.milest .mi:last-child::before{right:auto;width:7px}
+.milest .md{position:relative;z-index:1;width:16px;height:16px;border-radius:99px;background:var(--m-paper);border:2px solid var(--m-line);display:flex;align-items:center;justify-content:center;color:var(--pr-lime-text)}
+.milest .mi.past .md{background:var(--pr-lime-tint);border-color:var(--pr-lime-text)}
+.milest .mi.next .md{background:var(--pr-pink);border-color:var(--pr-pink-text)}
+.milest .mw{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;color:var(--m-text)}
+.milest .mt{font-size:12px;line-height:1.25;margin-top:2px;overflow-wrap:anywhere}
+.milest .mi.past{opacity:.6}.milest .mi.past .mt{text-decoration:line-through}
+.milest .mi.next{color:var(--m-ink)}.milest .mi.next .mt{font-weight:700}
+.milest .mi.next .mw{color:var(--pr-pink-text)}
+/* powder alert — the one loud card: snow tint, full 1.5px border, a solid neon
+   teal header band (core-four colour; a solid fill, not a Memphis motif, so the
+   countdown stripes stay the screen's single Memphis element) */
+.card.pow{border:1.5px solid var(--pr-blue-text);background:var(--pr-card-snow-bg);overflow:hidden;padding-top:0}
+.card.pow .powhd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 -15px 10px;padding:8px 15px;background:var(--pr-teal);color:var(--pr-ink)}
+.card.pow .powhd h2{margin:0;color:var(--pr-ink);display:flex;align-items:center;gap:6px}
+.card.pow .powhd .when{font-size:11px;font-weight:700;letter-spacing:.3px}
+.card.pow .prow{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid rgba(14,98,133,.14)}
+.card.pow .prow:last-of-type{border-bottom:none}
+.card.pow .prow .pn{flex:1;min-width:0}
+.card.pow .prow .ph{font-weight:700;font-size:15px}
+.card.pow .prow.lead .ph{font-size:17px}
+.card.pow .prow .pj{font-size:12.5px;color:var(--pr-text-2);margin-top:1px}
+.card.pow .prow .pin{font-family:var(--pr-font-app-display);font-size:22px;line-height:1;color:var(--pr-blue-text);white-space:nowrap}
+.card.pow .prow.lead .pin{font-size:30px;text-shadow:2px 2px 0 var(--pr-teal)}
+.card.pow .prow .ptag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-blue-text);margin-left:6px}
+#powslot:empty{display:none}
+/* get-ready one-liner (pink to-do card, tappable) */
+.card.ready{cursor:pointer;padding:12px 15px}
+.card.ready .rnext{font-size:12.5px;color:var(--pr-text-2);margin-top:3px}
+.card.ready .chev{font-size:20px;line-height:1;color:var(--pr-pink-text);padding-left:4px}
+/* snow-so-far table: dense 13px rows, numbers right-aligned, hairline dividers */
+.sft{display:grid;grid-template-columns:minmax(0,1fr) 38px 46px 74px 34px;column-gap:6px;align-items:center;font-size:13px}
+.sft.off{grid-template-columns:minmax(0,1fr) 92px 34px}
+.sft>div{padding:6px 0;border-bottom:1px solid rgba(14,98,133,.12);min-width:0}
+.sft>div.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sft>div.hd{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-blue-text);padding:0 0 5px}
+.sft>div.hl{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sft>div.ty{text-align:right;line-height:1.15}.sft .ty small{display:block;font-size:10.5px;color:var(--pr-text-2)}
+.sft>div.cam{text-align:right;font-size:11.5px;font-weight:600;white-space:nowrap}
+.sft>div:nth-last-child(-n+5){border-bottom:none}.sft.off>div:nth-last-child(-n+3){border-bottom:none}
+.sft>div.d2{display:none} /* second header set: desktop only (two hills per row) */
+/* phone-only small-caps label above the route strip (desktop uses the sec() header) */
+.plabel{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin:4px 4px 9px;display:flex;align-items:center;gap:5px}
+/* route strip: the 7 stops as a horizontal chain of chips (scrolls on a phone) */
+.rstrip{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 12px;padding:0 16px 6px;scrollbar-width:none}
+.rchip{flex:0 0 164px;background:var(--pr-card);border:1px solid var(--pr-border);border-left:4px solid #E3D9C8;border-radius:11px;padding:9px 10px 8px;cursor:pointer;display:flex;flex-direction:column;min-width:0}
+.rchip .rt{font-weight:700;font-size:14px;line-height:1.2}
+.rchip .rd{font-size:11.5px;color:var(--pr-text-2);margin-top:2px}
+.rchip .rh{font-size:11.5px;margin-top:5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rchip .rc{font-size:12px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.rchip .rx{font-size:10.5px;color:var(--pr-text-muted);margin-top:1px}
+.rchip .rtop{padding-bottom:7px}
+.rchip .rdr{font-size:11px;color:var(--pr-text-2);margin-top:auto;padding-top:6px;border-top:1px solid var(--pr-hairline);display:flex;gap:4px;align-items:flex-start;line-height:1.25}
+.rend small{display:block;text-transform:none;letter-spacing:0;font-size:11px;font-weight:600;margin-top:2px}
+.rend{flex:0 0 auto;align-self:center;font-size:11px;font-weight:700;color:var(--pr-text-muted);text-transform:uppercase;letter-spacing:.5px;padding:0 2px}
+/* did-you-know + crew + picks */
+.card.dyk{cursor:pointer}.card.dyk .fact{font-size:14px;line-height:1.45}
+.card.dyk .go{font-size:12px;font-weight:700;color:var(--pr-link);margin-top:8px}
+.card.crew{cursor:pointer}
+.crow{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--pr-hairline);font-size:13.5px}
+.crow:last-of-type{border-bottom:none}
+.emgline{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:12.5px;font-weight:600;color:var(--pr-text-2)}
+#hpicks:empty{display:none}
+.pick{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--pr-hairline);font-size:13.5px}
+.pick:last-of-type{border-bottom:none}
+.pick .pby{font-weight:700}.pick .pwh{color:var(--pr-text-2)}
+.linkrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.linkrow .btn{flex:1 1 auto;justify-content:center}
 
 /* --- Home sections + desktop-only cards (>=900px) --- */
 @media(min-width:900px){
@@ -466,12 +551,32 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
  .sect{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
   gap:16px;align-items:start;margin-bottom:30px}
  .sect>*{margin-bottom:0}
- #v-home .wrap{columns:auto;max-width:1160px}
- /* stats strip under the countdown */
- .hstats{display:flex;gap:34px;grid-column:1/-1;margin-top:30px;
-  border-top:1px solid rgba(251,246,236,.22);padding-top:18px}
+ #v-home .wrap,#v-ready .wrap{columns:auto;max-width:1160px}
+ #v-ready .wrap>.btn{width:auto;margin:0 0 18px} /* the "← Home" button stays a button, not a bar */
+ /* stats strip under the countdown (inside the dark hero on desktop) */
+ .hstats{display:flex;justify-content:flex-start;gap:34px;grid-column:1/-1;margin-top:30px;order:1;
+  border-top:1px solid rgba(251,246,236,.22);padding:18px 0 0;color:inherit}
  .hstats .v{font-family:var(--pr-font-app-display);font-size:23px;line-height:1}
- .hstats .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;opacity:.65;margin-top:6px}
+ .hstats .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;opacity:.65;margin-top:6px;color:inherit}
+ /* milestones ride in the hero too, full width under the stats, cream on ink */
+ .heroin .milest{grid-column:1/-1;order:2;margin:14px 0 0;padding:0;
+  --m-line:rgba(251,246,236,.28);--m-text:rgba(251,246,236,.72);--m-ink:var(--pr-hero-text);--m-paper:var(--pr-hero-bg)}
+ .heroin .milest .mrow{overflow:visible;margin:0;padding:0}
+ .heroin .milest .mi{flex:1 1 0;width:auto}
+ .heroin .milest .mi.past .md{background:var(--pr-lime);border-color:var(--pr-lime);color:var(--pr-ink)}
+ .heroin .milest .mi.next .mw{color:var(--pr-pink)}
+ .heroin .milest .mi.past{opacity:.5}
+ .phoneonly{display:none}
+ /* the route strip becomes one row (YYC · 7 stops · GEG, no scrolling) inside its section */
+ .rstrip{display:grid;grid-template-columns:auto repeat(7,minmax(0,1fr)) auto;gap:10px;overflow:visible;margin:0;padding:0}
+ .rchip{flex:none}
+ .linkrow{margin-bottom:0}
+ /* snow-so-far: a 9-row table looks lost at 1100px wide, so lay it out two
+    hills per row (10 cells per row; the .d2 header set fills the second half) */
+ .sft{grid-template-columns:minmax(0,1fr) 40px 50px 78px 40px minmax(0,1fr) 40px 50px 78px 40px;column-gap:8px}
+ .sft.off{grid-template-columns:minmax(0,1fr) 100px 40px minmax(0,1fr) 100px 40px}
+ .sft>div.d2{display:block}
+ .sft>div:nth-child(10n+6),.sft.off>div:nth-child(6n+4){padding-left:22px}
  .drow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--pr-hairline)}
  .drow:last-child{border-bottom:none;padding-bottom:0}
  .drail{border-left:3px solid #E3D9C8;padding-left:11px}
@@ -492,6 +597,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
   <button class="nb" data-t="snow" onclick="sw('snow')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g></svg></span><span>Snow</span></button>
   <button class="nb" data-t="drive" onclick="sw('drive')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g></svg></span><span>Drive</span></button>
     <button class="nb" data-t="scene" onclick="sw('scene')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g></svg></span><span>Scene</span></button>
+  <button class="nb gone" data-t="ready" onclick="sw('ready')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/></svg></span><span>Get ready</span></button>
   <button class="nb" data-t="more" onclick="sw('more')"><span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/></svg></span><span>More</span></button>
   <div class="tw"><div class="xs muted">Trip window</div><div class="xs" style="font-weight:700" id="twdates">Feb 5 – 21, 2027</div></div>
 </nav>
@@ -501,6 +607,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 <div id="v-drive" class="view"></div>
 <div id="v-scene" class="view"></div>
 <div id="v-more" class="view"></div>
+<div id="v-ready" class="view"></div>
 
 <div id="zov" aria-hidden="true">
   <div id="zstage"><div id="zpan"><img id="zimg" alt=""><svg id="zsvg" viewBox="0 0 1 1" preserveAspectRatio="none"></svg></div></div>
@@ -621,6 +728,10 @@ function covRow(cv){ CVN++; var did='cvd'+CVN;
   if(cv.details)h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+did+'\')">Claims &amp; fine print ▾</div><div id="'+did+'" class="xs muted" style="display:none;margin-top:3px">'+esc(cv.details)+'</div>';
   return h+'</div>';
 }
+/* emgFormWhere() — where "My emergency info" is from where you're standing:
+   the Get ready tab while it's live; once it's back on More, "right below"
+   when you're reading this on More, "on the More tab" from anywhere else. */
+function emgFormWhere(){ return readyLive()?'on the Get ready tab':(CUR==='more'?'right below':'on the More tab'); }
 function hurtHtml(){
   var crew=D.crew||[]; if(!crew.length)return '';
   var h='<div style="margin-top:10px;border-top:1px solid var(--pr-hairline);padding-top:9px"><div class="sm" style="font-weight:700">🚑 Someone\u2019s hurt — who?</div>';
@@ -629,12 +740,12 @@ function hurtHtml(){
   crew.forEach(function(c){ var on=(c.name===HURT_SEL); h+='<button class="btn" onclick="pickHurt(\''+esc(c.name)+'\')" style="padding:5px 11px'+(on?';background:var(--pr-danger-text);color:#fff;border-color:var(--pr-danger-text)':'')+'">'+esc(c.name)+'</button>'; });
   h+='</div>';
   if(HURT_SEL){ var p=null; crew.forEach(function(c){ if(c.name===HURT_SEL)p=c; }); var e=(p&&p.emergency)||{};
-    if(e.pending){ h+='<div class="xs muted" style="margin-top:8px">'+esc(HURT_SEL)+'\u2019s info isn\u2019t in yet — the 60-second form is right below. Meanwhile: patrol/911, then hospital below.</div>'; }
+    if(e.pending){ h+='<div class="xs muted" style="margin-top:8px">'+esc(HURT_SEL)+'\u2019s info isn\u2019t in yet — the 60-second form is '+emgFormWhere()+'. Meanwhile: patrol/911, then hospital below.</div>'; }
     else if(e.placeholder){ CVN++; var pid='cvd'+CVN;
       h+='<div class="xs" style="margin-top:8px">'+esc(HURT_SEL)+' never filled out the form. There is an official trip medical record on file.</div>';
       h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+pid+'\')">Medical record \u25be \u2014 only open this if it\u2019s actually relevant. Respect their privacy for now.</div>';
       h+='<div id="'+pid+'" class="xs" style="display:none;margin-top:4px;font-weight:700">Surgical history: '+esc((e.medical||{}).surgeries||'\u2014')+'<br>Medications: '+esc((e.medical||{}).meds||'\u2014')+'</div>';
-      h+='<div class="xs muted" style="margin-top:6px">Real coverage unknown \u2014 ski patrol/911, then the hospital below. '+esc(HURT_SEL)+': fix this in the form below.</div>'; }
+      h+='<div class="xs muted" style="margin-top:6px">Real coverage unknown \u2014 ski patrol/911, then the hospital below. '+esc(HURT_SEL)+': fix this in the form '+emgFormWhere()+'.</div>'; }
     else {
       if(e.ice&&e.ice.name)h+='<div class="xs" style="margin-top:8px;font-weight:700">ICE: '+esc(e.ice.name)+(e.ice.phone?' · <a href="tel:'+esc(e.ice.phone)+'">'+esc(e.ice.phone)+'</a>':' · number TBD')+'</div>';
       var covs=(e.coverages||[]).slice().sort(function(a,b){ return (b.callFirst?1:0)-(a.callFirst?1:0); });
@@ -653,9 +764,9 @@ async function applyEmg(arr){ var ch=false;
       (D.crew||[]).forEach(function(c){ if(normName(c.name)===normName(sb.who)){ em.submitted=sb.ts||em.submitted; c.emergency=em; ch=true; } });
     }catch(e){}
   } return ch; }
-function loadEmg(){ try{ var c=JSON.parse(localStorage.getItem('emgCache')||'null'); if(c&&c.length)applyEmg(c).then(function(ch){ if(ch&&CUR==='more')render(CUR); }); }catch(e){}
+function loadEmg(){ try{ var c=JSON.parse(localStorage.getItem('emgCache')||'null'); if(c&&c.length)applyEmg(c).then(function(ch){ if(ch&&(CUR==='more'||CUR==='home'||CUR==='ready'))render(CUR); }); }catch(e){}
   var u=emgUrl(); if(!u)return;
-  fetch(u+'?emg=1').then(function(x){return x.json();}).then(function(a){ if(!Array.isArray(a))return; a=a.filter(function(sb){return sb&&sb.who&&sb.data&&sb.iv;}); if(!a.length)return; localStorage.setItem('emgCache',JSON.stringify(a)); applyEmg(a).then(function(ch){ if(ch&&(CUR==='more'||CUR==='home'))render(CUR); }); }).catch(function(){}); }
+  fetch(u+'?emg=1').then(function(x){return x.json();}).then(function(a){ if(!Array.isArray(a))return; a=a.filter(function(sb){return sb&&sb.who&&sb.data&&sb.iv;}); if(!a.length)return; localStorage.setItem('emgCache',JSON.stringify(a)); applyEmg(a).then(function(ch){ if(ch&&(CUR==='more'||CUR==='home'||CUR==='ready'))render(CUR); }); }).catch(function(){}); }
 async function submitEmg(){
   var who=($('emWho')||{}).value||''; if(!who){ toast('Pick your name first'); return; }
   function v(id){ return (($(id)||{}).value||'').trim(); }
@@ -675,7 +786,7 @@ async function submitEmg(){
     var u=emgUrl();
     if(u){ fetch(u,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'putemg',who:who,iv:sub.iv,data:sub.data})}).then(function(){ toast('Saved — hits everyone’s phone on their next open'); }).catch(function(){ toast('Saved on this phone — needs wifi to reach the crew'); }); }
     else toast('Saved on this phone — sharing pipe not switched on yet');
-    render('more');
+    render(CUR); /* the form lives on More and on the Get-ready view — redraw whichever is open */
   }catch(e){ toast('Couldn’t encrypt — tell Tanner'); }
 }
 function emgFormCard(){
@@ -712,7 +823,7 @@ function addSharedDoc(inp){ var f=inp.files[0]; if(!f)return;
 function openSharedDoc(id,name,type,iv){ fetch(D.docsUrl+'?doc='+encodeURIComponent(id)).then(function(x){return x.json();}).then(async function(dd){ var pt=await dkDecrypt(b64d(iv),b64d(dd.data)); var url=URL.createObjectURL(new Blob([pt],{type:type||'application/octet-stream'})); window.open(url,'_blank'); }).catch(function(){ toast('Couldn\u2019t open — offline, or saved before a password change'); }); }
 function $(id){return document.getElementById(id);}
 /* ---- Powder Run icon set (design-system glyphs, currentColor) ---- */
-var IC={huck:'<path d="M3 21V10h5V3h4v18H3Z"/><path d="M16.5 4h3v8.8l2-2 1.5 1.6-5 5-5-5 1.5-1.6 2 2V4Z"/>',mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',calendar:'<path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/>',snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',checklist:'<path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/>',cheers:'<g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g>',more:'<circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/>',warning:'<path fill-rule="evenodd" d="M12 2.4a1.6 1.6 0 0 1 1.4.8l8.8 15.2a1.6 1.6 0 0 1-1.4 2.4H3.2a1.6 1.6 0 0 1-1.4-2.4L10.6 3.2A1.6 1.6 0 0 1 12 2.4Zm-1.1 6.2h2.2l-.4 5.6h-1.4l-.4-5.6ZM12 15.6a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',alert:'<path fill-rule="evenodd" d="M8.1 2.5h7.8l5.6 5.6v7.8l-5.6 5.6H8.1l-5.6-5.6V8.1l5.6-5.6ZM10.9 7h2.2l-.4 6h-1.4l-.4-6ZM12 15.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',closed:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.6a7.2 7.2 0 0 0-5.6 11.8L16.6 6.4A7.15 7.15 0 0 0 12 4.8Zm5.6 3L7.4 17.9A7.2 7.2 0 0 0 17.6 7.8Z"/>',check:'<path d="M9.55 15.15 19.1 5.6l1.9 1.9L9.55 19 3 12.45l1.9-1.9 4.65 4.6Z"/>',tip:'<path d="M12 6.2a4.8 4.8 0 0 1 2.7 8.8c-.4.3-.6.7-.7 1.2l-.1.6H10l-.1-.6c-.1-.5-.3-.9-.7-1.2A4.8 4.8 0 0 1 12 6.2Z"/><path d="M10 18.4h4v1a1.5 1.5 0 0 1-1.5 1.4h-1a1.5 1.5 0 0 1-1.5-1.4v-1Z"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 1.4v2.3M4.9 4.1l1.6 1.6M19.1 4.1l-1.6 1.6M2.4 10.8h2.3M19.3 10.8h2.3"/></g>',pin:'<path fill-rule="evenodd" d="M12 2.2a7.2 7.2 0 0 1 7.2 7.2c0 4.8-5.4 10.8-6.7 12.2a.7.7 0 0 1-1 0C10.2 20.2 4.8 14.2 4.8 9.4A7.2 7.2 0 0 1 12 2.2Zm0 4.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/>',map:'<path fill-rule="evenodd" d="M8.6 3 3.6 4.9a1 1 0 0 0-.6.9v14.4a.6.6 0 0 0 .8.6l4.8-1.9 6.8 2.1 5-1.9a1 1 0 0 0 .6-.9V3.8a.6.6 0 0 0-.8-.6l-4.8 1.9L8.6 3Zm.7 2.3 5.4 1.7v12.6L9.3 17.9V5.3Z"/>',ticket:'<path fill-rule="evenodd" d="M3 5.8h18a1 1 0 0 1 1 1v10.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.8a1 1 0 0 1 1-1ZM2 10.2a1.9 1.9 0 0 1 0 3.6v-3.6Zm20 0v3.6a1.9 1.9 0 0 1 0-3.6ZM7.9 10.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm3.5-3.4h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Z"/>',phone:'<path d="M6.6 3c.5 0 2.9 2.4 2.9 3s-1.5 1.9-1.5 2.6 1.2 2.3 2.7 3.8 3.1 2.7 3.8 2.7 2-1.5 2.6-1.5S21 16 21 16.5 19.6 21 17.5 21C12 21 3 12 3 6.5 3 4.4 6.1 3 6.6 3Z"/>',bed:'<path d="M2.4 5.4h2v8.2h7.2V7.9h6.2a3.8 3.8 0 0 1 3.8 3.8v6.9h-2v-2.2H4.4v2.2h-2V5.4Z"/><circle cx="7.5" cy="10.4" r="2"/>',compass:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.4A7.4 7.4 0 1 0 19.4 12 7.4 7.4 0 0 0 12 4.6Z"/><path d="M12 5.6 14.2 12 12 18.4 9.8 12 12 5.6Z"/>',trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',skier:'<circle cx="14.4" cy="3" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 5.2 10.7 9.4l2.2 3.3-.6 3.2M13 6.6l3.7 2.6"/></g><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M16.9 9.4l2.7 6.4"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.8 16.2h13.6c1.1 0 1.9-.4 2.5-1.3M4.6 18.8h13.6c1.1 0 1.9-.4 2.5-1.3"/></g>',snowboarder:'<circle cx="14.9" cy="3.4" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 5.8 11.8 9.9l-2.5 5.2M11.8 9.9l2.1 5.3M14.1 6.3l3.3 2.3"/></g><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.6 15.2c.5 1.3 1.4 2 2.8 2h11.2c1.4 0 2.3-.7 2.8-2"/>',gondola:'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 3.4h20"/><rect x="11.2" y="3.4" width="1.6" height="4.4"/><path fill-rule="evenodd" d="M6.8 7.4h10.4a2 2 0 0 1 2 2.2l-.8 8.4a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-.8-8.4a2 2 0 0 1 2-2.2Zm.6 3 .3 3.4h8.6l.3-3.4H7.4Z"/>',food:'<path d="M5.4 2.6h1.4v4.6h.8V2.6H9v4.6h.8V2.6h1.4v6a2.6 2.6 0 0 1-2 2.5v10.3H7.4V11.1a2.6 2.6 0 0 1-2-2.5v-6Z"/><path d="M15.4 2.6c2.4 1.6 3.4 5.4 3.4 8 0 1.6-1 2.6-2 3v7.8h-1.4V2.6Z"/>',meeting:'<path fill-rule="evenodd" d="M9.4 6.6A1.6 1.6 0 0 1 11 5h2a1.6 1.6 0 0 1 1.6 1.6v.8h3.8A1.6 1.6 0 0 1 20 9v9.6a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.6V9a1.6 1.6 0 0 1 1.6-1.6h3.8v-.8Zm1.7.2v.6h1.8v-.6h-1.8Zm-.5 5.6h2.8v2h-2.8v-2Z"/><circle cx="17.8" cy="3.6" r="1.2"/><circle cx="20.2" cy="1.9" r=".9"/><circle cx="15.9" cy="1.7" r=".7"/>',laundry:'<path fill-rule="evenodd" d="M5 2.5h14A1.5 1.5 0 0 1 20.5 4v16a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 20V4A1.5 1.5 0 0 1 5 2.5Zm1.2 2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Zm3.4 0a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2ZM12 8.2a5.6 5.6 0 1 0 0 11.2 5.6 5.6 0 0 0 0-11.2Zm0 2a3.6 3.6 0 0 1 3.43 2.5c-1.2.9-2.3.2-3.43-.35-1.05-.5-2.15-.9-3.4.1A3.6 3.6 0 0 1 12 10.2Z"/>',coffee:'<path fill-rule="evenodd" d="M4 7h13v2h2.2a2.3 2.3 0 0 1 0 4.6H17.6A6.5 6.5 0 0 1 4.4 13L4 7Zm13.4 4.6h1.6a.8.8 0 0 0 0-1.6h-1.5l-.1 1.6ZM5 19h13v2H5v-2Z"/>',pool:'<path fill-rule="evenodd" d="M2.5 17.2c1.6 0 1.6 1 3.2 1s1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1v2.2c-1.6 0-1.6 1-3.2 1s-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1v-2.2Zm6-12A2.7 2.7 0 0 1 11.2 8v6.1c-.6.2-1 .5-1.6.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Zm7 0A2.7 2.7 0 0 1 18.2 8v6.6c-.7-.1-1-.4-1.6-.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Z"/>',parking:'<path fill-rule="evenodd" d="M4.5 3h15v18h-15V3ZM9 6.5v11h2.4v-3.4h1.8a3.8 3.8 0 1 0 0-7.6H9Zm2.4 2.2h1.7a1.6 1.6 0 0 1 0 3.2h-1.7V8.7Z"/>',kitchen:'<path fill-rule="evenodd" d="M5.5 2.5h2v7.1a2.6 2.6 0 0 1-1 2v9.9h-2v-9.9a2.6 2.6 0 0 1-1-2V2.5h2Zm12 0c1.9.6 3 2.7 3 5.2 0 2.2-.9 4-2.3 4.8v9h-2v-9c-1.4-.8-2.3-2.6-2.3-4.8 0-2.5 1.1-4.6 3-5.2h.6Zm-6.9 0h1.8l.5 7.3a2.3 2.3 0 0 1-1.4 2.3v9.4h-2v-9.4a2.3 2.3 0 0 1-1.4-2.3l.5-7.3h2Z"/>'};
+var IC={huck:'<path d="M3 21V10h5V3h4v18H3Z"/><path d="M16.5 4h3v8.8l2-2 1.5 1.6-5 5-5-5 1.5-1.6 2 2V4Z"/>',mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',calendar:'<path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/>',snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',checklist:'<path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/>',cheers:'<g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g>',more:'<circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/>',warning:'<path fill-rule="evenodd" d="M12 2.4a1.6 1.6 0 0 1 1.4.8l8.8 15.2a1.6 1.6 0 0 1-1.4 2.4H3.2a1.6 1.6 0 0 1-1.4-2.4L10.6 3.2A1.6 1.6 0 0 1 12 2.4Zm-1.1 6.2h2.2l-.4 5.6h-1.4l-.4-5.6ZM12 15.6a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',alert:'<path fill-rule="evenodd" d="M8.1 2.5h7.8l5.6 5.6v7.8l-5.6 5.6H8.1l-5.6-5.6V8.1l5.6-5.6ZM10.9 7h2.2l-.4 6h-1.4l-.4-6ZM12 15.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',closed:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.6a7.2 7.2 0 0 0-5.6 11.8L16.6 6.4A7.15 7.15 0 0 0 12 4.8Zm5.6 3L7.4 17.9A7.2 7.2 0 0 0 17.6 7.8Z"/>',check:'<path d="M9.55 15.15 19.1 5.6l1.9 1.9L9.55 19 3 12.45l1.9-1.9 4.65 4.6Z"/>',tip:'<path d="M12 6.2a4.8 4.8 0 0 1 2.7 8.8c-.4.3-.6.7-.7 1.2l-.1.6H10l-.1-.6c-.1-.5-.3-.9-.7-1.2A4.8 4.8 0 0 1 12 6.2Z"/><path d="M10 18.4h4v1a1.5 1.5 0 0 1-1.5 1.4h-1a1.5 1.5 0 0 1-1.5-1.4v-1Z"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 1.4v2.3M4.9 4.1l1.6 1.6M19.1 4.1l-1.6 1.6M2.4 10.8h2.3M19.3 10.8h2.3"/></g>',pin:'<path fill-rule="evenodd" d="M12 2.2a7.2 7.2 0 0 1 7.2 7.2c0 4.8-5.4 10.8-6.7 12.2a.7.7 0 0 1-1 0C10.2 20.2 4.8 14.2 4.8 9.4A7.2 7.2 0 0 1 12 2.2Zm0 4.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/>',map:'<path fill-rule="evenodd" d="M8.6 3 3.6 4.9a1 1 0 0 0-.6.9v14.4a.6.6 0 0 0 .8.6l4.8-1.9 6.8 2.1 5-1.9a1 1 0 0 0 .6-.9V3.8a.6.6 0 0 0-.8-.6l-4.8 1.9L8.6 3Zm.7 2.3 5.4 1.7v12.6L9.3 17.9V5.3Z"/>',ticket:'<path fill-rule="evenodd" d="M3 5.8h18a1 1 0 0 1 1 1v10.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.8a1 1 0 0 1 1-1ZM2 10.2a1.9 1.9 0 0 1 0 3.6v-3.6Zm20 0v3.6a1.9 1.9 0 0 1 0-3.6ZM7.9 10.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm3.5-3.4h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Z"/>',phone:'<path d="M6.6 3c.5 0 2.9 2.4 2.9 3s-1.5 1.9-1.5 2.6 1.2 2.3 2.7 3.8 3.1 2.7 3.8 2.7 2-1.5 2.6-1.5S21 16 21 16.5 19.6 21 17.5 21C12 21 3 12 3 6.5 3 4.4 6.1 3 6.6 3Z"/>',bed:'<path d="M2.4 5.4h2v8.2h7.2V7.9h6.2a3.8 3.8 0 0 1 3.8 3.8v6.9h-2v-2.2H4.4v2.2h-2V5.4Z"/><circle cx="7.5" cy="10.4" r="2"/>',compass:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.4A7.4 7.4 0 1 0 19.4 12 7.4 7.4 0 0 0 12 4.6Z"/><path d="M12 5.6 14.2 12 12 18.4 9.8 12 12 5.6Z"/>',trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',skier:'<circle cx="14.4" cy="3" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 5.2 10.7 9.4l2.2 3.3-.6 3.2M13 6.6l3.7 2.6"/></g><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M16.9 9.4l2.7 6.4"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.8 16.2h13.6c1.1 0 1.9-.4 2.5-1.3M4.6 18.8h13.6c1.1 0 1.9-.4 2.5-1.3"/></g>',snowboarder:'<circle cx="14.9" cy="3.4" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 5.8 11.8 9.9l-2.5 5.2M11.8 9.9l2.1 5.3M14.1 6.3l3.3 2.3"/></g><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.6 15.2c.5 1.3 1.4 2 2.8 2h11.2c1.4 0 2.3-.7 2.8-2"/>',gondola:'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 3.4h20"/><rect x="11.2" y="3.4" width="1.6" height="4.4"/><path fill-rule="evenodd" d="M6.8 7.4h10.4a2 2 0 0 1 2 2.2l-.8 8.4a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-.8-8.4a2 2 0 0 1 2-2.2Zm.6 3 .3 3.4h8.6l.3-3.4H7.4Z"/>',food:'<path d="M5.4 2.6h1.4v4.6h.8V2.6H9v4.6h.8V2.6h1.4v6a2.6 2.6 0 0 1-2 2.5v10.3H7.4V11.1a2.6 2.6 0 0 1-2-2.5v-6Z"/><path d="M15.4 2.6c2.4 1.6 3.4 5.4 3.4 8 0 1.6-1 2.6-2 3v7.8h-1.4V2.6Z"/>',meeting:'<path fill-rule="evenodd" d="M9.4 6.6A1.6 1.6 0 0 1 11 5h2a1.6 1.6 0 0 1 1.6 1.6v.8h3.8A1.6 1.6 0 0 1 20 9v9.6a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.6V9a1.6 1.6 0 0 1 1.6-1.6h3.8v-.8Zm1.7.2v.6h1.8v-.6h-1.8Zm-.5 5.6h2.8v2h-2.8v-2Z"/><circle cx="17.8" cy="3.6" r="1.2"/><circle cx="20.2" cy="1.9" r=".9"/><circle cx="15.9" cy="1.7" r=".7"/>',laundry:'<path fill-rule="evenodd" d="M5 2.5h14A1.5 1.5 0 0 1 20.5 4v16a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 20V4A1.5 1.5 0 0 1 5 2.5Zm1.2 2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Zm3.4 0a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2ZM12 8.2a5.6 5.6 0 1 0 0 11.2 5.6 5.6 0 0 0 0-11.2Zm0 2a3.6 3.6 0 0 1 3.43 2.5c-1.2.9-2.3.2-3.43-.35-1.05-.5-2.15-.9-3.4.1A3.6 3.6 0 0 1 12 10.2Z"/>',coffee:'<path fill-rule="evenodd" d="M4 7h13v2h2.2a2.3 2.3 0 0 1 0 4.6H17.6A6.5 6.5 0 0 1 4.4 13L4 7Zm13.4 4.6h1.6a.8.8 0 0 0 0-1.6h-1.5l-.1 1.6ZM5 19h13v2H5v-2Z"/>',pool:'<path fill-rule="evenodd" d="M2.5 17.2c1.6 0 1.6 1 3.2 1s1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1v2.2c-1.6 0-1.6 1-3.2 1s-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1v-2.2Zm6-12A2.7 2.7 0 0 1 11.2 8v6.1c-.6.2-1 .5-1.6.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Zm7 0A2.7 2.7 0 0 1 18.2 8v6.6c-.7-.1-1-.4-1.6-.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Z"/>',parking:'<path fill-rule="evenodd" d="M4.5 3h15v18h-15V3ZM9 6.5v11h2.4v-3.4h1.8a3.8 3.8 0 1 0 0-7.6H9Zm2.4 2.2h1.7a1.6 1.6 0 0 1 0 3.2h-1.7V8.7Z"/>',kitchen:'<path fill-rule="evenodd" d="M5.5 2.5h2v7.1a2.6 2.6 0 0 1-1 2v9.9h-2v-9.9a2.6 2.6 0 0 1-1-2V2.5h2Zm12 0c1.9.6 3 2.7 3 5.2 0 2.2-.9 4-2.3 4.8v9h-2v-9c-1.4-.8-2.3-2.6-2.3-4.8 0-2.5 1.1-4.6 3-5.2h.6Zm-6.9 0h1.8l.5 7.3a2.3 2.3 0 0 1-1.4 2.3v9.4h-2v-9.4a2.3 2.3 0 0 1-1.4-2.3l.5-7.3h2Z"/>',music:'<path fill-rule="evenodd" d="M19.6 2.6 8.4 5.1a1 1 0 0 0-.8 1v10.2a3.4 3.4 0 1 0 2 3.1V9.9l8-1.8v6.2a3.4 3.4 0 1 0 2 3.1V3.6a1 1 0 0 0-1.2-1Z"/>',chat:'<path fill-rule="evenodd" d="M4.6 3.4h14.8A2.6 2.6 0 0 1 22 6v9.2a2.6 2.6 0 0 1-2.6 2.6h-7.2l-4.9 3.7a.8.8 0 0 1-1.3-.6v-3.1H4.6A2.6 2.6 0 0 1 2 15.2V6a2.6 2.6 0 0 1 2.6-2.6Zm2.6 5.2v2h9.6v-2H7.2Zm0 3.6v2h6.4v-2H7.2Z"/>'};
 function ic(n,s){s=s||14;var g=IC[n];if(!g)return '';return '<svg class="pri" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="currentColor" aria-hidden="true">'+g+'</svg>';}
 function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1900);}
@@ -1522,13 +1633,29 @@ function mapsUrl(q){return 'https://www.google.com/maps/search/?api=1&query='+en
 function gsearch(q){return 'https://www.google.com/search?q='+encodeURIComponent(q);}
 
 /* ---- nav ---- */
-function sw(v){if(!D)return; if(v!=='scene')scGeoStop(); CUR=v; var vs=document.querySelectorAll('.view'); for(var i=0;i<vs.length;i++)vs[i].classList.remove('active'); $('v-'+v).classList.add('active'); var nb=document.querySelectorAll('.nb'); for(var j=0;j<nb.length;j++)nb[j].classList.toggle('on',nb[j].dataset.t===v); window.scrollTo(0,0); render(v);}
-function render(v){({home:rHome,days:rDays,snow:rSnow,drive:rDrive,scene:rScene,more:rMore})[v]();}
+/* readyLive() — is the Get-ready tab in play? True pre-trip and on fly-in day
+   (Feb 5, tripDayIdx()===0): that's when the checklist, packing list and
+   emergency form matter as a set. From the first Banff day on — and after the
+   trip — the tab is gone from both navs, packing + the form go back to More
+   exactly where they used to live, and the pre-trip checklist is retired.
+   Used by syncNav(), sw()/render(), rHome(), rMore(), crewCard()/deskCrew()
+   and hurtHtml(). Change the rule here and everything follows. */
+function readyLive(){ var i=tripDayIdx(); return i===-1||i===0; }
+/* formView() — which view holds "My emergency info" right now */
+function formView(){ return readyLive()?'ready':'more'; }
+/* syncNav() — show/hide the Get-ready tab in the bottom nav (and the desktop top bar, same buttons) */
+function syncNav(){ var b=document.querySelector('.nb[data-t="ready"]'); if(b)b.classList.toggle('gone',!readyLive()); }
+/* sw(view) — switch views. 'ready' is a real tab while readyLive(); once it's
+   gone, asking for it lands on More (no error, nothing left lit that shouldn't be). */
+function sw(v){if(!D)return; if(v==='ready'&&!readyLive())v='more'; if(v!=='scene')scGeoStop(); CUR=v; var vs=document.querySelectorAll('.view'); for(var i=0;i<vs.length;i++)vs[i].classList.remove('active'); $('v-'+v).classList.add('active'); var nb=document.querySelectorAll('.nb'); for(var j=0;j<nb.length;j++)nb[j].classList.toggle('on',nb[j].dataset.t===v); window.scrollTo(0,0); render(v);}
+function render(v){ syncNav(); if(v==='ready'&&!readyLive()){ sw('more'); return; } ({home:rHome,days:rDays,snow:rSnow,drive:rDrive,scene:rScene,more:rMore,ready:rReady})[v](); }
 function openGuide(id){ SCENE_TOWN=id; sw('scene'); }
 
 /* ---- pre-trip checklist + emergency + packing ---- */
 function ckDone(){ try{ return JSON.parse(localStorage.getItem('ckDone')||'{}'); }catch(e){ return {}; } }
-function toggleCheck(id){ var d=ckDone(); d[id]=!d[id]; localStorage.setItem('ckDone',JSON.stringify(d)); render('home'); }
+/* toggleCheck/togglePack re-render whatever view is open (the checklist now
+   lives in the Get-ready view, and its one-liner summary sits on Home) */
+function toggleCheck(id){ var d=ckDone(); d[id]=!d[id]; localStorage.setItem('ckDone',JSON.stringify(d)); render(CUR); }
 function checklistCard(){ var items=D.checklist||[]; if(!items.length)return ''; var dn=ckDone(); var left=items.filter(function(x){return !dn[x.id];}).length;
   var h='<div class="card todo"><div class="between"><h2 style="margin:0">'+ic('check',13)+' Pre-trip checklist</h2><span class="pill '+(left?'warn':'ok')+'">'+(left?left+' to go':'all done')+'</span></div>';
   var sorted=items.slice().sort(function(a,b){ var ad=dn[a.id]?1:0,bd=dn[b.id]?1:0; if(ad!==bd)return ad-bd; return ((a.due||'9999')<(b.due||'9999'))?-1:1; });
@@ -1540,7 +1667,7 @@ function emergencyCard(stop){ if(!stop)return ''; var ho=hospitalFor(stop.id);
   return '<div class="card alertcard"><div class="between"><h2 style="margin:0;color:var(--pr-danger-text)">'+ic('alert',13)+' Emergency · '+esc(stop.name)+'</h2><a class="btn" href="tel:911" style="border-color:var(--pr-danger-text);color:var(--pr-danger-text);font-weight:700">911</a></div>'+(ho?'<div class="sm" style="margin-top:8px"><a href="tel:'+esc(ho.v)+'">'+ic('phone',13)+' '+esc(ho.name)+' · '+esc(ho.v)+'</a></div>':'')+'<div class="xs" style="margin-top:5px"><a href="https://avalanche.ca" target="_blank">'+ic('mountain',12)+' Avalanche Canada forecast ↗</a></div>'+hurtHtml()+contactRows()+'</div>';
 }
 function pkDone(){ try{ return JSON.parse(localStorage.getItem('packDone')||'{}'); }catch(e){ return {}; } }
-function togglePack(k){ var d=pkDone(); d[k]=!d[k]; localStorage.setItem('packDone',JSON.stringify(d)); render('more'); }
+function togglePack(k){ var d=pkDone(); d[k]=!d[k]; localStorage.setItem('packDone',JSON.stringify(d)); render(CUR); }
 function packingCard(){ var cats=D.packing||[]; if(!cats.length)return ''; var d=pkDone(); var i=0,tot=0,done=0,rows='';
   cats.forEach(function(c){ rows+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-text-muted);margin:10px 0 4px">'+esc(c.cat)+'</div>'; (c.items||[]).forEach(function(it){ var key='p'+i; i++; tot++; var dn=!!d[key]; if(dn)done++; rows+='<div style="display:flex;gap:9px;padding:5px 0;cursor:pointer" onclick="togglePack(\''+key+'\')"><div style="color:'+(dn?'var(--pr-ok-text)':'var(--pr-border)')+'">'+ic(dn?'check':'more',15)+'</div><div class="sm" style="flex:1'+(dn?';opacity:.5;text-decoration:line-through':'')+'">'+esc(it)+'</div></div>'; }); });
   return '<div class="card todo"><div class="between"><h2 style="margin:0">'+ic('checklist',13)+' Packing list</h2><span class="pill muted">'+done+'/'+tot+'</span></div>'+rows+'</div>';
@@ -1564,32 +1691,9 @@ function fmtCancel(x){ var d=new Date(x);
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+
          d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
 
-function deskStops(){
-  var h='<div class="card deskonly"><h2>'+ic('bed',13)+' Where we sleep</h2>';
-  (D.stops||[]).forEach(function(s){
-    var g=STOPACC[s.id], a=g?ACCENTS[g]:null;
-    h+='<div class="drail" style="margin-bottom:11px'+(a?';border-left-color:'+a[0]:'')+'">'+
-       '<div class="between"><div><div style="font-weight:700;font-size:14px">'+esc(s.hotel)+'</div>'+
-       '<div class="xs muted">'+esc(s.name)+' \u00b7 '+fmtShort(s.in)+'\u2013'+fmtShort(s.out)+'</div></div>'+
-       '<div class="xs" style="font-weight:700;white-space:nowrap">'+esc(s.cost||'')+'</div></div>'+
-       (s.cancel?'<div class="xs muted" style="margin-top:2px">Free cancel to '+fmtCancel(s.cancel)+'</div>':'')+
-       '</div>';
-  });
-  return h+'</div>';
-}
-
-function deskDays(){
-  var idx=tripDayIdx(), start=(idx>=0?idx:0), list=(D.days||[]).slice(start,start+5);
-  var h='<div class="card deskonly"><h2>'+ic('calendar',13)+' '+(idx>=0?'Next up':'How it opens')+'</h2>';
-  list.forEach(function(d){
-    var g=d.rid?GROUPACC[d.rid]:STOPACC[d.stop], a=g?ACCENTS[g]:null;
-    h+='<div class="drail" style="margin-bottom:10px'+(a?';border-left-color:'+a[0]:'')+'">'+
-       '<div class="xs muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.5px">'+esc(d.wd)+' \u00b7 '+fmtShort(d.dt)+'</div>'+
-       '<div style="font-weight:700;font-size:14px;margin-top:1px">'+esc(d.title)+'</div>'+
-       (d.drive?'<div class="xs muted" style="margin-top:2px">'+esc(d.drive)+'</div>':'')+'</div>';
-  });
-  return h+'<button class="btn" style="margin-top:4px" onclick="sw(\'days\')">Full itinerary \u2192</button></div>';
-}
+/* (deskStops "Where we sleep" and deskDays "How it opens" were retired in the
+   Sep 2026 Home redesign \u2014 routeStrip() below shows the same stops, costs and
+   drives on every width.) */
 
 function deskTown(){
   var idx=tripDayIdx(), sid=(idx>=0&&D.days[idx])?D.days[idx].stop:((D.stops||[])[0]||{}).id;
@@ -1614,36 +1718,288 @@ function deskCrew(){
        '<div class="xs muted" style="white-space:nowrap">'+esc(c.legs||'')+'</div></div>';
   });
   if(D.rooming) h+='<div class="xs muted" style="margin-top:10px">'+esc(D.rooming)+'</div>';
+  h+='<div style="cursor:pointer" onclick="sw(\''+formView()+'\')">'+emgLine()+'</div>';
   return h+'</div>';
 }
 
+/* =========================== HOME CARDS (Sep 2026) ===========================
+   Every function below builds ONE card for the Home tab and returns an HTML
+   string; rHome() strings them together in the order the crew sees them.
+   Cards that need the network render a placeholder first and fill themselves
+   in when the cache or the fetch comes back — Home never waits on a request,
+   and a failed request never throws (it just leaves "—" or an empty slot). */
+
+/* Short hill names for dense rows (the data's names run long: "Revelstoke (RMR)"). */
+var SHORTN={sunshine:'Sunshine',louise:'Lake Louise',norquay:'Norquay',panorama:'Panorama',kickinghorse:'Kicking Horse',revelstoke:'Revelstoke',whitewater:'Whitewater',red:'RED',schweitzer:'Schweitzer'};
+function shortName(rid){ return SHORTN[rid]||((D.resorts||{})[rid]||{}).name||rid; }
+/* hillOrder() — the nine hills in the order we ride them (first appearance in
+   days[]), then any resort the itinerary never names. Every snow list uses it. */
+function hillOrder(){ var o=[],seen={}; (D.days||[]).forEach(function(d){ if(d.rid&&!seen[d.rid]&&(D.resorts||{})[d.rid]){ seen[d.rid]=1; o.push(d.rid); } }); Object.keys(D.resorts||{}).forEach(function(k){ if(!seen[k]){ seen[k]=1; o.push(k); } }); return o; }
+/* fmtIn(n) — inches for display: 0″, 2.5″, 11″ */
+function fmtIn(n){ if(!(n>0.05))return '0″'; return (n<10?n.toFixed(1).replace(/\.0$/,''):String(Math.round(n)))+'″'; }
+
+/* omDaily(rids, query) — ONE open-meteo call for several hills at once. A
+   comma-separated latitude=/longitude= list comes back as a JSON array in the
+   same order (one hill comes back as a plain object, so we wrap it). Resolves
+   to {rid:{time:[dates], snow:[cm per day]}}. Snowfall is in cm — ÷2.54 for ″. */
+function omDaily(rids,q){
+  rids=rids.filter(function(k){ var r=(D.resorts||{})[k]; return r&&r.lat!=null&&r.lon!=null; });
+  if(!rids.length)return Promise.resolve({});
+  var lat=rids.map(function(k){ return D.resorts[k].lat; }).join(','), lon=rids.map(function(k){ return D.resorts[k].lon; }).join(',');
+  return fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&daily=snowfall_sum&'+q+'&timezone=auto').then(function(x){ return x.json(); }).then(function(j){
+    var arr=Array.isArray(j)?j:[j], out={}; rids.forEach(function(k,i){ var d=(arr[i]||{}).daily; if(d&&d.time)out[k]={time:d.time,snow:d.snowfall_sum||[]}; }); return out; });
+}
+/* cacheGet(key, ttlMs) / cachePut(key, data) / cacheStale(key) — a tiny
+   localStorage cache: {ts, data}. cacheGet returns null once it's older than
+   ttl; cacheStale hands back whatever is there regardless of age (offline fallback). */
+function cacheGet(key,ttl){ try{ var c=JSON.parse(localStorage.getItem(key)||'null'); if(c&&c.ts&&(Date.now()-c.ts)<ttl)return c.data; }catch(e){} return null; }
+function cacheStale(key){ try{ var c=JSON.parse(localStorage.getItem(key)||'null'); return c?c.data:null; }catch(e){ return null; } }
+function cachePut(key,data){ try{ localStorage.setItem(key,JSON.stringify({ts:Date.now(),data:data})); }catch(e){} }
+
+/* ---- 1. Powder alert ----
+   Shows only when a hill got POW_MIN_IN inches or more YESTERDAY — the last
+   complete day open-meteo reports (past_days=2 → [day-before, yesterday, today];
+   today's number is part forecast so we don't use it). One call covers all nine
+   hills; the answer is cached POW_TTL ms (60 min) so ten opens in a morning
+   cost one request. Several hills → one card, biggest first; on trip days the
+   hill we ride today, then tomorrow, leads. Nothing over the threshold → no card.
+   Screenshot hook: localStorage.powDemo='1' renders POW_FIXTURE instead of
+   fetching. It never fires without that flag. Change the threshold, the cache
+   time or the fixture right here. */
+var POW_MIN_IN=3, POW_TTL=60*60*1000, POW_FIXTURE={revelstoke:11,kickinghorse:6,whitewater:3};
+/* the jargon ladder — numbers stay honest, the words don't */
+function powWord(n){ return n<1?'dust on crust':n<3?'a sprinkle — hunt cord':n<6?'soft refills all morning':n<12?'proper pow day, call in sick':'nuking — blower over-the-hood freshies, tree wells are real'; }
+function powDemoOn(){ try{ return localStorage.getItem('powDemo')==='1'; }catch(e){ return false; } }
+/* powFromDaily(res) — yesterday's snowfall per hill, cm → inches: {rid: inches} */
+function powFromDaily(res){ var out={}; Object.keys(res||{}).forEach(function(k){ var t=res[k].time||[], s=res[k].snow||[]; if(t.length<2)return; var v=s[t.length-2]; if(typeof v==='number')out[k]=v/2.54; }); return out; }
+function powCardHtml(inches){
+  var idx=tripDayIdx(), rids=hillOrder().filter(function(k){ return (inches[k]||0)>=POW_MIN_IN; });
+  if(!rids.length)return '';
+  var lead={}; if(idx>=0){ var t=D.days[idx]&&D.days[idx].rid, m=D.days[idx+1]&&D.days[idx+1].rid; if(t)lead[t]=2; if(m&&!lead[m])lead[m]=1; }
+  rids.sort(function(a,b){ return ((lead[b]||0)-(lead[a]||0))||(inches[b]-inches[a]); });
+  var top=D.resorts[rids[0]]||{}, camUrl=top.cams||top.snow||'';
+  var h='<div class="card pow"><div class="powhd"><h2>'+ic('snowflake',14)+' Powder alert'+(powDemoOn()?' · demo':'')+'</h2><span class="when">yesterday</span></div>';
+  rids.forEach(function(k,i){ var n=inches[k], tag=lead[k]===2?'today':lead[k]===1?'tomorrow':'';
+    h+='<div class="prow'+(i===0?' lead':'')+'"><div class="pn"><div class="ph">'+esc(shortName(k))+(tag?'<span class="ptag">'+tag+'</span>':'')+'</div><div class="pj">'+esc(powWord(n))+'</div></div><div class="pin">'+fmtIn(n)+'</div></div>'; });
+  h+='<div class="xs" style="margin-top:9px;color:var(--pr-text-2)">Model totals (open-meteo), midnight to midnight — the hill’s own report is the number that counts.'+(camUrl?' <a href="'+esc(camUrl)+'" target="_blank" style="font-weight:700">'+esc(shortName(rids[0]))+' cams ↗</a>':'')+'</div></div>';
+  return h;
+}
+/* powSlot() is the placeholder rHome() prints; fillPow() fills it from the
+   fixture, the cache, or the network (in that order). Empty slot = no card. */
+function powSlot(){ return '<div id="powslot"></div>'; }
+function fillPow(){ var el=$('powslot'); if(!el)return;
+  if(powDemoOn()){ el.innerHTML=powCardHtml(POW_FIXTURE); return; }
+  var c=cacheGet('powCache',POW_TTL); if(c){ el.innerHTML=powCardHtml(powFromDaily(c)); return; }
+  omDaily(hillOrder(),'past_days=2&forecast_days=1').then(function(res){ cachePut('powCache',res); var e2=$('powslot'); if(e2)e2.innerHTML=powCardHtml(powFromDaily(res)); }).catch(function(){ var old=cacheStale('powCache'), e3=$('powslot'); if(old&&e3)e3.innerHTML=powCardHtml(powFromDaily(old)); });
+}
+
+/* ---- 2. Get-ready one-liner ----
+   Replaces the full checklist on Home: "Get ready · 3 of 10 done · next: RCR
+   card by Dec 15 ›". Tap → the Get-ready view (checklist + packing + the
+   emergency-info form). CK_SHORT maps each checklist id to a label short
+   enough for the "next:" slot; an unmapped id falls back to its first four
+   words. "Next" = the undone item with the earliest due date (overdue ones
+   say so), else the first undone item without a date. */
+var CK_SHORT={tires:'tire check at pickup',drivers:'licences at the counter',canister:'empty airbag cylinder',ikon:'IKON pass',khtix:'RCR card',wh2o:'Whitewater ticket',emgform:'emergency info',avy:'avy kit check',cell:'phone plan',cash:'cash, CAD + USD'};
+function ckShort(x){ return CK_SHORT[x.id]||(x.text||'').split(/\s+/).slice(0,4).join(' '); }
+function readyCard(){ var items=D.checklist||[]; if(!items.length)return ''; var dn=ckDone(), done=items.filter(function(x){ return dn[x.id]; }).length, left=items.length-done;
+  var todo=items.filter(function(x){ return !dn[x.id]; }), today=nowMid();
+  var dated=todo.filter(function(x){ return x.due; }).sort(function(a,b){ return a.due<b.due?-1:1; }), nx=dated[0]||todo[0], line;
+  if(!left)line='All done. First chair anyway — don’t be the guy we wait for.';
+  else if(nx.due){ var od=dObj(nx.due)<today; line=(od?'overdue: ':'next: ')+ckShort(nx)+' · '+(od?'was due ':'by ')+fmtShort(nx.due); }
+  else line='next: '+ckShort(nx);
+  return '<div class="card todo ready" onclick="sw(\'ready\')"><div class="between"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">'+ic('check',13)+' Get ready</h2><span class="pill '+(left?'warn':'ok')+'">'+done+' of '+items.length+' done</span></div><div class="rnext">'+esc(line)+'</div></div><div class="chev">›</div></div></div>';
+}
+
+/* ---- the Get-ready view (7th nav tab while readyLive()) ----
+   Also reached from Home's one-liner, the crew card and a row on More. All the
+   pre-trip admin in one place: checklist, packing list, emergency-info form.
+   The toggles call render(CUR) so ticking a box redraws this view. Once the tab
+   is gone, sw('ready')/render('ready') land on More instead (see sw/render). */
+function rReady(){
+  var h=testBanner()+'<div class="hh"><h1>Get ready</h1><div class="sub">Checklist, packing, emergency info — the boring stuff that makes the trip work</div></div>';
+  h+='<button class="btn" style="margin-bottom:12px" onclick="sw(\'home\')">← Home</button>';
+  h+=sec('Before we go','checklist · packing · emergency info')+checklistCard()+packingCard()+emgFormCard();
+  setView('v-ready',h);
+}
+
+/* ---- 3. Snow so far + cams ----
+   Nine rows in itinerary order: last 7 days ″, season so far ″, what's typical
+   for our dates (normals: snow in the 2 weeks before our ski day + the usual
+   hi/lo, °C in the data → °F here) and a cam link (resorts[rid].cams, falling
+   back to .snow). ONE open-meteo call with past_days=92 (the API max), cached
+   SNOW_TTL ms (6 h). "Season so far" counts from Nov 1 when Nov 1 is inside the
+   92-day window, otherwise it's honestly labelled "last 92 days". Off-season
+   (Jul–Oct) it skips the call altogether and shows the typical column only.
+   Offline: stale cache if there is one, else "—". */
+var SNOW_TTL=6*60*60*1000;
+function snowOffSeason(){ var m=getNow().getMonth(); return m>=6&&m<=9; }
+function snowSeasonStart(){ var n=getNow(), y=n.getMonth()>=10?n.getFullYear():n.getFullYear()-1; return y+'-11-01'; }
+function snowSoFarCard(){
+  var off=snowOffSeason(), rids=hillOrder();
+  var h='<div class="card snow"><div class="between" style="margin-bottom:8px"><h2 style="margin:0">'+ic('snowflake',13)+' Snow so far</h2><span class="pill muted" id="sfpill">'+(off?'season opens Nov':'…')+'</span></div>';
+  /* header cells are printed twice: the second set (.d2) is hidden on phones and
+     lets desktop lay the table out two hills per row */
+  var hd=off?['Hill','Typical for our dates','']:['Hill','7 days','Season','Typical',''];
+  h+='<div class="sft'+(off?' off':'')+'">';
+  [0,1].forEach(function(rep){ hd.forEach(function(t,i){ h+='<div class="hd'+(i?' n':'')+(rep?' d2':'')+'">'+t+'</div>'; }); });
+  rids.forEach(function(k){ var r=D.resorts[k]||{}, nm=(D.normals||{})[k], cam=r.cams||r.snow;
+    h+='<div class="hl">'+esc(shortName(k))+'</div>';
+    if(!off)h+='<div class="n" id="sf7-'+k+'">…</div><div class="n" id="sfs-'+k+'">…</div>';
+    h+='<div class="ty">'+(nm?('~'+nm.snowIn+'″<small>'+cF(nm.hiC)+'° / '+cF(nm.loC)+'°F</small>'):'—')+'</div>';
+    h+='<div class="cam">'+(cam?'<a href="'+esc(cam)+'" target="_blank">cam ↗</a>':'')+'</div>';
+  });
+  h+='</div><div class="xs" style="margin-top:8px;color:var(--pr-text-2)">'+(off?'Season opens in Nov — the 7-day and season-to-date columns show up here then. ':'Totals are open-meteo model estimates; the hill’s report wins. ')+'Typical = snow in the 2 weeks before our ski day, 8-yr avg, with the usual hi / lo.</div></div>';
+  return h;
+}
+/* snowSums(res) — per hill {d7, season} in inches, plus _label for the pill */
+function snowSums(res){ var start=snowSeasonStart(), out={}, since=false;
+  Object.keys(res||{}).forEach(function(k){ var t=res[k].time||[], s=res[k].snow||[], d7=0, se=0, i;
+    for(i=Math.max(0,t.length-7);i<t.length;i++)d7+=(s[i]||0);
+    var f=t.indexOf(start); if(f<0)f=0; else since=true;
+    for(i=f;i<t.length;i++)se+=(s[i]||0);
+    out[k]={d7:d7/2.54,season:se/2.54}; });
+  out._label=since?'since Nov 1':'last 92 days'; return out; }
+function fillSnowSoFar(){ if(snowOffSeason()||!$('sfpill'))return;
+  var apply=function(res){ var s=snowSums(res); hillOrder().forEach(function(k){ var v=s[k], a=$('sf7-'+k), b=$('sfs-'+k); if(a)a.textContent=v?fmtIn(v.d7):'—'; if(b)b.textContent=v?fmtIn(v.season):'—'; }); var p=$('sfpill'); if(p)p.textContent=s._label; };
+  var c=cacheGet('snowSoFarCache',SNOW_TTL); if(c){ apply(c); return; }
+  omDaily(hillOrder(),'past_days=92&forecast_days=1').then(function(res){ cachePut('snowSoFarCache',res); apply(res); }).catch(function(){
+    var old=cacheStale('snowSoFarCache'); if(old){ apply(old); return; }
+    hillOrder().forEach(function(k){ ['sf7-','sfs-'].forEach(function(p){ var e=$(p+k); if(e)e.textContent='—'; }); }); var p=$('sfpill'); if(p)p.textContent='offline'; });
+}
+
+/* ---- 4. Route strip ----
+   The 7 stops as a chain of chips: town, dates, nights, hotel, cost, free-cancel
+   date, and the drive out to the next stop. Drives come from the days[] drive
+   string on the NEXT stop's check-in day ("Banff → Panorama ~2h50 (Hwy 93…)" →
+   "~2h50", plus anything after a ⚠, e.g. "· US border"). Left rail = the
+   Itinerary's day-accent colour for that stop. Scrolls sideways on a phone,
+   one 7-up row on desktop. On trip days tonight's stop gets a "tonight" pill and
+   the strip opens scrolled to it (scrollRoute). Tap → Itinerary at that stop. */
+function driveInto(stopId){ var days=D.days||[]; for(var i=0;i<days.length;i++){ if(days[i].stop===stopId&&days[i].drive)return days[i].drive; } return ''; }
+function driveShort(s){ if(!s)return ''; var m=s.match(/~\s?[\d.]+(?:[–-][\d.]+)?\s?h(?:\d{2})?/), t=m?m[0].replace(/\s/g,''):'', w=s.indexOf('⚠')>=0?s.split('⚠')[1].split('(')[0].trim():''; return t+(w?' · '+w:''); }
+function routeStrip(){ var stops=D.stops||[]; if(!stops.length)return ''; var days=D.days||[], idx=tripDayIdx(), cur=(idx>=0&&days[idx])?days[idx].stop:null, last=(days[days.length-1]||{}).drive||'';
+  var h='<div class="rstrip" id="rstrip">', d0=driveShort(driveInto(stops[0].id));
+  h+='<div class="rend">'+ic('ticket',12)+' YYC'+(d0?'<small>'+esc(d0)+' →</small>':'')+'</div>';
+  stops.forEach(function(s,i){ var g=STOPACC[s.id], a=g?ACCENTS[g]:null, di=dObj(s.in), dout=dObj(s.out), nights=Math.round((dout-di)/864e5);
+    var dates=fmtShort(s.in)+'–'+(di.getMonth()===dout.getMonth()?dout.getDate():fmtShort(s.out));
+    var nxt=stops[i+1], drv=nxt?driveShort(driveInto(nxt.id)):driveShort(last), dest=nxt?nxt.name:((last.match(/→\s*([^~]+)/)||[])[1]||'').trim();
+    h+='<div class="rchip'+(s.id===cur?' cur':'')+'"'+(a?' style="border-left-color:'+a[0]+'"':'')+' onclick="goStop(\''+s.id+'\')">'
+      +'<div class="rtop"><div class="rt">'+esc(s.name)+(s.id===cur?' <span class="pill" style="font-size:9.5px;padding:1px 6px;vertical-align:2px">tonight</span>':'')+'</div>'
+      +'<div class="rd">'+esc(dates)+' · '+nights+(nights===1?' night':' nights')+'</div>'
+      +'<div class="rh">'+esc(s.hotel)+'</div>'
+      +'<div class="rc">'+esc(s.cost||'')+'</div>'
+      +(s.cancel?'<div class="rx">free cancel to '+esc(fmtShort(s.cancel.slice(0,10)))+'</div>':'')+'</div>'
+      +((drv||dest)?'<div class="rdr">'+ic('car',11)+'<span>'+esc(drv)+(dest?' → '+esc(dest):'')+'</span></div>':'')
+      +'</div>'; });
+  return h+'<div class="rend">GEG '+ic('ticket',12)+'</div></div>'; }
+/* goStop(id) — open the Itinerary and scroll to that stop's colour group */
+function goStop(id){ sw('days'); var g=STOPACC[id]; if(g)setTimeout(function(){ jumpGroup(g); },80); }
+
+/* ---- 5. Did you know ----
+   One fact a day, picked by day-of-year from every guide[town].facts[] entry
+   (tagged with the town) plus every roadside sight's note (tagged with the
+   leg). Guide facts tap through to that town's guide; roadside ones to Drive. */
+function dykPool(){ var pool=[];
+  (D.stops||[]).forEach(function(s){ var g=guideFor(s.id); if(!g)return; (g.facts||[]).forEach(function(f){ pool.push({t:f,label:s.name+' guide',go:"openGuide('"+s.id+"')"}); }); });
+  (D.roadside||[]).forEach(function(r){ var leg=(r.leg||'').split(' · ')[0]; (r.sights||[]).forEach(function(x){ if(x.note)pool.push({t:x.name+' — '+x.note,label:'on the drive, '+leg,go:"sw('drive')"}); }); });
+  return pool; }
+function dykCard(){ var pool=dykPool(); if(!pool.length)return ''; var n=getNow(), doy=Math.floor((Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())-Date.UTC(n.getFullYear(),0,1))/864e5), f=pool[doy%pool.length];
+  return '<div class="card dyk" onclick="'+f.go+'"><h2>'+ic('tip',13)+' Did you know</h2><div class="fact">'+esc(f.t)+'</div><div class="go">→ '+esc(f.label)+'</div></div>'; }
+
+/* ---- 6. Crew card (phone; desktop keeps deskCrew, which gets the same line) ----
+   Names + legs, and how many of the crew have filed emergency info. An entry
+   counts as IN when c.emergency exists and is neither pending nor placeholder
+   — the same test hurtHtml() and emgFormCard() use. Tap → Get-ready view. */
+function emgIn(){ var n=0,t=0; (D.crew||[]).forEach(function(c){ t++; if(c.emergency&&!c.emergency.pending&&!c.emergency.placeholder)n++; }); return [n,t]; }
+function emgLine(){ var e=emgIn(), all=(e[0]===e[1]); return '<div class="emgline" style="color:'+(all?'var(--pr-ok-text)':'var(--pr-orange-text)')+'">'+ic(all?'check':'alert',13)+'<span>'+e[0]+' of '+e[1]+' have their emergency info in'+(all?'':' — yours? ›')+'</span></div>'; }
+function crewCard(){ var crew=D.crew||[]; if(!crew.length)return ''; var h='<div class="card crew phoneonly" onclick="sw(\''+formView()+'\')"><h2>The crew</h2>';
+  crew.forEach(function(c){ h+='<div class="crow"><div style="font-weight:600;min-width:0">'+esc(c.name)+(c.note?' <span class="xs muted">'+esc(c.note)+'</span>':'')+'</div><div class="xs muted" style="white-space:nowrap">'+esc(c.legs||'')+'</div></div>'; });
+  return h+emgLine()+'</div>'; }
+
+/* ---- 7. Milestones ----
+   trip-data.json → milestones:[{d:'YYYY-MM-DD', t:'label'}]. Past = check in
+   the dot, the next one is highlighted with "in N days", later ones muted.
+   Printed right after the countdown; setView() lifts it into the hero with
+   the stats strip. Hidden once the trip starts. */
+function milestones(){ var ms=(D.milestones||[]).slice().sort(function(a,b){ return a.d<b.d?-1:1; }); if(!ms.length||tripDayIdx()!==-1)return '';
+  var today=nowMid(), seen=false, h='<div class="milest"><div class="mrow" id="mrow">';
+  ms.forEach(function(m){ var dd=Math.ceil((dObj(m.d)-today)/864e5), cls, when=fmtShort(m.d);
+    if(dd<0)cls='past'; else if(!seen){ cls='next'; seen=true; when+=' · '+(dd===0?'today':dd===1?'tomorrow':'in '+dd+' days'); } else cls='later';
+    h+='<div class="mi '+cls+'"'+(cls==='next'?' id="mnext"':'')+'><div class="md">'+(cls==='past'?ic('check',9):'')+'</div><div class="mw">'+esc(when)+'</div><div class="mt">'+esc(m.t)+'</div></div>'; });
+  return h+'</div></div>'; }
+/* keep the "next" milestone in view when the row scrolls (phones) */
+function scrollMilestones(){ var row=$('mrow'), nx=$('mnext'); if(!row||!nx||row.scrollWidth<=row.clientWidth)return; row.scrollLeft=Math.max(0,row.scrollLeft+nx.getBoundingClientRect().left-row.getBoundingClientRect().left-16); }
+/* scrollRoute() — on trip days, scroll the route strip so tonight's stop is the
+   first visible chip (phones; on desktop the strip is a grid and never scrolls) */
+function scrollRoute(){ var st=$('rstrip'), ch=st&&st.querySelector('.rchip.cur'); if(!st||!ch||st.scrollWidth<=st.clientWidth)return; st.scrollLeft=Math.max(0,st.scrollLeft+ch.getBoundingClientRect().left-st.getBoundingClientRect().left-16); }
+
+/* ---- 8. Latest picks ----
+   The last 3 crew picks from the feed the Scene tab reads (D.runsUrl, same
+   parse as loadRuns). The cached copy (runsCache) draws instantly; the fetch
+   refreshes it. No feed URL, or offline with no cache → the slot stays empty. */
+function picksSlot(){ return '<div id="hpicks"></div>'; }
+function picksHtml(arr){ var list=(arr||[]).slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); }).slice(0,3); if(!list.length)return '';
+  var h='<div class="card"><div class="between" style="margin-bottom:4px"><h2 style="margin:0">'+ic('cheers',13)+' Latest picks</h2><a href="#" onclick="sw(\'scene\');return false" class="xs" style="font-weight:700">all picks →</a></div>';
+  list.forEach(function(r){ h+='<div class="pick">'+kindIcon(r.kind)+'<div style="flex:1;min-width:0"><span class="pby">'+esc(r.by||'someone')+'</span> · '+esc(r.text)+(r.resort?' <span class="pwh">· '+esc(r.resort)+'</span>':'')+'</div></div>'; });
+  return h+'</div>'; }
+function fillPicks(){ var el=$('hpicks'); if(!el||!D.runsUrl)return;
+  try{ var c=JSON.parse(localStorage.getItem('runsCache')||'[]'); if(c.length)el.innerHTML=picksHtml(c); }catch(e){}
+  fetch(D.runsUrl).then(function(x){ return x.json(); }).then(function(j){ var arr=Array.isArray(j)?j:(j.runs||[]); localStorage.setItem('runsCache',JSON.stringify(arr)); var e2=$('hpicks'); if(e2)e2.innerHTML=picksHtml(arr); }).catch(function(){}); }
+
+/* ---- 9. Playlist / group chat / G.N.A.R. ----
+   A row of buttons, only for the keys that exist in trip-data.json meta:
+   playlistUrl and chatUrl open in a new tab; gnarUrl (the G.N.A.R. scoreboard,
+   gnar.html — built separately) opens in the same tab. No keys → no row. */
+function gnarOn(){ var g=(D.meta||{}).gnarUrl; return (typeof g==='string'&&g.trim())?g.trim():''; }
+function linkRow(){ var m=D.meta||{}, b='', g=gnarOn();
+  if(m.playlistUrl)b+='<a class="btn" href="'+esc(m.playlistUrl)+'" target="_blank">'+ic('music',14)+' Trip playlist ↗</a>';
+  if(m.chatUrl)b+='<a class="btn" href="'+esc(m.chatUrl)+'" target="_blank">'+ic('chat',14)+' Group chat ↗</a>';
+  if(g)b+='<a class="btn" href="'+esc(g)+'">'+ic('skier',14)+' G.N.A.R. scoreboard</a>';
+  return b?'<div class="linkrow">'+b+'</div>':''; }
+/* gnarCard() — the same scoreboard as a row on More; nothing when meta.gnarUrl is absent */
+function gnarCard(){ var g=gnarOn(); if(!g)return '';
+  return '<div class="card"><h2>'+ic('skier',13)+' Crew games</h2><a class="lk" href="'+esc(g)+'" style="color:inherit"><div style="flex:1">G.N.A.R. scoreboard<small>claim your points, dock your buddies</small></div><span>›</span></a></div>'; }
+
+/* rHome() — the Home tab. Phone order, pre-trip: hero → countdown (+milestones)
+   → stats → powder alert (if any) → get-ready one-liner → snow so far → the
+   route → did you know → crew → latest picks → deadlines & money → playlist /
+   chat → full itinerary. On trip days the today cards (snow today & tomorrow,
+   secret stash, tonight's guide, tonight's base, emergency) sit where they
+   always did. sec() headers are invisible on phones; on desktop each one opens
+   a grid (see setView). */
 function rHome(){
   var idx=tripDayIdx(), h=testBanner();
   h+='<div class="hh"><h1>'+esc(D.meta.title)+' '+esc(D.meta.year)+'</h1><div class="sub">'+esc(D.meta.tagline)+'</div></div>';
   if(idx===-1){ h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Countdown</div><div class="big" style="margin:6px 0 2px">'+daysUntilStart()+'</div><div class="sm" style="opacity:.85">days until Banff · first chair '+fmtShort(D.meta.firstChair||D.meta.start)+'</div><div class="stripe"></div></div>'; }
   else if(idx>=0){ var td=D.days[idx], r=resortOfDay(td); h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Today · '+td.wd+' '+fmtShort(td.dt)+'</div><div class="hero-ti" style="margin:6px 0 3px">'+esc(td.title)+'</div>'+(passChip(idx)?'<div style="margin-top:5px">'+passChip(idx)+'</div>':'')+'<button class="btn" onclick="dsToday()" style="margin-top:9px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('map',12)+' Today\u2019s day sheet</button>'+'<div class="stripe"></div></div>'; }
   else { h+='<div class="banner"><div class="hero-ti">That’s a wrap 🎿</div><div class="sm" style="opacity:.85;margin-top:4px">Hope it was deep. Drive safe home.</div><div class="stripe"></div></div>'; }
-  h+=deskStats();
+  h+=milestones();   /* pre-trip only; rides in the hero with the stats */
+  h+=deskStats();    /* the 4-number stats strip — now on phones too */
+  h+=powSlot();      /* powder alert: fills itself in (or stays empty) */
   var sname=(idx>=0)?firstResortDayName(idx):''; if(sname)h+='<div class="card" style="background:var(--pr-purple-tint);border-color:#DCC9F4"><div class="sm" style="font-weight:700;color:var(--pr-purple-text)">🏷️ First day at '+esc(sname)+' — '+esc(D.meta.sticker||'grab a trip sticker!')+'</div></div>';
-  h+=sec(idx>=0?'Today':'Snow &amp; mountains');
-  h+=homeSnowCard();
-  if(idx>=0){ var tday=D.days[idx], trid=tday.rid, tstop=stopById(tday.stop);
+  if(readyLive())h+=sec('What needs doing')+readyCard();
+  if(idx>=0){ h+=sec('Today')+homeSnowCard(); var tday=D.days[idx], trid=tday.rid, tstop=stopById(tday.stop);
     if(trid&&stashFor(trid)){ h+='<div class="card stash"><h2>🤫 Today’s secret stash · '+esc((D.resorts[trid]||{}).name||'')+'</h2><div class="sm">'+esc(stashFor(trid))+'</div></div>'; }
     var tg=tstop?guideFor(tstop.id):null; if(tg){ h+='<div class="card meeting"><h2>'+ic('meeting',13)+' '+esc(tstop.name)+' tonight</h2>'+(tg.tonight?'<div class="sm">'+esc(tg.tonight)+'</div>':'')+((tg.facts&&tg.facts.length)?'<div class="xs muted" style="margin-top:7px">'+ic('tip',12)+' '+esc(tg.facts[0])+'</div>':'')+'<div class="btn" style="width:100%;justify-content:center;margin-top:10px" onclick="openGuide(\''+tstop.id+'\')">'+ic('cheers',14)+' Full '+esc(tstop.name)+' guide</div></div>'; }
     if(tstop){ h+='<div class="card"><h2>Tonight’s base</h2><div style="font-weight:700">'+esc(tstop.hotel)+'</div><div class="xs muted">'+esc(tstop.name)+'</div><div style="margin-top:8px;display:flex;gap:6px"><a class="btn" href="'+mapsUrl(tstop.hotel+' '+tstop.addr)+'" target="_blank">'+ic('pin',14)+' Map</a><a class="btn" href="tel:'+esc(tstop.phone)+'">'+ic('phone',14)+' Call</a></div><div class="xs muted" style="margin-top:7px">Conf '+esc(tstop.conf)+' · '+esc(tstop.cost)+'</div>'+(tstop.note?'<div class="xs muted" style="margin-top:5px">'+esc(tstop.note)+'</div>':'')+'</div>'; }
     if(tstop)h+=emergencyCard(tstop);
   }
+  else h+=homeSnowCard(); /* pre-trip this is empty, except for the Jul 4 demo */
+  h+=sec('Snow &amp; mountains')+snowSoFarCard();
+  h+=sec('The route',(D.stops||[]).length+' stops \u00b7 '+(D.days.length-1)+' nights');
+  h+='<div class="plabel phoneonly">'+ic('bed',12)+' The route \u00b7 '+(D.stops||[]).length+' stops \u00b7 '+(D.days.length-1)+' nights</div>'+routeStrip();
+  h+=sec('The town &amp; the crew')+deskTown()+dykCard()+crewCard()+deskCrew()+picksSlot();
   h+=sec('Deadlines &amp; money');
   var now=getNow(), nx=null;
   if(idx===-1)(D.stops||[]).forEach(function(s){ if(s.cancel){var c=new Date(s.cancel); if(c>now&&(!nx||c<nx.c))nx={c:c,s:s};} });
   if(nx){ var dd=Math.ceil((nx.c-now)/864e5); h+='<div class="card money"><div class="between"><div><div class="xs" style="text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:var(--pr-card-money-fg)">Next free-cancel deadline</div><div style="font-weight:700;margin-top:3px">'+esc(nx.s.hotel)+'</div><div class="sm muted">'+esc(nx.s.name)+' · '+nx.c.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+nx.c.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+'</div></div><span class="pill '+(dd<14?'warn':'ok')+'">'+dd+'d</span></div></div>'; }
   h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div></div>';
-  if(idx===-1)h+=sec('What needs doing');
-  if(idx===-1)h+=checklistCard();
-  h+=sec('The route','7 stops \u00b7 '+D.days.length+' days')+deskStops()+deskDays();
-  h+=sec('The town &amp; the crew')+deskTown()+deskCrew();
+  var lr=linkRow(); if(lr)h+=sec('Crew links')+lr;
   h+='<div class="btn pri" style="width:100%;justify-content:center" onclick="sw(\'days\')">'+ic('calendar',14)+' Full itinerary</div>';
-  setView('v-home',h); initFx();
+  setView('v-home',h); initFx(); fillPow(); fillSnowSoFar(); fillPicks(); scrollMilestones(); scrollRoute();
+  /* widths shift a few px once the webfonts land — re-run the two strip scrolls then (both are no-ops once correct) */
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){ if(CUR==='home'){ scrollMilestones(); scrollRoute(); } });
 }
 
 
@@ -1663,8 +2019,9 @@ function setView(id,h){
   el.insertBefore(hero,hh); hin.appendChild(hh);
   var nx=nextEl(hero.nextSibling);
   if(nx&&/\bbanner\b/.test(nx.className||'')) hin.appendChild(nx);
-  var st2=nextEl(hero.nextSibling);
-  if(st2&&/\bhstats\b/.test(st2.className||'')) hin.appendChild(st2);
+  /* the milestones row and the stats strip follow the banner on Home — both
+     ride in the hero (desktop lays them out full-width under the countdown) */
+  for(var k=0;k<2;k++){ var st2=nextEl(hero.nextSibling); if(st2&&/\b(hstats|milest)\b/.test(st2.className||'')) hin.appendChild(st2); else break; }
   var st=document.createElement('div'); st.className='hstripe';
   el.insertBefore(st,hero.nextSibling);
   var wrap=document.createElement('div'); wrap.className='wrap';
@@ -2223,11 +2580,15 @@ function rMore(){
   (D.crew||[]).forEach(function(c){h+='<div class="between" style="padding:5px 0;border-bottom:1px solid var(--pr-hairline)"><div style="font-weight:600">'+esc(c.name)+(c.note?' <span class="xs muted">'+esc(c.note)+'</span>':'')+'</div><span class="xs muted">'+esc(c.legs)+'</span></div>';});
   if(D.rooming)h+='<div class="sm muted" style="margin-top:9px">'+esc(D.rooming)+'</div>';
   h+='</div>';
+  /* while the Get-ready tab is live, packing + the emergency form live THERE (this row is a second way in);
+     once it's gone (readyLive() false) they come back to More, exactly where they used to be */
+  if(readyLive())h+='<div class="card"><h2>Before we go</h2><div class="lk" onclick="sw(\'ready\')"><div style="flex:1">Get ready<small>pre-trip checklist · packing list · my emergency info</small></div><span>›</span></div></div>';
+  h+=gnarCard();
   h+='<div class="card"><h2>Document vault</h2><div class="xs muted" style="margin-bottom:8px"><b>My files</b> — stored on this phone, works offline.</div><div id="doclist" class="sm muted">…</div><label class="btn" style="margin-top:8px;cursor:pointer">＋ Add file<input type="file" hidden onchange="addDoc(this)"></label><div style="border-top:1px solid var(--pr-hairline);margin-top:12px;padding-top:10px"><div class="xs muted" style="margin-bottom:8px"><b>Trip docs</b> — built into the app, work offline on every phone.</div>'+((D.docs||[]).map(function(dd){ return '<div class="between" style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm" style="font-weight:600;flex:1;padding-right:8px">'+esc(dd.name)+'</div><button class="btn" onclick="openEmbDoc(\''+esc(dd.id)+'\')">Open</button></div>'; }).join('')||'<div class="sm muted">None yet.</div>')+'</div><div style="border-top:1px solid var(--pr-hairline);margin-top:12px;padding-top:10px"><div class="xs muted" style="margin-bottom:8px"><b>Crew files</b> — shared with everyone, encrypted with the trip password before upload.</div><div id="sdoclist" class="sm muted">…</div><label class="btn" style="margin-top:8px;cursor:pointer">＋ Share a file<input type="file" hidden onchange="addSharedDoc(this)"></label></div></div>';
   h+='<div class="card alertcard"><h2 style="color:var(--pr-danger-text)">'+ic('alert',13)+' Emergency</h2>'+hurtHtml()+'<div style="margin-top:10px;border-top:1px solid var(--pr-hairline);padding-top:6px"><div class="xs muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.4px">Everyone</div>'+contactRows()+'</div></div>';
-  h+=emgFormCard();
+  if(!readyLive())h+=emgFormCard();
   h+='<div class="card"><h2>Safety &amp; emergency</h2>'; (D.safety||[]).forEach(function(s){ h+='<div class="between" style="padding:5px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm">'+esc(s.name)+'</div>'+(s.url?'<a href="'+s.url+'" target="_blank" class="sm">open ↗</a>':'<a href="tel:'+esc(s.v)+'" class="sm" style="font-weight:700">'+esc(s.v)+'</a>')+'</div>'; }); h+='</div>';
-  h+=packingCard();
+  if(!readyLive())h+=packingCard();
   h+='<div class="card"><h2>App</h2><div class="lk" onclick="lockApp()"><div style="flex:1">Lock this phone<small>sign out — trip name &amp; password needed again</small></div><span>🔒</span></div><div class="lk" onclick="hardRefresh()"><div style="flex:1">Refresh app &amp; data<small>clear the offline cache, reload the latest now</small></div><span>⟳</span></div></div>';
   if(adminOn()){
     h+='<div class="card"><h2>🧪 Test mode (admin)</h2><div class="xs muted" style="margin-bottom:8px">Pretend it’s a different date/time. Set it to <b>Jul 4</b> to preview example storm/ski conditions on the Snow tab.</div><input class="inp" type="datetime-local" id="testInput"><div style="margin-top:8px"><button class="btn pri" onclick="setTest()">Set test time</button> <button class="btn" onclick="clearTest()">Reset to now</button></div></div>';
