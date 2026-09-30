@@ -697,7 +697,7 @@ function reverse(id){ var c=allClaims().filter(function(x){ return x.id===id; })
 /* ---- Rules ---- */
 function vRules(){
   var h='<div class="card"><h2>'+ic('tip',13)+' How it works</h2>'+RULES.map(function(r){ return '<div class="sm" style="padding:4px 0;border-bottom:1px solid var(--pr-hairline)">'+esc(r)+'</div>'; }).join('')+'<div class="xs muted" style="margin-top:8px">Line score = worth + extras + trick − crashes. GNAR Factor = line scores + everything else − penalties + vote awards.</div></div>';
-  h+='<div class="card"><h2>'+ic('checklist',13)+' You</h2><div class="who">'+PLAYERS.map(function(p){ return '<button class="'+(ME===p?'on':'')+'" onclick="setMe(\''+jsq(p)+'\')">'+esc(p)+'</button>'; }).join('')+'</div><div class="xs muted">Same name the app’s Crew picks uses.</div></div>';
+  h+='<div class="card"><h2>'+ic('checklist',13)+' You</h2><div class="who">'+PLAYERS.map(function(p){ return '<button class="'+(ME===p?'on':'')+'" onclick="setMe(\''+jsq(p)+'\')">'+esc(p)+'</button>'; }).join('')+'</div></div>';
   var secs=[['line','Lines'],['set','Sets — several in one day'],['lx','Line extras'],['trick','Tricks'],['hill','On hill'],['prep','Prep and daily discipline'],['town','Business meetings'],['road','Roadside'],['stick','Sticker hunt'],['bonus','Stupid bonuses'],['pen','Penalties']];
   secs.forEach(function(s){ var list=ITEMS.filter(function(it){ return it.g===s[0]; }); var tint=GROUP_TINT[s[0]]||'';
     h+='<div class="card '+tint+'"><h2>'+ic(GROUP_ICON[s[0]]||'tip',13)+' '+esc(s[1])+'</h2><table class="rl">';

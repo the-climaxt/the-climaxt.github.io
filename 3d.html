@@ -512,8 +512,8 @@ function renderDrawer(){
     $('dsub').textContent=[sv.skiIn?'ski-in':'not ski-in — '+(sv.subtype==='transit_stop'?'in town':'walk or drive'),sv.hours,sv.note].filter(Boolean).join(' · ');
     h+='<div class="tog"><button class="btn" onclick="map.flyTo({center:['+sv.at[0]+','+sv.at[1]+'],zoom:16,pitch:55,duration:1200})">Zoom to it</button>'+(sv.subtype==='lodging'||sv.subtype==='base_lodge'||sv.subtype==='transit_stop'||sv.subtype==='parking'||true?'<button class="btn'+(HOME===SEL?' pri':'')+'" onclick="setHome(\''+SEL+'\')">'+(HOME===SEL?'★ Home':'Set as home')+'</button>':'')+'<button class="btn" onclick="select(null)">Clear</button></div>';
     var rcs=reachFor(SEL); if(rcs&&MAN.reach&&MAN.reach.rows&&MAN.reach.rows.length){ if(rcs.groups.length){ h+='<div class="zlab">Lifts that get you here</div>'; rcs.groups.forEach(function(g){ g.items.forEach(function(l){ var lf=MAN.lifts.filter(function(x){return x.ref_id===l;})[0]; if(!lf)return; h+='<div class="zrr k-lift" onclick="select(\''+l+'\',true)"><span class="zd"></span><span class="znm">'+esc(lf.name)+'<div class="zsb">'+esc(REACH_WORDS[g.cls].toLowerCase())+'</div></span></div>'; }); }); }
-      else h+='<div class="zsb" style="margin:6px 0 10px">'+(sv.skiIn?'No lift skis to it within the model\'s limits.':'Not ski-in: get to the base and walk, drive or ride the bus.')+'</div>'; }
-    else h+='<div class="zsb" style="margin:6px 0 10px">Lifts ↔ places not computed for this hill (needs 1 m lidar).</div>';
+      else h+='<div class="zsb" style="margin:6px 0 10px">'+(sv.skiIn?'No lift skis to it.':'Not ski-in: get to the base and walk, drive or ride the bus.')+'</div>'; }
+    else h+='<div class="zsb" style="margin:6px 0 10px">No lift links for this hill.</div>';
     body.innerHTML=h; return;
   }
   if(SEL){
@@ -586,14 +586,14 @@ function reachFor(ref){
   return {kind:isLift?'lift':'run', byRef:byRef, groups:REACH_ORDER.filter(function(c){return groups[c];}).map(function(c){ return {cls:c, items:groups[c].sort(function(a,b){return (isLift?runLabel(a):(NAMES.lifts[a]||{}).name||'').localeCompare(isLift?runLabel(b):(NAMES.lifts[b]||{}).name||'');})}; })};
 }
 function reachHtml(rc){
-  if(!MAN.reach||!MAN.reach.rows||!MAN.reach.rows.length) return '<div class="zsb" style="margin:6px 0 10px">Lifts ↔ runs not computed for this hill (needs 1 m lidar).</div>';
+  if(!MAN.reach||!MAN.reach.rows||!MAN.reach.rows.length) return '<div class="zsb" style="margin:6px 0 10px">No lift links for this hill.</div>';
   var h='';
   if(rc.kind==='lift'){
-    if(!rc.groups.length) return '<div class="zsb" style="margin:6px 0 10px">No named run reaches from this lift in the model.</div>';
+    if(!rc.groups.length) return '<div class="zsb" style="margin:6px 0 10px">No named run from this lift.</div>';
     rc.groups.forEach(function(g){ var runs=g.items.filter(function(r){return !isService(r);}); if(!runs.length)return; h+='<div class="zlab">'+REACH_WORDS[g.cls]+'<span class="zct">'+runs.length+'</span></div>'; runs.forEach(function(r){ var run=MAN.runs.filter(function(x){return x.ref_id===r;})[0]; if(run)h+=row(run); }); });
     h+=svcRows(rc.groups);
   } else {
-    if(!rc.groups.length) return '<div class="zlab">Lifts that get you here<span class="zct">0</span></div><div class="zsb" style="margin:0 0 10px">No lift reaches this line within the model\'s limits (a hike over '+115+' m of climb, or a line outside the area).</div>';
+    if(!rc.groups.length) return '<div class="zlab">Lifts that get you here<span class="zct">0</span></div><div class="zsb" style="margin:0 0 10px">No lift reaches this line (a hike over '+115+' m of climb, or a line outside the area).</div>';
     h+='<div class="zlab">Lifts that get you here</div>';
     rc.groups.forEach(function(g){ g.items.forEach(function(l){ var lf=MAN.lifts.filter(function(x){return x.ref_id===l;})[0]; if(!lf)return; h+='<div class="zrr k-lift" onclick="select(\''+l+'\',true)"><span class="zd"></span><span class="znm">'+esc(lf.name)+'<div class="zsb">'+esc(REACH_WORDS[g.cls].toLowerCase())+'</div></span></div>'; }); });
   }

@@ -664,7 +664,6 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 <div id="lclose" onclick="liftClose()"></div>
 <div id="lsheet" aria-hidden="true">
   <div class="lshead"><span id="lsname"></span><button class="lsx" onclick="liftClose()" aria-label="Close lift sheet">&#10005;</button></div>
-  <div class="lssub">Everywhere this lift takes you — tap a zone to open its map</div>
   <div id="lszones"></div>
 </div>
 
@@ -721,8 +720,8 @@ function showGate(err){ var nav=document.querySelector('.bnav'); if(nav)nav.styl
   h+='<div class="xs muted" style="margin:10px 0 2px">Trip password</div><input class="inp" id="gpw" type="password" placeholder="password">';
   h+=(err?'<div class="xs" style="margin-top:8px;color:var(--pr-danger-text);font-weight:700">'+esc(err)+'</div>':'');
   h+='<button class="btn pri" style="width:100%;justify-content:center;margin-top:12px" onclick="gateSubmit()">Unlock the app</button>';
-  h+='<div class="xs muted" style="margin-top:9px">One time only — the app then works offline, no re-entry.</div></div>';
-  h+='<div class="card alertcard"><div class="between"><h2 style="margin:0;color:var(--pr-danger-text)">'+ic('alert',13)+' Emergency</h2><a class="btn" href="tel:911" style="border-color:var(--pr-danger-text);color:var(--pr-danger-text);font-weight:700">911</a></div><div class="xs muted" style="margin-top:6px">Crew contacts, insurance lines &amp; hospitals are inside the app once you\u2019re signed in.</div></div>';
+  h+='</div>';
+  h+='<div class="card alertcard"><div class="between"><h2 style="margin:0;color:var(--pr-danger-text)">'+ic('alert',13)+' Emergency</h2><a class="btn" href="tel:911" style="border-color:var(--pr-danger-text);color:var(--pr-danger-text);font-weight:700">911</a></div></div>';
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
   $('v-home').classList.add('active'); $('v-home').innerHTML=h;
 }
@@ -812,7 +811,7 @@ function emgFormWhere(){ return readyLive()?'on the Get ready tab':(CUR==='more'
 function hurtHtml(){
   var crew=D.crew||[]; if(!crew.length)return '';
   var h='<div style="margin-top:10px;border-top:1px solid var(--pr-hairline);padding-top:9px"><div class="sm" style="font-weight:700">🚑 Someone\u2019s hurt — who?</div>';
-  h+='<div class="xs muted" style="margin:4px 0 7px">1) Life-threatening: ski patrol / 911 NOW — coverage waits. 2) Stabilized: do NOT book transport yourself — use their CALL-FIRST lines. 3) Save every receipt.</div>';
+  h+='<div class="xs muted" style="margin:4px 0 7px">Do NOT book transport yourself — use their CALL-FIRST lines. Save every receipt.</div>';
   h+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
   crew.forEach(function(c){ var on=(c.name===HURT_SEL); h+='<button class="btn" onclick="pickHurt(\''+jsq(c.name)+'\')" style="padding:5px 11px'+(on?';background:var(--pr-danger-text);color:#fff;border-color:var(--pr-danger-text)':'')+'">'+esc(c.name)+'</button>'; });
   h+='</div>';
@@ -820,7 +819,7 @@ function hurtHtml(){
     if(e.pending){ h+='<div class="xs muted" style="margin-top:8px">'+esc(HURT_SEL)+'\u2019s info isn\u2019t in yet — the 60-second form is '+emgFormWhere()+'. Meanwhile: patrol/911, then hospital below.</div>'; }
     else if(e.placeholder){ CVN++; var pid='cvd'+CVN;
       h+='<div class="xs" style="margin-top:8px">'+esc(HURT_SEL)+' never filled out the form. There is an official trip medical record on file.</div>';
-      h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+pid+'\')">Medical record \u25be \u2014 only open this if it\u2019s actually relevant. Respect their privacy for now.</div>';
+      h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+pid+'\')">Medical record \u25be</div>';
       h+='<div id="'+pid+'" class="xs" style="display:none;margin-top:4px;font-weight:700">Surgical history: '+esc((e.medical||{}).surgeries||'\u2014')+'<br>Medications: '+esc((e.medical||{}).meds||'\u2014')+'</div>';
       h+='<div class="xs muted" style="margin-top:6px">Real coverage unknown \u2014 ski patrol/911, then the hospital below. '+esc(HURT_SEL)+': fix this in the form '+emgFormWhere()+'.</div>'; }
     else {
@@ -828,7 +827,7 @@ function hurtHtml(){
       var covs=(e.coverages||[]).slice().sort(function(a,b){ return (b.callFirst?1:0)-(a.callFirst?1:0); });
       covs.forEach(function(cv){ h+=covRow(cv); });
       if(e.medical){ CVN++; var mid='cvd'+CVN;
-        h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+mid+'\')">Medical details \u25be \u2014 only open if it\u2019s actually relevant; respect their privacy.</div>';
+        h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+mid+'\')">Medical details \u25be</div>';
         h+='<div id="'+mid+'" class="xs muted" style="display:none;margin-top:3px">'+esc([e.medical.allergies?('allergies: '+e.medical.allergies):'',e.medical.meds?('meds: '+e.medical.meds):'',e.medical.blood?('blood: '+e.medical.blood):'',e.medical.surgeries?('surgeries: '+e.medical.surgeries):'',e.medical.notes||''].filter(Boolean).join(' · ')||'—')+'</div>'; }
     }
   }
@@ -985,7 +984,7 @@ function emgFormCard(){
   function box(id,ph,val,top){ return '<input class="inp" id="'+id+'" placeholder="'+ph+'" value="'+esc(val)+'" autocomplete="off"'+(top?' style="margin-top:6px"':'')+'>'; }
   function tick(id,on,txt){ return '<label class="xs" style="display:flex;gap:7px;align-items:flex-start;margin-top:7px;font-weight:700"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+' style="margin-top:1px"><span>'+txt+'</span></label>'; }
   var h='<div class="card" id="emgcard"><h2>My emergency info</h2>';
-  h+='<div class="xs muted" style="margin-bottom:8px">60 seconds. If you get wrecked, this is what the crew reads to ski patrol and your insurance line. Encrypted before it leaves your phone — visible to everyone signed in, nobody else.'+(e?' <b>'+(sel===me?'Yours is in':esc(sel)+'’s info is in')+' — the boxes show what’s on file. Change what’s wrong, then save.</b>':'')+'</div>';
+  h+='<div class="xs muted" style="margin-bottom:8px">Everyone signed in can see this.'+(e?' <b>'+(sel===me?'Yours is in':esc(sel)+'’s info is in')+' — the boxes show what’s on file. Change what’s wrong, then save.</b>':'')+'</div>';
   h+='<select class="inp" id="emWho" onchange="emgPick(this.value)">'+opts+'</select><div id="emgq" style="margin:4px 0 2px">'+emgTagHtml(sel)+'</div>';
   h+='<div class="xs muted" style="margin:10px 0 2px">Emergency contact</div>'+box('emIn','Name',pf.iceName)+box('emIp','Phone',pf.icePhone,1);
   h+='<div class="xs muted" style="margin:10px 0 2px">Health insurance</div>'+box('emHco','Company / plan',pf.hCo)+box('emHid','Member ID',pf.hId,1)+box('emHph','Phone on the card',pf.hPh,1);
@@ -1001,7 +1000,6 @@ function emgFormCard(){
   h+=box('emAll','Allergies','')+box('emMed','Medications','',1)+box('emBld','Blood type','',1)+box('emNts','Anything else patrol should know','',1);
   if(medOn)h+=tick('emMclr',false,'Remove the medical info on file');
   h+='<button class="btn pri" style="width:100%;justify-content:center;margin-top:10px" onclick="submitEmg()">Save my info</button><div id="emgmsg" class="xs" style="margin-top:7px;color:var(--pr-danger-text);font-weight:700"></div>';
-  h+='<div class="xs muted" style="margin-top:7px">Skip it and your official trip medical record stays as written. Ask Zack how that’s going.</div>';
   return h+'</div>';
 }
 /* a name was picked in the form: fill the boxes from that person's card (only this card is redrawn) */
@@ -1069,7 +1067,7 @@ function sdocIv(){ var a=new Uint8Array(12); crypto.getRandomValues(a); return a
 /* the crew file vault list (More). A "locked" answer says so — it is not "no files". File names go into
    the Open button through jsq(), so "Zack's card.pdf" opens (audit m6). */
 function listSharedDocs(){ var el=$('sdoclist'); if(!el)return;
-  if(!D.docsUrl){ el.innerHTML='<span class="muted">Not switched on yet — needs the 5-min Google-Script step (same as Runs sharing). Files are encrypted before they leave your phone.</span>'; return; }
+  if(!D.docsUrl){ el.innerHTML=''; return; }
   crewGet(D.docsUrl+'?docs=1').then(function(a){ var el2=$('sdoclist'); if(!el2)return;
     if(isLocked(a)){ el2.innerHTML='<span class="muted">'+LOCKED_MSG+'.</span>'; return; }
     if(!Array.isArray(a)){ el2.innerHTML='<span class="muted">Couldn’t read the shared vault — try again later.</span>'; return; }
@@ -1332,7 +1330,6 @@ function zRunChips(r,rich){
                             out+=zChip('hike','bootpack','Length unverified');
   if((r.obscurity||0)>=2)   out+=zChip('obsc','obscurity '+r.obscurity,'0 obvious … 3 undocumented');
   if(r.x==null)             out+=zChip('flat','not on the map');
-  if(r.approx)              out+=zChip('flat','approx','Pin is an estimate');
   return out?'<div class="zmeta">'+out+'</div>':'';
 }
 
@@ -1905,7 +1902,6 @@ function dsHtml(i){
   h+=skiSwitchHtml(day,true);
   if(b){ h+=baseLegendHtml(rid,false);
   } else if(SKEY){
-    h+='<div class="xs" style="color:#8f8697;margin-top:10px">No lift day \u2014 the map above is tonight\u2019s town. Numbered spots live in the Scene guide.</div>';
   }
   var g=guideFor(day.stop);
   h+='<div class="slgh" style="color:#8f8697;border-top:1px solid #3A3346;padding-top:12px;margin-top:12px">TONIGHT IN '+esc(st?st.name:day.stop).toUpperCase()+'</div>';
@@ -2025,7 +2021,7 @@ function skiSwitchHtml(day,dark){ var s=day&&day.skiSwitch; if(!s)return ''; var
     +'<button class="btn" style="min-height:40px;padding:6px 14px;'+(y?on:off)+'" onclick="setSkiSwitch(\''+day.dt+'\',true)">Yes</button>'
     +'<button class="btn" style="min-height:40px;padding:6px 14px;'+(!y?on:off)+'" onclick="setSkiSwitch(\''+day.dt+'\',false)">No</button></div>'
     +'<div class="sm" style="margin-top:6px'+(dark?';color:#CFC8D6':'')+'">'+esc(y?s.yes:s.no)+'</div>'
-    +'<div class="xs" style="margin-top:4px;color:'+(dark?'#8f8697':'var(--pr-text-muted)')+'">Set on this phone only — everyone flips their own.</div></div>'; }
+    +'</div>'; }
 
 /* ---- m2 (Sep 24 2026): free-cancel deadlines are stored with the hotel's own clock, e.g.
    "2027-02-02T18:00:00-06:00". The countdown uses the real instant (new Date), and the label shows the
@@ -2160,7 +2156,7 @@ function cachePut(key,data){ try{ localStorage.setItem(key,JSON.stringify({ts:Da
    time or the fixture right here. */
 var POW_MIN_IN=3, POW_TTL=60*60*1000, POW_FIXTURE={revelstoke:11,kickinghorse:6,whitewater:3};
 /* the jargon ladder — numbers stay honest, the words don't */
-function powWord(n){ return n<1?'dust on crust':n<3?'a sprinkle — hunt cord':n<6?'soft refills all morning':n<12?'proper pow day, call in sick':'nuking — blower over-the-hood freshies, tree wells are real'; }
+function powWord(n){ return n<1?'dust on crust':n<3?'a sprinkle — hunt cord':n<6?'soft refills all morning':n<12?'proper pow day, call in sick':'nuking — blower over-the-hood freshies'; }
 function powDemoOn(){ try{ return localStorage.getItem('powDemo')==='1'; }catch(e){ return false; } }
 /* powFromDaily(res) — yesterday's snowfall per hill, cm → inches: {rid: inches} */
 function powFromDaily(res){ var out={}; Object.keys(res||{}).forEach(function(k){ var t=res[k].time||[], s=res[k].snow||[]; if(t.length<2)return; var v=s[t.length-2]; if(typeof v==='number')out[k]=v/2.54; }); return out; }
@@ -2173,7 +2169,7 @@ function powCardHtml(inches){
   var h='<div class="card pow"><div class="powhd"><h2>'+ic('snowflake',14)+' Powder alert'+(powDemoOn()?' · demo':'')+'</h2><span class="when">yesterday</span></div>';
   rids.forEach(function(k,i){ var n=inches[k], tag=lead[k]===2?'today':lead[k]===1?'tomorrow':'';
     h+='<div class="prow'+(i===0?' lead':'')+'"><div class="pn"><div class="ph">'+esc(shortName(k))+(tag?'<span class="ptag">'+tag+'</span>':'')+'</div><div class="pj">'+esc(powWord(n))+'</div></div><div class="pin">'+fmtIn(n)+'</div></div>'; });
-  h+='<div class="xs" style="margin-top:9px;color:var(--pr-text-2)">Model totals (open-meteo), midnight to midnight — the hill’s own report is the number that counts.'+(camUrl?' <a href="'+esc(camUrl)+'" target="_blank" style="font-weight:700">'+esc(shortName(rids[0]))+' cams ↗</a>':'')+'</div></div>';
+  h+=(camUrl?'<div class="xs" style="margin-top:9px"><a href="'+esc(camUrl)+'" target="_blank" style="font-weight:700">'+esc(shortName(rids[0]))+' cams ↗</a></div>':'')+'</div>';
   return h;
 }
 /* powSlot() is the placeholder rHome() prints; fillPow() fills it from the
@@ -2209,7 +2205,7 @@ function readyCard(){ var items=D.checklist||[]; if(!items.length)return ''; var
    The toggles call render(CUR) so ticking a box redraws this view. Once the tab
    is gone, sw('ready')/render('ready') land on More instead (see sw/render). */
 function rReady(){
-  var h=testBanner()+'<div class="hh"><h1>Get ready</h1><div class="sub">Checklist, packing, emergency info — the boring stuff that makes the trip work</div></div>';
+  var h=testBanner()+'<div class="hh"><h1>Get ready</h1></div>';
   h+='<button class="btn" style="margin-bottom:12px" onclick="sw(\'home\')">← Home</button>';
   h+=sec('Before we go','checklist · packing · emergency info')+checklistCard()+packingCard()+emgFormCard();
   setView('v-ready',h);
@@ -2241,7 +2237,7 @@ function snowSoFarCard(){
     h+='<div class="ty">'+(nm?('~'+nm.snowIn+'″<small>'+cF(nm.hiC)+'° / '+cF(nm.loC)+'°F</small>'):'—')+'</div>';
     h+='<div class="cam">'+(cam?'<a href="'+esc(cam)+'" target="_blank">cam ↗</a>':'')+'</div>';
   });
-  h+='</div><div class="xs" style="margin-top:8px;color:var(--pr-text-2)">'+(off?'Season opens in Nov — the 7-day and season-to-date columns show up here then. ':'Totals are open-meteo model estimates; the hill’s report wins. ')+'Typical = snow in the 2 weeks before our ski day, 8-yr avg, with the usual hi / lo.</div></div>';
+  h+='</div></div>';
   return h;
 }
 /* snowSums(res) — per hill {d7, season} in inches, plus _label for the pill */
@@ -2480,7 +2476,7 @@ function setView(id,h){
 
 /* ---- DAYS ---- */
 function rDays(){
-  var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Itinerary</h1><div class="sub">'+fmtShort(D.meta.start)+' – '+fmtShort(D.meta.end)+' · '+D.days.length+' days · color = where we\u2019re riding</div></div>';
+  var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Itinerary</h1><div class="sub">Color = where we\u2019re riding</div></div>';
   var seenAcc=[]; D.days.forEach(function(d){ var gr=groupRid(d), g=gr?GROUPACC[gr]:STOPACC[d.stop]; if(g&&seenAcc.indexOf(g)<0)seenAcc.push(g); });
   if(seenAcc.length){ h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">'; seenAcc.forEach(function(g){ h+='<button onclick="jumpGroup(\''+g+'\')" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;color:var(--pr-text-2);background:var(--pr-card);border:1px solid var(--pr-border);border-radius:999px;padding:3px 9px 3px 6px;cursor:pointer"><span style="width:9px;height:9px;border-radius:99px;background:'+ACCENTS[g][0]+'"></span>'+ACCLABEL[g]+'</button>'; }); h+='</div>'; }
   var seenFirst={};
@@ -2672,7 +2668,6 @@ function s3dDraw(msg){ if(!S3D)return; var L=S3D.hills, todo=L.filter(function(h
   var all=L.reduce(function(a,h){ return a+h.size; },0), left=todo.reduce(function(a,h){ return a+h.size; },0), unknown=L.some(function(h){ return !h.files; });
   var h='<h2 style="margin:0 0 6px">'+ic('mountain',13)+' Save 3D maps</h2><div class="sm">All '+L.length+' hills: '+(unknown?'size unknown with no signal':'about '+mb(all))+'. '
     +(todo.length?'Still to save: '+todo.length+' hill'+(todo.length===1?'':'s')+(unknown?'':', about '+mb(left))+'.':'All saved on this phone.')+'</div>';
-  if(S3D.free!=null)h+='<div class="xs muted" style="margin-top:3px">Room left for the app on this phone: about '+mb(S3D.free)+'.</div>';
   if(S3D.free!=null&&left>S3D.free*0.9)h+='<div class="sm" style="margin-top:6px;color:var(--pr-warn-text);font-weight:700">Not enough room for all of them. Tick the hills you need most.</div>';
   h+='<div style="margin-top:6px">';
   L.forEach(function(x,i){ h+='<label class="sm" style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--pr-hairline)"><input type="checkbox"'+(x.tick?' checked':'')+(x.held?' disabled':'')+' onchange="s3dTick('+i+',this.checked)"><span style="flex:1">'+esc(x.name)+'</span><span class="xs muted">'+(x.files?mb(x.size):'size unknown')+'</span>'+(x.held?' <span class="pill ok">saved</span>':'')+'</label>'; });
@@ -2799,7 +2794,6 @@ function liftOpen(k,name){
           +(can?'<span class="zmi" style="color:var(--pr-link);display:flex;flex:0 0 auto">'+ic('map',14)+'</span>':'')+'</div>'; }); });
     var PL=(reachOf(k).places||[]).filter(function(x){ return x.lift===name; });
     if(PL.length){ h+='<div class="zacclab">Ski to · places</div>'; PL.forEach(function(x){ h+='<div class="lsrow"><span class="lsn">'+esc(x.place)+'<div class="zsb">'+esc(x.kind.replace('_',' '))+(x.how!=='straight'?' · '+esc(HOW_WORD[x.how]):'')+'</div></span></div>'; }); }
-    h+='<div class="xs muted" style="margin:6px 0 4px">From the lidar reach model'+(reachOf(k).built?' · '+esc(reachOf(k).built):'')+' — snow and slope, not ropes or closures.</div>';
     h+='<div class="zacclab" style="margin-top:11px">Zones it serves</div>';
   } else {
   (t.zones||[]).forEach(function(z,zi){
@@ -2820,7 +2814,7 @@ function liftOpen(k,name){
       h+='<div class="lsrow pk'+(can?' go':'')+'"'+(can?' onclick="liftPick(\''+k+'\','+p.zmi+','+ri+')"':'')+'>'
         +'<span class="zrk">'+p.r.pick+'</span>'
         +'<span class="lsn">'+esc(p.r.name)
-        +((!p.exact)?'<div class="zsb">'+esc(p.z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+' · lift unconfirmed</div>':'')
+        +((!p.exact)?'<div class="zsb">'+esc(p.z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+'</div>':'')
         +'</span>'
         +(can?'<span class="zmi" style="color:var(--pr-link);display:flex;flex:0 0 auto">'+ic('map',14)+'</span>':'')
         +'</div>';
@@ -2863,7 +2857,7 @@ function liftRowHtml(k){
 function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
   var cru=(mode==='mellow'), h='<div class="terr">', nMel=0;
   (t.zones||[]).forEach(function(z){ zItems(t,z).forEach(function(r){ if(isMellowRun(r))nMel++; }); });
-  h+='<div class="filt"><label><input type="checkbox"'+(cru?' checked':'')+' onchange="setCruisers(\''+k+'\',this.checked)"><span>Cruisers only<div class="hint">Groomers, greens &amp; stops — skip the gnar</div></span></label><span class="ct">'+nMel+' runs</span></div>';
+  h+='<div class="filt"><label><input type="checkbox"'+(cru?' checked':'')+' onchange="setCruisers(\''+k+'\',this.checked)"><span>Cruisers only</span></label><span class="ct">'+nMel+' runs</span></div>';
   /* v69.62: Tanner — all recommended (ranked-pick) runs up front, right below the filter */
   var recs=[]; (t.zones||[]).forEach(function(z){ var zmi=zHasMap(z)?zMapZones(k).indexOf(z):-1; zItems(t,z).forEach(function(r,ii){ if(typeof r.pick==='number'&&!r.mapOnly&&(!cru||isMellowRun(r)))recs.push([r,zmi,ii,z.name]); }); });
   recs.sort(function(a,b){ return a[0].pick-b[0].pick; });
@@ -2873,7 +2867,7 @@ function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
     h+='</div>';
   }
   var nHk=0; (t.zones||[]).forEach(function(z){ (z.runs||[]).forEach(function(r){ if(r.huck)nHk++; }); });
-  if(nHk)h+='<div class="xs" style="margin:2px 4px 8px;color:var(--pr-danger-text);font-weight:600">'+ic('huck',11)+' = mandatory air / cliff drop — check the line before you commit</div>';
+  if(nHk)h+='<div class="xs" style="margin:2px 4px 8px;color:var(--pr-danger-text);font-weight:600">'+ic('huck',11)+' = mandatory air</div>';
   if(t.overview)h+='<div class="tov">'+esc(t.overview)+'</div>';
   if(t.snowTiming)h+='<div class="ttm">'+ic('snowflake',13)+'<span>'+esc(t.snowTiming)+'</span></div>';
   (t.flags||[]).forEach(function(f){ h+='<div class="tflag">'+ic('alert',13)+'<span>'+esc(f)+'</span></div>'; });
@@ -2893,7 +2887,7 @@ function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
   if(!cru){
     if((t.cruisers||[]).length){ h+='<div class="tsec"><div class="tsl" style="color:var(--pr-card-terrain-fg)">'+ic('snowboarder',12)+' Carve &amp; cruise — wide, mellow &amp; scenic</div>'; t.cruisers.forEach(function(c){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(c.name)+'</b>'+(c.level?' <span class="t2">('+esc(c.level)+')</span>':'')+(c.where?' <span class="t2">· '+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
     if((t.cabins||[]).length){ h+='<div class="tsec"><div class="tsl">'+ic('food',12)+' On-mountain food &amp; huts</div>'; t.cabins.forEach(function(c){ h+='<div class="xs" style="margin-top:4px"><b>'+esc(c.name)+'</b>'+(c.where?' <span class="t2">'+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
-    if((t.woods||[]).length){ h+='<div class="tsec"><div class="tsl" style="color:var(--pr-card-terrain-fg)">'+ic('trees',12)+' In the trees — hidden spots</div>'; t.woods.forEach(function(w){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(w.name)+'</b>'+(w.type?' <span class="t2">('+esc(w.type)+')</span>':'')+((w.conf&&w.conf!=='verified')?' <span class="pill muted" style="font-size:11px;padding:1px 6px">'+esc(w.conf)+'</span>':'')+(w.find?'<div class="t2" style="margin-top:1px">'+ic('pin',11)+' '+esc(w.find)+'</div>':'')+(w.note?'<div style="margin-top:2px">'+esc(w.note)+'</div>':'')+'</div>'; }); h+='<div class="t2" style="font-size:11px;margin-top:7px;font-style:italic">Word-of-mouth &amp; unofficial. Open booze outside licensed areas can cost your pass; unsanctioned structures get torn down; tree wells are lethal — ride glades with a partner and pack out everything.</div></div>'; }
+    if((t.woods||[]).length){ h+='<div class="tsec"><div class="tsl" style="color:var(--pr-card-terrain-fg)">'+ic('trees',12)+' In the trees — hidden spots</div>'; t.woods.forEach(function(w){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(w.name)+'</b>'+(w.type?' <span class="t2">('+esc(w.type)+')</span>':'')+(/^(rumor|unverified)$/.test(w.conf||'')?' <span class="pill muted" style="font-size:11px;padding:1px 6px">'+esc(w.conf)+'</span>':'')+(w.find?'<div class="t2" style="margin-top:1px">'+ic('pin',11)+' '+esc(w.find)+'</div>':'')+(w.note?'<div style="margin-top:2px">'+esc(w.note)+'</div>':'')+'</div>'; }); h+='</div>'; }
     if(t.mellow)h+='<div class="xs" style="margin-top:11px;background:var(--pr-ok-bg);border-radius:9px;padding:7px 9px"><b>Mellow:</b> '+esc(t.mellow)+'</div>';
   }
   return h+'</div>';
@@ -2917,7 +2911,7 @@ function terrRow(k,zmi,r,ii){
     +(pin?' onclick="zOpen(\''+k+'\','+zmi+','+ii+')"':'')+'>'
     +'<span class="zd"></span><span class="znm">'+esc(r.name)+(r.huck?' <span style="color:var(--pr-danger-text)" title="mandatory air / cliff drop">'+ic('huck',12)+'</span>':'')+(sub?'<div class="zsb">'+sub+'</div>':'')+'</span>'
     +(r.kind?'<span class="kind '+r.kind+'">'+r.kind+'</span>':'')
-    +((r.conf&&r.conf!=='verified')?'<span class="pill muted" style="font-size:11px;padding:1px 6px">'+esc(r.conf)+'</span>':'')
+    +(/^(rumor|unverified)$/.test(r.conf||'')?'<span class="pill muted" style="font-size:11px;padding:1px 6px">'+esc(r.conf)+'</span>':'')
     +(pin?'<span class="zmi">'+ic('map',14)+'</span>':'')+'</div>';
 }
 
@@ -2952,7 +2946,7 @@ function suggestedHtml(k){
 function toggleSuggested(k){ var el=$('sg-'+k), c=$('sgcar-'+k); if(!el)return; if(!el.style.display||el.style.display==='none'){ el.innerHTML=suggestedHtml(k); el.style.display='block'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
 function toggleTerrain(k){ var el=$('terr-'+k), c=$('terrcar-'+k); if(!el)return; if(!el.style.display||el.style.display==='none'){ el.innerHTML=terrainHtml((D.terrain||{})[k],TMODE[k]||'all',k); el.style.display='block'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
 function rSnow(){
-  var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1><div class="sub">'+(isDemo()?'🧪 Example storm conditions — set the test date off Jul 4 to exit':'Forecast when it’s close · typical averages until then')+'</div></div><div class="xs muted" style="margin:0 0 8px">Tap a map to download it — on wifi it’ll open offline from your Files/Photos.</div><button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button> '+s3dButton()+'<div id="mapstat"></div><div id="snowwrap"></div>';
+  var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1>'+(isDemo()?'<div class="sub">🧪 Example storm conditions — set the test date off Jul 4 to exit</div>':'')+'</div><button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button> '+s3dButton()+'<div id="mapstat"></div><div id="snowwrap"></div>';
   setView('v-snow',h); var w=$('snowwrap');
   Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k];
     w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(BUNDLES3D[k]?'<a class="btn" href="3d.html?m='+encodeURIComponent(k)+z3dV(k)+'">'+ic('mountain',14)+' 3D map</a>':'')+(r.map?'<a class="btn" href="'+mapV(r.map)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+mapV(r.map2)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+mapV(r.map3)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+mapV(r.basemap)+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+(r.cams?'<a class="btn" href="'+r.cams+'" target="_blank">'+ic('mountain',14)+' '+esc(r.camsLabel||'Webcams')+'</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleSuggested(\''+k+'\')"><span>'+ic('mountain',15)+' Suggested runs — the ranked picks</span><span id="sgcar-'+k+'">▾</span></div><div id="sg-'+k+'" style="display:none"></div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
@@ -2990,7 +2984,7 @@ function driveCard(x,today){ DS_N++; var i=DS_N, seg=legSights(x.leg), n=(seg&&s
     h+='</div>'; }
   h+='</div>'; return h; }
 function rDrive(){ DS_N=0;
-  var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Drives &amp; roads</h1><div class="sub">Legs, the ferry, the border &amp; shuttles</div></div>';
+  var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Drives &amp; roads</h1></div>';
   var legs=(D.drives||[]).slice(), todayLegs=[];
   if(idx>=0){ var ds=fmtShort(D.days[idx].dt); todayLegs=legs.filter(function(x){ return (x.d||'').indexOf(ds)>=0; }); legs=legs.filter(function(x){ return todayLegs.indexOf(x)<0; }); }
   todayLegs.forEach(function(x){ h+=driveCard(x,true); });
@@ -3083,7 +3077,7 @@ function scYou(){ var t=SCENE_TOWN, sc=(D.scene||{})[t];
     else { var xy=scT(sc.tf,GEOPOS[0],GEOPOS[1]);
       if(xy[0]>=0&&xy[0]<=sc.tf.W&&xy[1]>=0&&xy[1]<=sc.tf.H){ if(you){ you.setAttribute('transform','translate('+xy[0].toFixed(1)+','+xy[1].toFixed(1)+')'); you.style.display=''; } if(strip)strip.innerHTML=''; }
       else { if(you)you.style.display='none';
-        if(strip){ var st=stopById(t); strip.innerHTML='<div style="border:1.5px solid var(--pr-border);border-radius:11px;padding:8px 12px;margin:0 0 10px"><div style="font-family:var(--pr-font-app-display);font-size:14px">You aren\u2019t here.</div><div class="xs muted" style="margin-top:2px">This is the '+esc(st?st.name:t)+' map \u2014 you\u2019re \u2248'+scDistKm(sc.tf,GEOPOS)+' km away. \u201cWhere am I?\u201d jumps you to the right one.</div></div>'; } } } }
+        if(strip){ var st=stopById(t); strip.innerHTML='<div style="border:1.5px solid var(--pr-border);border-radius:11px;padding:8px 12px;margin:0 0 10px"><div style="font-family:var(--pr-font-app-display);font-size:14px">You aren\u2019t here.</div><div class="xs muted" style="margin-top:2px">This is the '+esc(st?st.name:t)+' map.</div></div>'; } } } }
   sfYou(); }
 function sfYou(){ var fs=$('snothere2');
   if(!SOPEN||!STF||!SKEY){ if(fs){fs.style.display='none';fs.innerHTML='';} return; }
@@ -3095,7 +3089,7 @@ function sfYou(){ var fs=$('snothere2');
     if(fs){ fs.style.display='none'; fs.innerHTML=''; }
   } else {
     if(fy)fy.style.display='none';
-    if(fs){ fs.innerHTML='<div style="background:var(--pr-ink);border:1px solid var(--pr-text-2);border-radius:11px;padding:7px 12px;color:var(--pr-cream)"><span style="font-weight:700">You aren\u2019t here.</span> <span style="opacity:.75;font-size:11.5px">This is the '+esc(sfMapName())+' map \u2014 you\u2019re \u2248'+scDistKm(STF,GEOPOS)+' km away.</span></div>'; fs.style.display='block'; }
+    if(fs){ fs.innerHTML='<div style="background:var(--pr-ink);border:1px solid var(--pr-text-2);border-radius:11px;padding:7px 12px;color:var(--pr-cream)"><span style="font-weight:700">You aren\u2019t here.</span> <span style="opacity:.75;font-size:11.5px">This is the '+esc(sfMapName())+' map.</span></div>'; fs.style.display='block'; }
   } }
 function scGeoStart(){ if(GEOW!=null||!(navigator.geolocation))return; try{ GEOW=navigator.geolocation.watchPosition(function(p){ GEOPOS=[p.coords.latitude,p.coords.longitude]; if(CUR==='scene'||SOPEN)scYou(); },function(){},{enableHighAccuracy:true,maximumAge:15000}); }catch(e){} }
 function scGeoStop(){ if(GEOW!=null&&navigator.geolocation){ try{navigator.geolocation.clearWatch(GEOW);}catch(e){} GEOW=null; } }
@@ -3130,7 +3124,7 @@ function sfWhere(){ whereAmIWait(true); }
 function rScene(){
   var stops=D.stops||[], idx=tripDayIdx();
   if(!SCENE_TOWN || !guideFor(SCENE_TOWN)){ var ts=(idx>=0&&D.days[idx])?D.days[idx].stop:null; SCENE_TOWN=(ts&&guideFor(ts))?ts:((stops[0]&&stops[0].id)||null); }
-  var h=testBanner()+'<div class="hh"><h1>Scene &amp; town guide</h1><div class="sub">Bars, eats, stupid fun &amp; fun facts — by town</div></div>';
+  var h=testBanner()+'<div class="hh"><h1>Scene &amp; town guide</h1></div>';
   h+='<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px">';
   stops.forEach(function(s){ var on=(s.id===SCENE_TOWN), ga=STOPACC[s.id], a=ga?ACCENTS[ga]:null;
     h+='<button class="btn" onclick="setSceneTown(\''+s.id+'\')" style="flex:0 0 auto'+(on?(a?';background:'+a[0]+';color:var(--pr-ink);border-color:var(--pr-ink);font-weight:700':';background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)'):'')+'">'+((a&&!on)?'<span style="width:9px;height:9px;border-radius:99px;background:'+a[0]+'"></span>':'')+esc(s.name)+'</button>'; });
@@ -3151,7 +3145,6 @@ function rScene(){
       +'<div style="display:flex;gap:6px;margin-top:8px"><button class="btn" onclick="sfOpen()" style="flex:1;justify-content:center;gap:7px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('map',12)+'FULL SCREEN MAP</button><button class="btn" onclick="scBaseDay(\''+sc.baseRid+'\')" style="justify-content:center;gap:7px;background:transparent;color:#FBF6EC;border-color:#5B5368;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('calendar',12)+'DAY SHEET</button></div>'
       +'<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #3A3346;margin-top:8px;padding:8px 4px 2px">';
     if(bs.shut)h+='<div style="font-size:11px;font-weight:700;color:#35B5E8;letter-spacing:.06em">'+esc(bs.shut).toUpperCase()+'</div>';
-    h+='<div class="xs" style="color:#8f8697">Village spots are the numbered names in the guide below — tap one to find it here.</div>';
     h+='</div></div>';
   }
   if(sc&&(!bs||side==='town')){
@@ -3163,7 +3156,6 @@ function rScene(){
     h+='<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #3A3346;margin-top:8px;padding:8px 4px 2px">';
     h+='<div style="display:flex;gap:6px;align-items:center;cursor:pointer" onclick="scPulse(\''+SCENE_TOWN+'\',\'hq\')"><span style="width:15px;height:15px;border-radius:4px;background:#FBF6EC;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path fill-rule="evenodd" d="M12 2.2 22.5 21H1.5L12 2.2Zm0 7.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM9.9 21v-5.6h4.2V21H9.9Z"/></svg></span><span style="font-size:11px;font-weight:700;color:#FBF6EC;letter-spacing:.08em">OUR HOTEL'+(sc.combo?' + SHUTTLE':'')+' \u2014 '+esc(sc.hotel).toUpperCase()+'</span></div>';
     if(!sc.combo) h+='<div style="display:flex;gap:6px;align-items:center;cursor:pointer" onclick="scPulse(\''+SCENE_TOWN+'\',\'shut\')"><span style="width:15px;height:15px;border-radius:4px;background:#35B5E8;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span><span style="font-size:11px;font-weight:700;color:#35B5E8;letter-spacing:.08em">'+esc(sc.shut).toUpperCase()+'</span></div>';
-    h+='<div class="xs" style="color:#8f8697">Tap any numbered name below to find it on the map.</div>';
     h+='</div></div>';
   }
   var g=guideFor(SCENE_TOWN);
@@ -3183,7 +3175,7 @@ function rScene(){
 function crewPicksHtml(){
   var crew=(D.crew||[]), me=localStorage.getItem('me')||'', known=crew.some(function(c){ return c.name===me; });
   var crewOpts=crew.length?((known?'':'<option value="" selected>Who are you?</option>')+crew.map(function(c){ return '<option value="'+esc(c.name)+'"'+(c.name===me?' selected':'')+'>'+esc(c.name)+'</option>'; }).join('')):'<option value="">Me</option>';
-  var h='<div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin:18px 4px 9px">'+ic('checklist',13)+' Crew picks — runs &amp; spots'+(D.runsUrl?'':' · this phone only')+'</div>';
+  var h='<div style="font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin:18px 4px 9px">'+ic('checklist',13)+' Crew picks — runs &amp; spots'+'</div>';
   h+='<div class="card"><input class="inp" id="runText" placeholder="What — a run, bar, sight…">'
    +'<div style="display:flex;gap:7px;margin-top:8px"><button class="btn" id="rk-run" style="flex:1;justify-content:center;background:var(--pr-btn-primary-bg);color:#fff" onclick="setKind(\'run\')">'+ic('skier',14)+' Run</button><button class="btn" id="rk-spot" style="flex:1;justify-content:center" onclick="setKind(\'spot\')">'+ic('cheers',14)+' Spot</button></div>'
    +'<div style="display:flex;gap:7px;margin-top:8px"><input class="inp" id="runResort" placeholder="Where (resort, town, drive)" style="flex:1"><select class="inp" id="runBy" style="flex:1">'+crewOpts+'</select></div>'
@@ -3215,7 +3207,7 @@ function rMore(){
      once it's gone (readyLive() false) they come back to More, exactly where they used to be */
   if(readyLive())h+='<div class="card"><h2>Before we go</h2><div class="lk" onclick="sw(\'ready\')"><div style="flex:1">Get ready<small>pre-trip checklist · packing list · my emergency info</small></div><span>›</span></div></div>';
   h+=gnarCard();
-  h+='<div class="card"><h2>Document vault</h2><div class="xs muted" style="margin-bottom:8px"><b>My files</b> — stored on this phone, works offline.</div><div id="doclist" class="sm muted">…</div><label class="btn" style="margin-top:8px;cursor:pointer">＋ Add file<input type="file" hidden onchange="addDoc(this)"></label><div style="border-top:1px solid var(--pr-hairline);margin-top:12px;padding-top:10px"><div class="xs muted" style="margin-bottom:8px"><b>Trip docs</b> — built into the app, work offline on every phone.</div>'+((D.docs||[]).map(function(dd){ return '<div class="between" style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm" style="font-weight:600;flex:1;padding-right:8px">'+esc(dd.name)+'</div><button class="btn" onclick="openEmbDoc(\''+esc(dd.id)+'\')">Open</button></div>'; }).join('')||'<div class="sm muted">None yet.</div>')+'</div><div style="border-top:1px solid var(--pr-hairline);margin-top:12px;padding-top:10px"><div class="xs muted" style="margin-bottom:8px"><b>Crew files</b> — shared with everyone, encrypted before they leave your phone.</div><div id="sdoclist" class="sm muted">…</div><label class="btn" style="margin-top:8px;cursor:pointer">＋ Share a file<input type="file" hidden onchange="addSharedDoc(this)"></label></div></div>';
+  h+='<div class="card"><h2>Document vault</h2><div class="xs muted" style="margin-bottom:8px"><b>My files</b></div><div id="doclist" class="sm muted">…</div><label class="btn" style="margin-top:8px;cursor:pointer">＋ Add file<input type="file" hidden onchange="addDoc(this)"></label><div style="border-top:1px solid var(--pr-hairline);margin-top:12px;padding-top:10px"><div class="xs muted" style="margin-bottom:8px"><b>Trip docs</b></div>'+((D.docs||[]).map(function(dd){ return '<div class="between" style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm" style="font-weight:600;flex:1;padding-right:8px">'+esc(dd.name)+'</div><button class="btn" onclick="openEmbDoc(\''+esc(dd.id)+'\')">Open</button></div>'; }).join('')||'<div class="sm muted">None yet.</div>')+'</div>'+(D.docsUrl?'<div style="border-top:1px solid var(--pr-hairline);margin-top:12px;padding-top:10px"><div class="xs muted" style="margin-bottom:8px"><b>Crew files</b></div><div id="sdoclist" class="sm muted">…</div><label class="btn" style="margin-top:8px;cursor:pointer">＋ Share a file<input type="file" hidden onchange="addSharedDoc(this)"></label></div>':'')+'</div>';
   h+='<div class="card alertcard"><h2 style="color:var(--pr-danger-text)">'+ic('alert',13)+' Emergency</h2>'+hurtHtml()+'<div style="margin-top:10px;border-top:1px solid var(--pr-hairline);padding-top:6px"><div class="xs muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.4px">Everyone</div>'+contactRows()+'</div></div>';
   if(!readyLive())h+=emgFormCard();
   /* m11 (Sep 24 2026): the hospitals come from hospitals[] — all 7 stops (it used to list 5 of 7, missing
