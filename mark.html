@@ -95,14 +95,24 @@ function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clear
 var Q=new URLSearchParams(location.search), INDEX=[], W={}, M=null, FILTER='all';
 /* "Refresh from the server" (Tanner, Sep 5: "can you add a cache clear into the mark & edits apps?"). The app's service
    worker keeps this page stale-first and everything under /maps/ cache-first, so after a rebuild the phone can keep showing
-   the old page and the old list. This drops ONLY the 3D map's own entries from the cache — this page, 3d.html, and the
-   sealed bundles under /maps/3d/ — never the crew's saved trail maps or the app shell — then reloads. Edits stay: they live
-   in localStorage, which is not touched. */
+   the old page and the old list. Refresh drops the stale copies and reloads.
+   Fixed Sep 29 2026 — before, it deleted EVERY saved 3D map (all of /maps/3d/) with no signal check, so a tap without
+   signal left the phone with no 3D maps at all. Now:
+     1. it checks for signal first (a quick no-cache ping); without signal it changes nothing — the saved map still works;
+     2. it drops only this page, the other 3D page, the to-do list (wanted.bundle) and THIS mountain's map — never the other
+        hills, the crew's saved trail maps or the app shell.
+   Edits stay: they live in localStorage, which is not touched. */
 async function pr3dRefresh(btn){
-  if(btn){ btn.disabled=true; btn.textContent='Refreshing…'; }
-  var n=0;
+  var label=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='Checking signal…'; }
+  var online=false; try{ var ac=new AbortController(), tm=setTimeout(function(){ ac.abort(); },6000);
+    var r=await fetch(location.pathname+'?ping='+Date.now(),{method:'HEAD',cache:'no-store',signal:ac.signal}); clearTimeout(tm); online=!!(r&&r.ok); }catch(e){}
+  if(!online){ if(btn){ btn.disabled=false; btn.textContent=label; } toast('No signal — nothing changed. The saved map still works offline.'); return; }
+  if(btn) btn.textContent='Refreshing…';
+  var mine=M?new RegExp('/maps/3d/'+String(M).replace(/[^a-z0-9_-]/gi,'')+'\\.bundle'):null;   /* this hill's bundle and its .1/.2 pieces */
   try{ if(window.caches){ var keys=await caches.keys(); for(var k=0;k<keys.length;k++){ var c=await caches.open(keys[k]), reqs=await c.keys();
-    for(var i=0;i<reqs.length;i++){ var u=reqs[i].url; if(u.indexOf('/maps/3d/')>=0||/\/(3d|mark)\.html(\?|$)/.test(u)){ await c.delete(reqs[i]); n++; } } } } }catch(e){}
+    for(var i=0;i<reqs.length;i++){ var u=reqs[i].url;
+      if(/\/maps\/3d\/wanted\.bundle/.test(u)||(mine&&mine.test(u))||/\/(3d|mark)\.html(\?|$)/.test(u)){ await c.delete(reqs[i]); } } } } }catch(e){}
   try{ if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){ var reg=await navigator.serviceWorker.getRegistration(); if(reg)reg.update(); } }catch(e){}
   location.replace(location.pathname+location.search.replace(/[?&]r=\d+/,'')+(location.search?'&':'?')+'r='+Date.now()+location.hash);
 }

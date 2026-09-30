@@ -6,3 +6,19 @@ Thumbs.db
 
 # Editor-only aerial tiles — NEVER deploy, even after the 3D go-ahead
 *-aerial.pmtiles
+
+# Readable trip data must never go live (audit m41, Sep 24 2026).
+# The master lives in 04-app-build\, never in this folder.
+trip-data.plain.json
+*.plain.json
+
+# Backups belong in 04-app-build\_backups\, never here.
+*.bak
+
+# Gate files hold the trip name + password in plain text.
+gate*.txt
+*.gate
+
+# Temp files from the publish tools' safe save step (they exist for a moment only).
+.*.tmp-*
+*.tmp
