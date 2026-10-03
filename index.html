@@ -279,6 +279,47 @@ button.achip:active{opacity:.7}
 .lsrow .lsn{font-size:13px;font-weight:600;flex:1}
 .lsrow.pk{border-color:var(--pr-yellow);background:var(--pr-yellow-tint)}
 .snlifts{margin-top:9px}
+/* ---- search on one mountain (Oct 2026): one box on the Snow-tab card, one at the top of the map drawer ---- */
+.srbox{position:relative;margin-top:9px}
+.srq{font-size:16px;padding:10px 40px 10px 12px;-webkit-appearance:none;appearance:none}   /* 16px: an iPhone zooms the page for smaller inputs */
+.srq::-webkit-search-cancel-button{display:none}
+.srx{position:absolute;right:6px;top:50%;margin-top:-15px;width:30px;height:30px;border-radius:999px;border:0;
+ background:var(--pr-paper);color:var(--pr-ink);font-size:12px;font-family:inherit;cursor:pointer;
+ display:flex;align-items:center;justify-content:center}
+.srx:active{opacity:.7}
+.zruns.srres{padding:0;margin-top:8px}
+.sric{flex:0 0 auto;display:flex;justify-content:center;width:15px;color:var(--pr-text-2)}
+#zsearch{padding:0 16px 10px}
+/* ---- meet up · find the lift (Oct 2026): a solid bottom sheet like the lift sheet, taller ---- */
+#wclose{position:fixed;inset:0;z-index:396;display:none}
+#wclose.on{display:block}
+#wsheet{position:fixed;left:0;right:0;bottom:0;z-index:397;background:var(--pr-card);
+ border-top:1.5px solid var(--pr-border);border-radius:14px 14px 0 0;
+ padding:15px 16px calc(16px + env(safe-area-inset-bottom));max-height:88%;overflow-y:auto;
+ transform:translateY(102%);transition:transform .28s ease}
+#wsheet.on{transform:none}
+#wbody{max-width:900px;margin:0 auto}
+.wfld{margin-top:10px}
+.wfld .zacclab{margin-bottom:5px}
+.wpick{display:flex;gap:6px;align-items:center}
+.wval{flex:1;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;font-family:inherit;font-size:14px;font-weight:600;
+ border:1px solid var(--pr-border);border-radius:10px;background:var(--pr-card);color:var(--pr-ink);padding:11px 12px;cursor:pointer;width:100%}
+.wval:active{opacity:.7}
+.wval.empty{color:var(--pr-text-muted);font-weight:400}
+.wsub{font-size:11.5px;font-weight:400;color:var(--pr-text-2);margin-left:4px}
+.srx.wclr{position:static;margin:0;flex:0 0 auto}
+.zacclab.wsec{margin-top:16px}
+#wbody .zacclab .zct{background:var(--pr-yellow-tint);color:var(--pr-yellow-text);border-radius:999px;padding:2px 8px;font-size:11.5px;letter-spacing:0}
+.wwho{font-size:12px;font-weight:700;margin:8px 0 5px}
+.wans{border:1px solid var(--pr-border);border-radius:11px;padding:10px 12px;margin-bottom:6px;background:var(--pr-card)}
+.wans .wtop{font-size:14px;line-height:1.4}
+.wans .zsb{font-size:11.5px;color:var(--pr-text-2);margin-top:4px;line-height:1.5}
+.btn.wbtn{margin-top:8px}
+#zwk{padding:0 16px 10px}
+#zwk .btn.wbtn{margin-top:0}
+#zbody.searching #zwk{display:none}
+#zsearch .srbox{margin-top:0}
+#zbody.searching #zaccess,#zbody.searching .zrow,#zbody.searching .zgroup{display:none !important}
 .zmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .zrr .zwhy{font-size:11.5px;color:var(--pr-ink);margin-top:4px;line-height:1.45;font-weight:400}
 .zrr .zent{font-size:11px;color:var(--pr-text-2);margin-top:5px;line-height:1.45;font-weight:400;
@@ -634,6 +675,8 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
     <span class="zgrab">&#9662;</span>
     <div id="zbar" onclick="zToggleDrawer()"><span class="zdt" id="zdtitle"></span><span class="zdg" id="zdgate"></span></div>
     <div id="zbody">
+      <div id="zsearch"><div class="srbox"><input class="inp srq" id="zq" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Find a run, lift or hut" aria-label="Find a run, lift or hut on this mountain" oninput="zSearch(this.value)" onkeydown="srEnter(event,this)" onfocus="zSearchFocus(true)" onblur="setTimeout(function(){zSearchFocus(false);},250)"><button class="srx" id="zqx" style="display:none" onclick="zSearchClear()" aria-label="Clear the search">&#10005;</button></div></div>
+      <div id="zwk"></div>
       <div id="zaccess" style="display:none"></div>
       <div class="zrow">
         <div class="znote"><div class="zsub" id="zsub"></div><div id="zopen" style="margin-top:10px"></div></div>
@@ -666,6 +709,9 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
   <div class="lshead"><span id="lsname"></span><button class="lsx" onclick="liftClose()" aria-label="Close lift sheet">&#10005;</button></div>
   <div id="lszones"></div>
 </div>
+
+<div id="wclose" onclick="wkClose()"></div>
+<div id="wsheet" aria-hidden="true"><div id="wbody"></div></div>
 
 <div class="toast" id="toast"></div>
 
@@ -1212,6 +1258,8 @@ window.addEventListener('message',function(ev){
 function zOpen(k,zi,ri){
   if(!D||!D.terrain||!D.terrain[k])return;
   ZR=k; ZSHUT=false; ZOPEN=true; Z3D.mode='3d'; ZFROM=''; zFromFill();
+  ZQ=''; ZQF=false; var zq=$('zq'); if(zq)zq.value=''; var zqx=$('zqx'); if(zqx)zqx.style.display='none'; $('zbody').classList.remove('searching');
+  $('zwk').innerHTML=wkBtnHtml(k);
   $('zov').classList.add('on'); $('zov').setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
   if(!ZPUSHED){ try{ history.pushState({zov:1},''); ZPUSHED=true; }catch(e){} }
@@ -1230,11 +1278,12 @@ function zOpen(k,zi,ri){
 }
 function zClose(fromPop){
   ZOPEN=false; ZRUN=-1; zClearPulse(); zResetZoom();
+  ZQ=''; ZQF=false; var zq=$('zq'); if(zq){ zq.value=''; zq.blur(); } zKb();
   $('zov').classList.remove('on'); $('zov').setAttribute('aria-hidden','true');
   document.body.style.overflow='';
   if(fromPop!==true && ZPUSHED){ ZPUSHED=false; try{ history.back(); }catch(e){} }
 }
-window.addEventListener('popstate',function(){ if(ZOPEN){ ZPUSHED=false; zClose(true); } });
+window.addEventListener('popstate',function(){ if(wkBack())return; if(ZOPEN){ ZPUSHED=false; zClose(true); } });
 
 function zChips(){
   var box=$('zchips'); box.innerHTML='';
@@ -1248,6 +1297,7 @@ function zChips(){
   });
 }
 function zSetZone(i){
+  if(ZQ||ZQF)zSearchClear(true);                        /* the map is moving: put the normal list back */
   ZI=i; zResetZoom(); var z=zZone(); if(!z)return; var r=(D.resorts||{})[ZR]||{};
   $('zimg').src=mapV(z.zmap.img); $('zimg').alt=z.name+' zone map';
   $('zkeyimg').src=mapV(z.zmap.key); $('zkeyimg').alt='Where '+z.name+' sits on the sheet';
@@ -1385,6 +1435,7 @@ function zShowAll(v){ ZALL=v; zRenderRuns(); }
 
 function zRenderRuns(){
   var box=$('zruns'); box.innerHTML=''; var zs=zMapZones(ZR), t=(D.terrain||{})[ZR];
+  if(srNorm(ZQ)){ box.innerHTML=srHtml(ZR,ZQ); return; }   /* searching: the results replace the list (whole mountain, not just this zone) */
   zRenderRoutes(box);
   zSortBar(box);
 
@@ -1548,6 +1599,7 @@ function zFlashAt(x,y){
   return p;
 }
 function zFlash(ri){
+  if(ZQ||ZQF)zSearchClear(true);                        /* a run is being shown: the drawer must not stay tall over the map */
   var r=zList()[ri]; if(!r)return;
   if(z3dOn()){
     if(!Z3D.ready||z3dHas(r.name)){ ZRUN=ri; ZRT=-1; zClearPulse(); ZRUN=ri; var z=zZone(); z3dPost({t:'select',name:r.name,zone:z?z3dSlug(z.name):null}); zRenderRuns(); zUpdateReflash(); return; }
@@ -1670,7 +1722,8 @@ function zBindZoom(){
 function zSizeDrawer(){
   if(!ZOPEN)return;
   var ov=$('zov'), bar=$('zbar');
-  var full=Math.round(ov.clientHeight*(window.innerWidth>=900?0.46:0.52));
+  var full=zSearchOn()?Math.max(120,ov.clientHeight-$('ztop').offsetHeight-6)      /* searching: the drawer covers the map so the results clear the keyboard */
+                       :Math.round(ov.clientHeight*(window.innerWidth>=900?0.46:0.52));
   var min=bar.offsetHeight+8;
   ov.style.setProperty('--zdh',(ZSHUT?min:full)+'px');
   $('zdrawer').classList.toggle('shut',ZSHUT);
@@ -2708,7 +2761,7 @@ function climoHtml(k){ var n=(D.normals||{})[k]; if(!n) return '<span class="mut
    row tappable when the zone has a map. Walk/bootpack/hike/cat chips with a
    note expand their one-liner in place. Lift names carry apostrophes, so
    everything crosses onclick as INDICES, never as quoted strings. */
-var LIDX={}, ANOTE=-1;
+var LIDX={}, ANOTE=-1, LIFTN='';
 function accEntries(z){ return (z&&Array.isArray(z.access))?z.access:[]; }
 function accLabel(a){
   if(a.via==='lift')return a.name||'lift';
@@ -2771,7 +2824,7 @@ function zAccNote(i){ var n=$('zaccnote'); if(!n)return;
 }
 function liftOpen(k,name){
   var t=(D.terrain||{})[k]||{}, mz=zMapZones(k), e=liftIdx(k).map[name]||{zones:[],via:'lift'};
-  LIFTK=k;
+  LIFTK=k; LIFTN=name;
   $('lsname').innerHTML=(e.via==='cat'?ic('car',16):ic('gondola',16))+' '+esc(name);
   /* the picks: what you'd actually lap off this ride, ranked. Exact run-level
      matches first; then ranked runs with no lift data in a zone this ride
@@ -2830,6 +2883,8 @@ function liftOpen(k,name){
       +(zmi>=0?'<span class="zmi" style="color:var(--pr-link);display:flex;flex:0 0 auto">'+ic('map',14)+'</span>':'')
       +'</div>';
   });
+  if(((reachOf(k)||{}).lifts||[]).some(function(l){ return l.name===name; }))
+    h='<button class="btn wbtn" style="margin:0 0 10px" onclick="wkOpen(LIFTK,{a:{t:\'lift\',name:LIFTN}})">'+ic('compass',14)+' Meet up \u00b7 find the lift from here</button>'+h;
   $('lszones').innerHTML=h||'<div class="xs muted">No zones recorded for this lift.</div>';
   $('lsheet').classList.add('on'); $('lsheet').setAttribute('aria-hidden','false'); $('lclose').classList.add('on');
 }
@@ -2853,6 +2908,417 @@ function liftRowHtml(k){
         +(v==='cat'?ic('car',11):ic('gondola',11))+esc(n)+'</button>'; }).join('')
     +'</div></div>';
 }
+
+/* ================= SEARCH — one mountain at a time (Oct 2 2026) =================
+   WHAT  A search box on every mountain: on its Snow-tab card and at the top of its map drawer. It finds that
+         mountain's runs (by name, by any other name we hold, by trail number), lifts, zones, huts and hidden
+         spots. Tanner: "on mountain, and only for the mountain you're looking at" — it never looks at the
+         other eight, and it never looks at bars, hotels or the checklist.
+   WHY   A mountain has 90–200 rows. Scrolling for one name on a chairlift takes too long.
+   HOW   srIndex(k)   lists every findable thing on mountain k, once (kept until the trip data changes).
+         srFind(k,q)  scores each thing against what was typed and returns the best first:
+                        100 the whole name · 92 the name starts with it · 84 every typed word starts a word of
+                        the name · 74 it is inside the name · 70 the same with the spaces taken out ·
+                        62 and down: a NEAR MISS — the spelling is off by a letter or two (see srDist).
+         srRow(...)   draws one result with the same row shape the run lists use.
+         srGo(k,i)    what a tap does: a run or hut flashes on the map, a lift opens its sheet, a zone opens.
+   SPELLING  "We're bad at spelling" (Tanner). Each typed word may be wrong by 1 letter (3–4 letters long),
+         2 letters (5–7) or 3 letters (8 and up): a wrong letter, a missing one, an extra one, or two swapped.
+         Accents, apostrophes and "&" never matter: jalapeno = Jalapeño, goats eye = Goat's Eye.
+         When any name matches properly, the near misses are left off — they would only be noise.
+   NO NETWORK  Everything is in the trip data already on the phone. It works with no signal. */
+var SRIDX={}, SRD=null, SR_MAX=12;
+function srNorm(s){ s=String(s==null?'':s).toLowerCase();
+  try{ s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }catch(e){}                 /* accents off: n-tilde reads as n */
+  return s.replace(/[\u2018\u2019'`\u201c\u201d"]/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').replace(/^ +| +$/g,''); }
+function srKey(s){ var n=srNorm(s); return {n:n,w:n?n.split(' '):[],s:n.replace(/ /g,'')}; }
+/* srDist(a,b,max) — how many single-letter fixes turn a into b (wrong / missing / extra letter, or two neighbours
+   swapped). Stops counting once past max and returns max+1. */
+function srDist(a,b,max){
+  var la=a.length, lb=b.length; if(Math.abs(la-lb)>max)return max+1; if(a===b)return 0;
+  var pp=null, p=[], c, i, j; for(j=0;j<=lb;j++)p[j]=j;
+  for(i=1;i<=la;i++){ c=[i]; var best=i;
+    for(j=1;j<=lb;j++){ var cost=(a.charCodeAt(i-1)===b.charCodeAt(j-1))?0:1;
+      var v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+cost);
+      if(i>1&&j>1&&a.charCodeAt(i-1)===b.charCodeAt(j-2)&&a.charCodeAt(i-2)===b.charCodeAt(j-1))v=Math.min(v,pp[j-2]+1);
+      c[j]=v; if(v<best)best=v; }
+    if(best>max)return max+1; pp=p; p=c; }
+  return p[lb]; }
+function srAllow(len){ return len<=2?0:len<=4?1:len<=7?2:3; }
+/* srScore(q,c) — how well the typed text q matches one name c (both from srKey). 0 = not a match. */
+function srScore(q,c){
+  if(!q.n||!c.n)return 0;
+  if(c.n===q.n)return 100;
+  if(c.n.indexOf(q.n)===0)return 92;
+  var i, j, all=true;
+  for(i=0;i<q.w.length&&all;i++){ var hit=false; for(j=0;j<c.w.length;j++)if(c.w[j].indexOf(q.w[i])===0){ hit=true; break; } if(!hit)all=false; }
+  if(all)return 84;
+  if(q.s.length>=2&&c.s.indexOf(q.s)===0)return 80;      /* "jr" → "J.R. Trees", "feuzb" → "Feuz Bowl" */
+  if(q.n.length>=2&&c.n.indexOf(q.n)>=0)return 74;
+  if(q.s.length>=3&&c.s.indexOf(q.s)>=0)return 70;
+  /* near misses, word by word: each typed word must be close to a whole word of the name, or (4+ letters typed) to
+     the start of one — so a half-typed, misspelled word still finds its run */
+  var edits=0, ok=true;
+  for(i=0;i<q.w.length&&ok;i++){ var qt=q.w[i], al=srAllow(qt.length), best=al+1;
+    for(j=0;j<c.w.length&&best>0;j++){ var ct=c.w[j], d=srDist(qt,ct,al); if(d<best)best=d;
+      if(qt.length>=4&&ct.length>qt.length){ var pm=Math.min(al,1); d=srDist(qt,ct.slice(0,qt.length),pm); if(d<=pm&&d<best)best=d; } }
+    if(best>al)ok=false; else edits+=best; }
+  var sc=ok?(62-7*edits):0;
+  /* …and the whole thing with the spaces out: "feuzbowl", "kill thebanker" */
+  if(q.s.length>=5){ var al2=srAllow(q.s.length), d2=srDist(q.s,c.s,al2); if(d2<=al2)sc=Math.max(sc,58-6*d2);
+    if(c.s.length>q.s.length){ d2=srDist(q.s,c.s.slice(0,q.s.length),Math.min(al2,2)); if(d2<=Math.min(al2,2))sc=Math.max(sc,54-6*d2); } }
+  if(sc>0&&q.s.charAt(0)!==c.s.charAt(0))sc-=5;   /* people usually get the first letter right */
+  return sc>0?sc:0; }
+/* srIndex(k) — every findable thing on mountain k:
+     {t:'run'|'poi'|'lift'|'zone'|'spot', name, alt:[other names], num, zone, zmi, ri, r, c:[{k: srKey, aka}]}
+   run/poi rows are the same entries, in the same order, that the map drawer lists (zItems), so zmi + ri can be
+   handed straight to zOpen()/zFlash(). 'spot' = a hut, hidden spot or cruiser note that has no pin on a map. */
+function srIndex(k){
+  if(SRD!==D){ SRIDX={}; SRD=D; }
+  if(SRIDX[k])return SRIDX[k];
+  var t=(D.terrain||{})[k]||{}, mz=zMapZones(k), out=[], seen={};
+  function add(it){ var k0=srKey(it.name); it.c=[{k:k0,aka:''}];
+    if(k0.w.length>1&&k0.w[0]==='the')it.c.push({k:srKey(k0.w.slice(1).join(' ')),aka:''});      /* "stoke" finds "The Stoke" as a start-of-name match */
+    (it.alt||[]).forEach(function(a){ it.c.push({k:srKey(a),aka:String(a).replace(/\s*\([^)]*\)\s*/g,' ').replace(/^ +| +$/g,'')}); });
+    it.i=out.length; out.push(it); seen[k0.n]=1; }
+  (t.zones||[]).forEach(function(z){ var zmi=mz.indexOf(z), zn=z.name.replace(/\s*\((gated|mellow)\)\s*$/,'');
+    zItems(t,z).forEach(function(r,ri){ add({t:r.kind?'poi':'run',name:r.name,alt:[].concat(r.alias||[]),num:r.num,zone:zn,zmi:zmi,ri:ri,r:r}); }); });
+  var RL={}; ((reachOf(k)||{}).lifts||[]).forEach(function(l){ RL[l.name]=1; });       /* the lifts the ski-to model knows */
+  liftIdx(k).names.forEach(function(n){ add({t:'lift',name:n,via:liftIdx(k).map[n].via,model:!!RL[n]}); });
+  Object.keys(RL).forEach(function(n){ if(!liftIdx(k).map[n])add({t:'lift',name:n,via:'lift',model:true}); });   /* e.g. a hike or a lift no run names */
+  (t.zones||[]).forEach(function(z){ var zmi=mz.indexOf(z), zn=z.name.replace(/\s*\((gated|mellow)\)\s*$/,'');
+    if(zmi>=0&&!seen[srNorm(zn)])add({t:'zone',name:zn,alt:(zn!==z.name?[z.name.replace(/[()]/g,' ')]:[]),zmi:zmi}); });
+  [['cabins','food'],['woods','trees'],['cruisers','snowboarder']].forEach(function(sv){ (t[sv[0]]||[]).forEach(function(p){
+    if(!p||!p.name||seen[srNorm(p.name)])return;      /* already listed as a pinned row or a run */
+    add({t:'spot',name:p.name,icon:sv[1],sub:p.where||p.find||'',note:p.note||''}); }); });
+  return SRIDX[k]=out; }
+/* srFind(k,q,types) — the ranked results. types (optional) keeps only those kinds, e.g. {run:1,lift:1}. */
+function srFind(k,q,types){
+  var Q=srKey(q), out=[]; if(!Q.n)return out;
+  var numq=Q.w.length>0&&Q.w.every(function(w){ return /^[0-9]+[a-z]?$/.test(w); });   /* "81", "86+87", "124-132", "40b" */
+  srIndex(k).forEach(function(it){ if(types&&!types[it.t])return;
+    var best=0, via='';
+    it.c.forEach(function(c,ci){ var s=srScore(Q,c.k); if(Q.n.length<2&&s<84)s=0; if(c.aka)s-=1; if(s>best){ best=s; via=c.aka; } });
+    if(numq&&it.num!=null){ var nums=String(it.num).toLowerCase().split(/[^0-9a-z]+/).filter(Boolean), s2=0;
+      if(Q.w.every(function(w){ return nums.indexOf(w)>=0; }))s2=96;                                   /* every typed number is one of the run's numbers */
+      else if(Q.w.length===1&&nums.some(function(n){ return n.indexOf(Q.w[0])===0; }))s2=76;           /* still typing it */
+      if(s2>best){ best=s2; via=''; } }
+    if(best>0)out.push({it:it,s:best,via:via}); });
+  var TO={run:0,poi:1,lift:2,zone:3,spot:4};
+  out.sort(function(a,b){ return (b.s-a.s)||(TO[a.it.t]-TO[b.it.t])
+    ||((typeof b.it.r==='object'&&b.it.r&&zIsPick(b.it.r)?1:0)-(typeof a.it.r==='object'&&a.it.r&&zIsPick(a.it.r)?1:0))
+    ||(a.it.name<b.it.name?-1:a.it.name>b.it.name?1:0); });
+  var strong=out.filter(function(x){ return x.s>=70; });
+  if(strong.length)out=strong;                         /* a proper match exists: leave the near misses off */
+  return out; }
+/* srRow(k,x) — one result as a row. Runs and pinned huts look like the drawer's rows (level dot, trail number,
+   zone underneath); lifts, zones and unpinned spots get their icon where the dot would be. */
+function srRow(k,x){
+  var it=x.it, r=it.r, tap=' onclick="srGo(\''+k+'\','+it.i+')"', aka=x.via?('<div class="zsb">also called '+esc(x.via)+'</div>'):'';
+  if(it.t==='run'||it.t==='poi'){
+    var can=(it.zmi>=0), sub=[it.zone]; if(!r.kind){ var lv=((r.level||'')+(r.type?' '+r.type:'')); if(lv)sub.push(lv); } else if(r.where)sub.push(r.where);
+    return '<div class="zrr '+esc(r.kind?('k-'+r.kind):('lv-'+(r.level||'info')))+(can?'':' nopin')+'"'+(can?tap:'')+'>'
+      +(zIsPick(r)&&!r.mapOnly?'<span class="zrk">'+r.pick+'</span>':'<span class="zd"></span>')
+      +(r.num?'<span class="znum">'+esc(String(r.num))+'</span>':'')
+      +'<span class="znm">'+esc(r.name)+'<div class="zsb">'+esc(sub.join(' · '))+'</div>'+aka+'</span>'
+      +(r.kind?'<span class="kind '+esc(r.kind)+'">'+esc(r.kind)+'</span>':'')
+      +(can?'<span class="zmi" style="color:var(--pr-link);display:flex;flex:0 0 auto">'+ic('map',14)+'</span>':'')+'</div>'; }
+  if(it.t==='lift')
+    return '<div class="zrr"'+tap+'><span class="sric" style="color:var(--pr-'+(it.via==='cat'?'purple':'blue')+'-text)">'+ic(it.via==='cat'?'car':'gondola',15)+'</span>'
+      +'<span class="znm">'+esc(it.name)+'<div class="zsb">'+(it.via==='cat'?'snowcat':'lift')+'</div></span></div>';
+  if(it.t==='zone')
+    return '<div class="zrr"'+tap+'><span class="sric">'+ic('mountain',15)+'</span><span class="znm">'+esc(it.name)+'<div class="zsb">zone</div>'+aka+'</span>'
+      +'<span class="zmi" style="color:var(--pr-link);display:flex;flex:0 0 auto">'+ic('map',14)+'</span></div>';
+  return '<div class="zrr nopin"><span class="sric">'+ic(it.icon||'tip',15)+'</span><span class="znm">'+esc(it.name)
+    +(it.sub?'<div class="zsb">'+esc(it.sub)+'</div>':'')+(it.note?'<div class="zsb">'+esc(it.note)+'</div>':'')+'</span></div>'; }
+/* srHtml(k,q) — the whole result list for a box: rows, a "keep typing" line when there are more, or one plain
+   line when nothing matches. */
+function srHtml(k,q){
+  var res=srFind(k,q), h='';
+  if(!res.length)return '<div class="zempty">'+ic('closed',13)+'<span>No match on this mountain. Try fewer letters, or the trail number.</span></div>';
+  res.slice(0,SR_MAX).forEach(function(x){ h+=srRow(k,x); });
+  if(res.length>SR_MAX)h+='<div class="zempty"><span>'+(res.length-SR_MAX)+' more — keep typing to narrow it down.</span></div>';
+  return h; }
+/* srGo(k,i) — a tap on result i of mountain k. */
+function srGo(k,i){
+  var it=srIndex(k)[i]; if(!it)return;
+  if(it.t==='lift'){ liftOpen(k,it.name); return; }
+  if(it.zmi==null||it.zmi<0)return;
+  /* "Cruisers only" hides everything that is not mellow. You asked for this run by name: turn the filter off rather
+     than jump to a row the list will not show. */
+  if(it.r&&cruisersOn(k)&&!isMellowRun(it.r)){ setCruisers(k,false); toast('Cruisers only is off'); }
+  var inOv=(ZOPEN&&ZR===k);
+  if(inOv)zSearchClear(true);                           /* back to the normal list, so the run's full row shows */
+  if(it.t==='zone'){ if(inOv){ zSetZone(it.zmi); ZRUN=-1; zClearPulse(); zRenderRuns(); } else zOpen(k,it.zmi,-1); return; }
+  if(inOv){ if(it.zmi!==ZI)zSetZone(it.zmi);
+    ZRUN=-1; zClearPulse();                             /* drop the old pick first: if this run cannot be shown, nothing stays picked */
+    zFlash(it.ri); ZALL=true; zRenderRuns();
+    if(ZRUN!==it.ri&&!z3dOn())toast('Not pinned on this map');
+    var row=document.querySelector('#zruns .zrr.on'); if(row&&row.scrollIntoView)row.scrollIntoView({block:'nearest'}); }
+  else zOpen(k,it.zmi,it.ri); }
+/* ---- the Snow-tab card's box: results appear right under it ---- */
+function srCard(k,v){ var box=$('srr-'+k), x=$('srx-'+k); if(!box)return; var on=!!srNorm(v);
+  box.innerHTML=on?srHtml(k,v):''; box.style.display=on?'':'none'; if(x)x.style.display=v?'':'none'; }
+function srCardClear(k){ var q=$('srq-'+k); if(q){ q.value=''; q.focus(); } srCard(k,''); }
+function srEnter(e,el){ if(e&&e.key==='Enter')el.blur(); }      /* Enter: put the keyboard away so the results are in view */
+function srBoxHtml(k){
+  return '<div class="srbox"><input class="inp srq" id="srq-'+k+'" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"'
+    +' placeholder="Find a run, lift or hut" aria-label="Find a run, lift or hut on this mountain" oninput="srCard(\''+k+'\',this.value)" onkeydown="srEnter(event,this)">'
+    +'<button class="srx" id="srx-'+k+'" style="display:none" onclick="srCardClear(\''+k+'\')" aria-label="Clear the search">&#10005;</button></div>'
+    +'<div class="zruns srres" id="srr-'+k+'" style="display:none"></div>'; }
+/* ---- the map drawer's box: while there is text, the results REPLACE the run list and the drawer goes tall
+        (the keyboard covers the bottom of a phone screen; the results must sit above it) ---- */
+var ZQ='', ZQF=false;
+function zSearch(v){ ZQ=v||''; var x=$('zqx'); if(x)x.style.display=ZQ?'':'none'; zSearchMode(); zRenderRuns(); }
+function zSearchFocus(on){
+  if(!on&&document.activeElement===$('zq'))return;      /* the blur was followed by a new focus (a quick tap back in): still searching */
+  ZQF=on; if(on&&ZSHUT){ ZSHUT=false; } zSearchMode(); }
+/* the drawer goes tall when there is text — or, on a touch screen, as soon as the box is focused (the keyboard is coming).
+   With a mouse there is no on-screen keyboard to make room for, so focus alone changes nothing. */
+function zSearchOn(){ return !!(srNorm(ZQ)||(ZQF&&!ZFINE)); }
+function zSearchMode(){ var b=$('zbody'); if(b)b.classList.toggle('searching',!!srNorm(ZQ)); zKb(); zSizeDrawer(); }
+/* zSearchClear(away) — empty the box. away=true also leaves it (keyboard down): used when something else takes over
+   the drawer — a picked result, a lift-sheet row, a zone chip. away=false (the cross) keeps you typing. */
+function zSearchClear(away){ ZQ=''; var q=$('zq'); if(q){ q.value=''; if(away){ ZQF=false; q.blur(); } else q.focus(); }
+  var x=$('zqx'); if(x)x.style.display='none'; zSearchMode(); if(!away)zRenderRuns(); }
+/* zKb() — keep the whole overlay inside the part of the screen the keyboard has left visible, while searching.
+   (visualViewport is the visible part; without it — old browsers — nothing changes.) */
+function zKb(){ var ov=$('zov'), vv=window.visualViewport; if(!ov)return;
+  if(ZOPEN&&zSearchOn()&&vv&&vv.height<window.innerHeight-80){ ov.style.top=vv.offsetTop+'px'; ov.style.bottom='auto'; ov.style.height=vv.height+'px'; }
+  else { ov.style.top=''; ov.style.bottom=''; ov.style.height=''; } }
+if(window.visualViewport){ ['resize','scroll'].forEach(function(ev){ window.visualViewport.addEventListener(ev,function(){ if(ZOPEN){ zKb(); zSizeDrawer(); } }); }); }
+
+/* ================= MEET UP · FIND THE LIFT — one sheet, one mountain (Oct 2 2026) =================
+   WHAT  Two questions, one sheet (Tanner, Oct 2 2026):
+           1. "I'm one place and Zack is another — where can we both go?"      → pick two spots
+           2. "I want this run — which lift do I take from where I am?"         → pick a spot and a run
+         A SPOT is a lift or a run, picked with the same search the mountain uses (spelling does not matter).
+           a lift = you are at the TOP of it        a run = you are at the BOTTOM of it
+         ("I am on run X" means "from the bottom of X" — the one answer that is true wherever you are on the run.)
+   DATA  terrain[k].reach, written by 04-app-build/3d/scripts/export_reach_to_app.py:
+           rows    lift → run        (how: straight | partway | traverse | hike)        — the ski-to model, since Sep 2026
+           places  lift → bar / lodge / bus stop
+           links   lift top → lift base (how: straight | traverse | hike)               — new
+           starts  run bottom → lifts, runs (straight / part), places, stored as positions — new (see that script's header)
+         Six hills get this from the lidar model. Sunshine, Louise and Norquay get it from the line-network model
+         (reach.rough = true): fewer answers, the same shapes.
+   RULES (kept conservative on purpose)
+         - From a spot, with no lift: only what you can SKI to (straight or partway). A traverse or hike to a run is
+           offered only as the last leg to the run you ASKED for, and only when no lift does better (the Sep rule).
+         - Lift to lift: "straight", or "traverse" = a short flat skate (said in words). A hike is never used.
+         - A route rides at most three lifts. Fewest rides first.
+   NO NETWORK  All of it is worked out on the phone from the trip data. Nothing is sent anywhere. */
+var WK=null, W={a:null,b:null,t:null}, WEDIT='', WREM={};
+/* wkFrom(k,spot) — what you can get to from a spot WITHOUT riding a lift:
+     {runs:{name:how}, lifts:{name:how}, places:{name:1}, known:true|false}
+   known=false: the model has no answer for this run (no line drawn for it, or the hill was built before it existed). */
+function wkShown(k){ var m={}; srIndex(k).forEach(function(it){ if(it.t==='run')m[it.name]=1; }); return m; }   /* the run names the app shows on this mountain */
+function wkFrom(k,s){
+  var R=reachOf(k), out={runs:{},lifts:{},places:{},known:false}; if(!R||!s)return out;
+  var SH=wkShown(k);                                  /* the model also holds lines the app has no row for: leave those out */
+  if(s.t==='lift'){
+    R.rows.forEach(function(x){ if(x.lift===s.name&&HOW_RANK[x.how]<=1&&SH[x.run]){ out.runs[x.run]=x.how; out.known=true; } });
+    (R.places||[]).forEach(function(x){ if(x.lift===s.name&&HOW_RANK[x.how]<=1)out.places[x.place]=1; });
+    (R.links||[]).forEach(function(x){ if(x.from===s.name&&(x.how==='straight'||x.how==='traverse')){ out.lifts[x.to]=x.how; out.known=true; } });
+    if((R.lifts||[]).some(function(l){ return l.name===s.name; }))out.known=true;
+    return out; }
+  /* a run: starts.from[name] is a position in starts.sets; a set holds positions ("0,2") into reach.lifts,
+     starts.runs and starts.places — stored that way to keep the download small (the export script's header has the layout) */
+  var S=R.starts||{}, n=(S.from||{})[s.name], st=(n==null)?null:(S.sets||[])[n]; if(!st)return out;
+  out.known=true;
+  function ids(x){ return x?String(x).split(','):[]; }
+  var nm=S.runs||[], pl=S.places||[], lf=R.lifts||[];
+  ids(st.runs).forEach(function(i){ if(SH[nm[+i]])out.runs[nm[+i]]='straight'; });
+  ids(st.part).forEach(function(i){ if(SH[nm[+i]]&&!out.runs[nm[+i]])out.runs[nm[+i]]='partway'; });
+  ids(st.lifts).forEach(function(i){ if(lf[+i])out.lifts[lf[+i].name]='straight'; });
+  ids(st.places).forEach(function(i){ if(pl[+i]!=null)out.places[pl[+i]]=1; });
+  return out; }
+/* wkLinks(k) — lift → [{to,how}] for the links a route may use (straight, or a flat skate). */
+function wkLinks(k){ var R=reachOf(k), m={}; ((R&&R.links)||[]).forEach(function(x){ if(x.how==='straight'||x.how==='traverse')(m[x.from]=m[x.from]||[]).push({to:x.to,how:x.how}); }); return m; }
+/* wkLiftToRun(k,run) — {lift: how} for the lifts that get you onto a run. A traverse / hike only when no lift does better. */
+function wkLiftToRun(k,run){ var R=reachOf(k), m={}; if(!R)return m;
+  R.rows.forEach(function(x){ if(x.run===run&&reachWorth(R,x)&&(!(x.lift in m)||HOW_RANK[x.how]<HOW_RANK[m[x.lift]]))m[x.lift]=x.how; }); return m; }
+/* wkRoutes(k,spot,run) — the ways from a spot to a run, best first. Each route:
+     {rides:n, lifts:[names in order], legs:[how you get to each lift's base], last: how the last lift (or you) gets onto the run} */
+function wkRoutes(k,s,run){
+  var F=wkFrom(k,s), LR=wkLiftToRun(k,run), LK=wkLinks(k), out=[];
+  if(F.runs[run])out.push({rides:0,lifts:[],legs:[],last:F.runs[run]});
+  if(s.t==='lift'&&LR[s.name]&&!F.runs[run])out.push({rides:0,lifts:[],legs:[],last:LR[s.name]});   /* a traverse / hike from the lift you are on */
+  /* level by level: every lift you can be on top of after 1, 2, 3 rides. A lift is kept at the FIRST level that reaches
+     it, and within that level by the chain with the fewest flat skates — so "ski, ski" beats "ski, skate" for the same
+     number of lifts, whatever order the links are stored in. */
+  var seen={}, front=[]; if(s.t==='lift')seen[s.name]=1;
+  Object.keys(F.lifts).forEach(function(l){ if(!seen[l]){ seen[l]=1; front.push({lifts:[l],legs:[F.lifts[l]],sk:F.lifts[l]==='traverse'?1:0}); } });
+  for(var d=1;d<=3&&front.length;d++){ var cand={};
+    front.forEach(function(p){ var l=p.lifts[p.lifts.length-1];
+      if(LR[l])out.push({rides:d,lifts:p.lifts,legs:p.legs,last:LR[l]});
+      (LK[l]||[]).forEach(function(x){ if(seen[x.to])return; var sk=p.sk+(x.how==='traverse'?1:0);
+        if(!cand[x.to]||sk<cand[x.to].sk)cand[x.to]={lifts:p.lifts.concat([x.to]),legs:p.legs.concat([x.how]),sk:sk}; }); });
+    front=Object.keys(cand).map(function(l){ seen[l]=1; return cand[l]; }); }
+  function skate(r){ return r.legs.filter(function(h){ return h==='traverse'; }).length; }
+  out.sort(function(a,b){ return ((HOW_RANK[a.last]>=2?1:0)-(HOW_RANK[b.last]>=2?1:0))||(a.rides-b.rides)||(HOW_RANK[a.last]-HOW_RANK[b.last])||(skate(a)-skate(b)); });
+  return out; }
+/* wkMeet(k,a,b) — where two spots can both get to.
+     spots: [{kind:'base'|'top'|'place', name, ra, rb, via:{a,b}}]  ra / rb = lifts each person rides (0 or 1), fewest first
+     runs:  [names] both can ski to with no lift */
+function wkMeet(k,a,b){
+  var A=wkFrom(k,a), B=wkFrom(k,b), LK=wkLinks(k), spots=[], seen={};
+  function one(F){ var m={}; Object.keys(F.lifts).forEach(function(l){ (LK[l]||[]).forEach(function(x){ if(!(x.to in m))m[x.to]=l; }); }); return m; }   /* base → the lift you ride to get to it */
+  var A1=one(A), B1=one(B);
+  function add(o){ var id=o.kind+'|'+o.name; if(seen[id])return; seen[id]=1; spots.push(o); }
+  /* the top of the lift one of you is already on: the other rides it */
+  if(a.t==='lift'&&(a.name in B.lifts))add({kind:'top',name:a.name,ra:0,rb:1,via:{b:a.name}});
+  if(b.t==='lift'&&(b.name in A.lifts))add({kind:'top',name:b.name,ra:1,rb:0,via:{a:b.name}});
+  Object.keys(A.lifts).forEach(function(l){ if(l in B.lifts)add({kind:'base',name:l,ra:0,rb:0,via:{}}); });
+  Object.keys(A.places).forEach(function(p){ if(B.places[p])add({kind:'place',name:p,ra:0,rb:0,via:{}}); });
+  Object.keys(A.lifts).forEach(function(l){ if(l in B1)add({kind:'base',name:l,ra:0,rb:1,via:{b:B1[l]}}); });
+  Object.keys(B.lifts).forEach(function(l){ if(l in A1)add({kind:'base',name:l,ra:1,rb:0,via:{a:A1[l]}}); });
+  Object.keys(A1).forEach(function(l){ if(l in B1)add({kind:'base',name:l,ra:1,rb:1,via:{a:A1[l],b:B1[l]}}); });
+  spots.sort(function(x,y){ return ((x.ra+x.rb)-(y.ra+y.rb))||(({base:0,top:1,place:2})[x.kind]-({base:0,top:1,place:2})[y.kind]); });
+  var runs=Object.keys(A.runs).filter(function(r){ return r in B.runs; });
+  return {spots:spots,runs:runs,A:A,B:B}; }
+
+/* ---------------- the sheet ---------------- */
+function wkSpotLabel(s,f){ return s?(esc(s.name)+(f==='t'?'':' <span class="wsub">'+(s.t==='lift'?(wkWalk(s.name)?'top of it':'top of the lift'):'bottom of the run')+'</span>')):''; }
+/* a hike or bootpack that the model treats like a lift (Sub Peak hike, the Whitewater bootpacks): you do not "ride" it */
+function wkWalk(n){ return /(hike|bootpack)/i.test(n||''); }
+function wkRide(n,plain){ return (wkWalk(n)?'do the ':'ride ')+(plain?esc(n):'<b>'+esc(n)+'</b>'); }
+function wkTopOf(n){ return wkWalk(n)?('the '+esc(n)):('the top of '+esc(n)); }
+function wkCap(x){ return x.charAt(0).toUpperCase()+x.slice(1); }
+/* wkOpen(k,pre) — open the sheet for mountain k. pre (optional) = {a:spot} or {t:spot} to fill a field first. */
+function wkOpen(k,pre){
+  if(!reachOf(k)){ toast('No lift answers for this mountain yet'); return; }
+  if(WK!==k){ W=WREM[k]||{a:null,b:null,t:null}; WK=k; }
+  if(pre){ if(pre.a){ W={a:pre.a,b:null,t:null}; }      /* "from this lift": a fresh question, not the last one with a new start */
+           if(pre.t)W.t=pre.t; }
+  WEDIT=''; WSHOW=false; liftClose(); wkDraw();
+  $('wsheet').classList.add('on'); $('wsheet').setAttribute('aria-hidden','false'); $('wclose').classList.add('on'); wkKb(); }
+function wkClose(){ WREM[WK]=W; $('wsheet').classList.remove('on'); $('wsheet').setAttribute('aria-hidden','true'); $('wclose').classList.remove('on');
+  var q=$('wq'); if(q)q.blur(); }
+function wkField(f,lab,ph){
+  var s=W[f];
+  if(WEDIT===f) return '<div class="wfld"><div class="zacclab">'+lab+'</div><div class="srbox"><input class="inp srq" id="wq" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="'+ph+'" aria-label="'+ph+'" oninput="wkType(this.value)" onkeydown="srEnter(event,this)">'
+    +'<button class="srx" onclick="wkEdit(\'\')" aria-label="Cancel">&#10005;</button></div><div class="zruns srres" id="wres"></div></div>';
+  return '<div class="wfld"><div class="zacclab">'+lab+'</div>'
+    +(s?('<div class="wpick"><button class="wval" onclick="wkEdit(\''+f+'\')">'+(s.t==='lift'?ic('gondola',14):ic('skier',14))+'<span>'+wkSpotLabel(s,f)+'</span></button><button class="srx wclr" onclick="wkSet(\''+f+'\',null)" aria-label="Clear">&#10005;</button></div>')
+       :('<button class="wval empty" onclick="wkEdit(\''+f+'\')">'+ph+'</button>'))+'</div>'; }
+function wkEdit(f){ WEDIT=f; wkDraw(); var q=$('wq'); if(q)q.focus(); }
+function wkType(v){ var box=$('wres'); if(!box)return; var types=(WEDIT==='t')?{run:1}:{run:1,lift:1};
+  var res=srFind(WK,v,types).filter(function(x){ return x.it.t!=='lift'||x.it.model; }), h='';   /* only the lifts the model knows */
+  if(!srNorm(v)){ box.innerHTML=''; return; }
+  if(!res.length){ box.innerHTML='<div class="zempty">'+ic('closed',13)+'<span>No match on this mountain.</span></div>'; return; }
+  res.slice(0,8).forEach(function(x){ var it=x.it;
+    h+='<div class="zrr '+(it.t==='lift'?'':esc('lv-'+((it.r&&it.r.level)||'info')))+'" onclick="wkPick('+it.i+')">'
+      +(it.t==='lift'?'<span class="sric" style="color:var(--pr-blue-text)">'+ic(it.via==='cat'?'car':'gondola',15)+'</span>':'<span class="zd"></span>')
+      +'<span class="znm">'+esc(it.name)+'<div class="zsb">'+(it.t==='lift'?'lift · you are at the top':esc(it.zone||'')+(WEDIT==='t'?'':' · you are at the bottom'))+'</div>'
+      +(x.via?'<div class="zsb">also called '+esc(x.via)+'</div>':'')+'</span></div>'; });
+  box.innerHTML=h; }
+function wkPick(i){ var it=srIndex(WK)[i]; if(!it)return; wkSet(WEDIT,{t:it.t==='lift'?'lift':'run',name:it.name}); }
+function wkSet(f,s){ W[f]=s; WEDIT=''; wkDraw(); }
+/* a tappable run row (opens the map on it) / a lift row (opens its sheet) for the result lists */
+function wkRunRow(name,tag){ var hit=null; srIndex(WK).some(function(it){ if(it.t==='run'&&it.name===name){ hit=it; return true; } });
+  var can=hit&&hit.zmi>=0, r=hit&&hit.r;
+  return '<div class="zrr '+(r?esc('lv-'+(r.level||'info')):'')+(can?'':' nopin')+'"'+(can?' onclick="wkGoRun('+hit.i+')"':'')+'>'
+    +(r&&zIsPick(r)?'<span class="zrk">'+r.pick+'</span>':'<span class="zd"></span>')
+    +'<span class="znm">'+esc(name)+(tag||'')+(hit?'<div class="zsb">'+esc(hit.zone||'')+'</div>':'')+'</span>'
+    +(can?'<span class="zmi" style="color:var(--pr-link);display:flex;flex:0 0 auto">'+ic('map',14)+'</span>':'')+'</div>'; }
+function wkGoRun(i){ wkClose(); srGo(WK,i); }
+/* wkNoRun(k,run) — the model has no lift for this run. Say so, and show its zone's own "Getting here" line as typed. */
+function wkNoRun(k,run){ var t=(D.terrain||{})[k]||{}, z=null;
+  (t.zones||[]).forEach(function(q){ if(!z&&zItems(t,q).some(function(r){ return r.name===run; }))z=q; });
+  var acs=z?accSummary(z):'';
+  return '<div class="zempty">'+ic('closed',13)+'<span>The model has no lift for this run.'
+    +(acs?' Getting to its zone ('+esc(z.name.replace(/\s*\((gated|mellow)\)\s*$/,''))+'): '+esc(acs)+'.':'')+'</span></div>'; }
+function wkLeg(h){ return h==='traverse'?'a short flat skate to':'ski to'; }
+/* wkRouteHtml(r,run) — one route as a row: the lifts to ride in bold, the legs in plain words underneath. */
+function wkRouteHtml(r,run){
+  var LASTW={straight:'ski straight to',partway:'join partway down',traverse:'traverse to',hike:'hike to'};
+  if(!r.rides) return '<div class="wans"><div class="wtop">'+(r.last==='straight'?'Ski straight to it from here.':r.last==='partway'?'Ski to it from here — you join it partway down.':r.last==='traverse'?'Traverse to it from here. No lift needed.':'Hike to it from here. No lift gets closer.')+'</div></div>';
+  var h='<div class="wans"><div class="wtop">'+wkCap(r.lifts.map(function(l){ return wkRide(l); }).join(', then '))+'.</div><div class="zsb">', bits=[];
+  r.lifts.forEach(function(l,i){ bits.push((i?'From '+wkTopOf(r.lifts[i-1])+', ':'From here, ')+wkLeg(r.legs[i])+' '+esc(l)); });
+  bits.push('From '+wkTopOf(r.lifts[r.lifts.length-1])+', '+LASTW[r.last]+' '+esc(run));
+  return h+bits.join('. ')+'.</div></div>'; }
+function wkDraw(){
+  var k=WK, R=reachOf(k), h='', name=((D.resorts||{})[k]||{}).name||'';
+  h+='<div class="lshead"><span>'+ic('compass',16)+' Meet up · find the lift</span><button class="lsx" onclick="wkClose()" aria-label="Close">&#10005;</button></div>';
+  h+='<div class="lssub">'+esc(name)+' · a lift means the top of it · a run means the bottom of it</div>';
+  var FLD={a:['You are at','A lift or a run'],b:['Someone else is at','A lift or a run — leave empty if it is only you'],t:['Run you want','A run — leave empty to see what is in reach']};
+  if(WEDIT){ $('wbody').innerHTML=h+wkField(WEDIT,FLD[WEDIT][0],FLD[WEDIT][1]); return; }
+  ['a','b','t'].forEach(function(f){ h+=wkField(f,FLD[f][0],FLD[f][1]); });
+  var a=W.a, b=W.b, t=W.t;
+  if(!a&&!b&&!t){ $('wbody').innerHTML=h+'<div class="zempty" style="margin-top:12px">'+ic('tip',13)+'<span>Say where you are. Add a second spot to find where you can both go, or a run to find the lift that gets you there.</span></div>'; return; }
+  if(!a&&b){ a=b; b=null; }
+  var FA=a?wkFrom(k,a):null, FB=b?wkFrom(k,b):null;
+  function unknown(s){ return '<div class="zempty">'+ic('closed',13)+'<span>No ski-to answer for '+esc(s.name)+' yet. Pick the lift you rode instead.</span></div>'; }
+  /* --- 1. the run you want --- */
+  if(t){
+    h+='<div class="zacclab wsec">To '+esc(t.name)+'</div>';
+    if(!a){ var LR=wkLiftToRun(k,t.name), ls=Object.keys(LR).sort(function(x,y){ return HOW_RANK[LR[x]]-HOW_RANK[LR[y]]; });
+      h+=ls.length?('<div class="wans"><div class="wtop">'+ls.map(function(l){ return '<b>'+esc(l)+'</b>'+(LR[l]!=='straight'?' ('+esc(HOW_WORD[LR[l]])+')':''); }).join(' · ')+'</div><div class="zsb">These lifts get you onto it. Say where you are to get the one to take.</div></div>')
+                  :wkNoRun(k,t.name); }
+    else { [[a,FA,'You'],[b,FB,'They']].forEach(function(p){ if(!p[0])return;
+        if(b)h+='<div class="wwho">'+p[2]+' — from '+esc(p[0].name)+'</div>';
+        if(!p[1].known){ h+=unknown(p[0]); return; }
+        var rs=wkRoutes(k,p[0],t.name);
+        if(!rs.length){ var L2=Object.keys(wkLiftToRun(k,t.name));
+          h+=L2.length?('<div class="zempty">'+ic('closed',13)+'<span>No way found from there within three lifts. The model lists only what it is sure of. Lifts that get you onto it: '+L2.map(esc).join(' · ')+'.</span></div>')
+                      :wkNoRun(k,t.name); return; }
+        var best=rs[0].rides;                               /* show the ways with the fewest lifts, three at most */
+        rs.filter(function(r){ return r.rides===best; }).slice(0,3).forEach(function(r){ h+=wkRouteHtml(r,t.name); }); }); }
+  }
+  /* --- 2. two spots: where you can both go --- */
+  if(a&&b){
+    h+='<div class="zacclab wsec">Where you can both go</div>';
+    if(!FA.known)h+=unknown(a); else if(!FB.known)h+=unknown(b);
+    else { var M=wkMeet(k,a,b);
+      if(!M.spots.length&&!M.runs.length)h+='<div class="zempty">'+ic('closed',13)+'<span>Nothing in common within one lift each. The model lists only what it is sure of — try the lift each of you rode last.</span></div>';
+      /* grouped by how many lifts it takes; every no-lift spot is shown, the rest are cut at eight rows */
+      var GL=['No lift needed','One of you takes a lift','A lift each'], g=-1, shown=0;
+      M.spots.forEach(function(s){ var n=s.ra+s.rb; if(n>0&&shown>=8)return; shown++;
+        if(n!==g){ g=n; h+='<div class="wwho">'+GL[n]+'</div>'; }
+        var who=[];
+        if(s.kind==='top'){ who.push((s.ra?'You ':'They ')+wkRide(s.name,true)+' up'); who.push(s.ra?'they are already there':'you are already there'); }
+        else if(n){ who.push('You: '+(s.ra?(wkRide(s.via.a,true)+', then ski to it'):'ski to it')); who.push('They: '+(s.rb?(wkRide(s.via.b,true)+', then ski to it'):'ski to it')); }
+        h+='<div class="zrr nopin"><span class="sric" style="color:var(--pr-'+(s.kind==='place'?'teal':'blue')+'-text)">'+ic(s.kind==='place'?'pin':'gondola',15)+'</span>'
+          +'<span class="znm">'+(s.kind==='top'?'Top of ':s.kind==='base'?(wkWalk(s.name)?'Start of the ':'Base of '):'')+esc(s.name)+(who.length?'<div class="zsb">'+who.join(' · ')+'</div>':'')+'</span></div>'; });
+      if(M.runs.length){ h+='<div class="zacclab wsec">Runs you can both ski to now <span class="zct">'+M.runs.length+'</span></div>';
+        wkSortRuns(M.runs).slice(0,WSHOW?999:12).forEach(function(n){ h+=wkRunRow(n,(M.A.runs[n]==='partway'||M.B.runs[n]==='partway')?howTag('partway'):''); });
+        if(M.runs.length>12&&!WSHOW)h+='<button class="zmore" onclick="WSHOW=true;wkDraw()">Show all '+M.runs.length+'</button>'; } }
+  }
+  /* --- 3. one spot, no run asked for: what is in reach --- */
+  if(a&&!b&&!t){
+    if(!FA.known)h+=unknown(a);
+    else { var ls2=Object.keys(FA.lifts), ps=Object.keys(FA.places), rn=wkSortRuns(Object.keys(FA.runs));
+      h+='<div class="zacclab wsec">Lifts you can ski to</div>';
+      h+=ls2.length?('<div class="zacc">'+ls2.map(function(l){ return '<button class="achip lift" onclick="wkLift(\''+jsq(l)+'\')">'+ic('gondola',11)+esc(l)+(FA.lifts[l]==='traverse'?' · flat skate':'')+'</button>'; }).join('')+'</div>')
+                   :'<div class="zempty"><span>None the model is sure of.</span></div>';
+      if(ps.length)h+='<div class="zacclab wsec">Places you can ski to</div><div class="zsb" style="font-size:12px;line-height:1.5">'+ps.map(esc).join(' · ')+'</div>';
+      h+='<div class="zacclab wsec">Runs you can ski to <span class="zct">'+rn.length+'</span></div>';
+      rn.slice(0,WSHOW?999:12).forEach(function(n){ h+=wkRunRow(n,FA.runs[n]==='partway'?howTag('partway'):''); });
+      if(rn.length>12&&!WSHOW)h+='<button class="zmore" onclick="WSHOW=true;wkDraw()">Show all '+rn.length+'</button>';
+      if(!rn.length)h+='<div class="zempty"><span>None the model is sure of.</span></div>'; }
+  }
+  $('wbody').innerHTML=h; }
+var WSHOW=false;
+/* the picks first (in rank order), then A–Z */
+function wkSortRuns(names){ var pk={}; srIndex(WK).forEach(function(it){ if(it.t==='run'&&it.r&&zIsPick(it.r)&&!it.r.mapOnly)pk[it.name]=it.r.pick; });
+  return names.slice().sort(function(x,y){ return ((x in pk?pk[x]:999)-(y in pk?pk[y]:999))||(x.toLowerCase()<y.toLowerCase()?-1:1); }); }
+function wkLift(name){ var k=WK; wkClose(); liftOpen(k,name); }
+/* keep the sheet above the keyboard (same idea as zKb) */
+function wkKb(){ var s=$('wsheet'), vv=window.visualViewport; if(!s)return;
+  if(vv&&s.classList.contains('on')&&vv.height<window.innerHeight-80){ s.style.bottom=Math.max(0,window.innerHeight-vv.height-vv.offsetTop)+'px'; s.style.maxHeight=Math.round(vv.height*0.94)+'px'; }
+  else { s.style.bottom=''; s.style.maxHeight=''; } }
+if(window.visualViewport){ window.visualViewport.addEventListener('resize',wkKb); window.visualViewport.addEventListener('scroll',wkKb); }
+/* wkBack() — the phone's Back button while the sheet is open: close the sheet, nothing else. Returns true when it did.
+   (The map overlay owns one history entry; Back has just used it up, so it is put back when the map is still open.) */
+function wkBack(){ var s=$('wsheet'); if(!s||!s.classList.contains('on'))return false;
+  wkClose(); if(ZOPEN){ try{ history.pushState({zov:1},''); ZPUSHED=true; }catch(e){} } return true; }
+/* the two ways in: a button on the Snow-tab card and one in the map drawer */
+function wkBtnHtml(k,cls){ return reachOf(k)?('<button class="btn wbtn'+(cls?' '+cls:'')+'" onclick="wkOpenFrom(\''+k+'\')">'+ic('compass',14)+' Meet up · find the lift</button>'):''; }
+/* from the map drawer with a run picked: that run goes in as "Run you want" */
+function wkOpenFrom(k){ var pre=null;
+  if(ZOPEN&&ZR===k&&ZRUN>=0){ var r=zList()[ZRUN]; if(r&&!r.kind)pre={t:{t:'run',name:r.name}}; }
+  WSHOW=false; wkOpen(k,pre); }
 
 function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
   var cru=(mode==='mellow'), h='<div class="terr">', nMel=0;
@@ -2949,7 +3415,7 @@ function rSnow(){
   var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1>'+(isDemo()?'<div class="sub">🧪 Example storm conditions — set the test date off Jul 4 to exit</div>':'')+'</div><button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button> '+s3dButton()+'<div id="mapstat"></div><div id="snowwrap"></div>';
   setView('v-snow',h); var w=$('snowwrap');
   Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k];
-    w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(BUNDLES3D[k]?'<a class="btn" href="3d.html?m='+encodeURIComponent(k)+z3dV(k)+'">'+ic('mountain',14)+' 3D map</a>':'')+(r.map?'<a class="btn" href="'+mapV(r.map)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+mapV(r.map2)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+mapV(r.map3)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+mapV(r.basemap)+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+(r.cams?'<a class="btn" href="'+r.cams+'" target="_blank">'+ic('mountain',14)+' '+esc(r.camsLabel||'Webcams')+'</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleSuggested(\''+k+'\')"><span>'+ic('mountain',15)+' Suggested runs — the ranked picks</span><span id="sgcar-'+k+'">▾</span></div><div id="sg-'+k+'" style="display:none"></div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
+    w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(BUNDLES3D[k]?'<a class="btn" href="3d.html?m='+encodeURIComponent(k)+z3dV(k)+'">'+ic('mountain',14)+' 3D map</a>':'')+(r.map?'<a class="btn" href="'+mapV(r.map)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+mapV(r.map2)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+mapV(r.map3)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+mapV(r.basemap)+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+(r.cams?'<a class="btn" href="'+r.cams+'" target="_blank">'+ic('mountain',14)+' '+esc(r.camsLabel||'Webcams')+'</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?(srBoxHtml(k)+wkBtnHtml(k)):'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleSuggested(\''+k+'\')"><span>'+ic('mountain',15)+' Suggested runs — the ranked picks</span><span id="sgcar-'+k+'">▾</span></div><div id="sg-'+k+'" style="display:none"></div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
     fetchSnow(k);
   });
 }
@@ -3325,7 +3791,7 @@ async function tdRefresh(){
    filled in by the app itself, like the currency box on Home. After a tab switch the typed field is gone. */
 var TD_TYPED=null;
 document.addEventListener('input',function(e){ var x=e.target, ty=((x&&x.type)||'').toLowerCase(); if(ty!=='checkbox'&&ty!=='radio')TD_TYPED=x; },true);
-function tdBusy(){ if(document.querySelector('#zov.on,#sov.on,#lsheet.on'))return true;
+function tdBusy(){ if(document.querySelector('#zov.on,#sov.on,#lsheet.on,#wsheet.on'))return true;
   var a=document.activeElement, t=a&&a.tagName; if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||(a&&a.isContentEditable))return true;
   var x=TD_TYPED; return !!(x&&x.isConnected&&x.closest&&x.closest('#v-'+CUR)&&(x.value||'')!==''); }
 /* tdSwapWhenIdle() — put the newer trip data on screen as soon as the user isn't busy (checks every 3 s) */
