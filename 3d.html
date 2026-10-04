@@ -84,6 +84,19 @@ html,body{height:100%;background:var(--sky);color:var(--pr-cream);font-family:va
 .zd{width:11px;height:11px;border-radius:50%;flex:0 0 auto;border:1px solid var(--pr-ink);background:var(--pr-text-2)}
 .lv-green .zd{background:var(--pr-lime)}.lv-blue .zd{background:var(--pr-blue)}.lv-black .zd,.lv-double .zd{background:var(--pr-ink)}.lv-double .zd{box-shadow:0 0 0 2px var(--pr-card),0 0 0 3px var(--pr-ink)}
 .k-lift .zd{background:var(--pr-pink);border-radius:2px;width:14px;height:6px}
+/* one button per run (Oct 4 2026): a dot for each colour the run has, top of the hill first */
+.zds{display:flex;gap:5px;flex:0 0 auto;align-items:center}
+.zd.c-green{background:var(--pr-lime)}.zd.c-blue{background:var(--pr-blue)}.zd.c-black,.zd.c-double{background:var(--pr-ink)}.zd.c-double{box-shadow:0 0 0 2px var(--pr-card),0 0 0 3px var(--pr-ink);margin:0 3px}
+/* search (Oct 4 2026): the same box and rows as the crew app's mountain search */
+#findbtn{flex:0 0 auto;padding:6px 13px;font-size:12px;border-radius:999px}
+#sbox{padding:0 16px 10px;flex:0 0 auto}
+.srbox{position:relative}
+.inp.srq{font-size:16px;padding:10px 40px 10px 12px;margin:0;-webkit-appearance:none;appearance:none}   /* 16px: an iPhone zooms the page for smaller inputs */
+.srq::-webkit-search-cancel-button{display:none}
+.srx{position:absolute;right:6px;top:50%;margin-top:-15px;width:30px;height:30px;border-radius:999px;border:0;background:var(--pr-paper);color:var(--pr-ink);font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.srx:active{opacity:.7}
+.zempty{font-size:12px;color:var(--pr-text-muted);padding:8px 2px;line-height:1.45}
+#drawer.searching #dsub,#drawer.searching #findbtn{display:none}
 .znm{font-size:13px;font-weight:600;flex:1}.zsb{font-size:11px;font-weight:400;color:var(--pr-text-2);margin-top:2px;line-height:1.4}
 .btn{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--pr-font-app);padding:9px 13px;border-radius:10px;border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-ink);cursor:pointer}
 .btn.pri{background:var(--pr-pink-text);color:#fff;border-color:var(--pr-pink-text)}
@@ -126,7 +139,8 @@ html,body{height:100%;background:var(--sky);color:var(--pr-cream);font-family:va
 <div id="embedbar"><button id="eb-names" onclick="setNames(!LABELS.on);embedBar()">Names</button><button id="eb-trees" onclick="setTrees(!SHOW_TREES);embedBar()">Trees</button></div>
 <div id="drawer">
   <div id="grab"><i></i></div>
-  <div id="bar"><span class="zdt" id="dtitle">Loading…</span><span class="pill zone" id="dkind" style="display:none"></span></div>
+  <div id="bar"><span class="zdt" id="dtitle">Loading…</span><span class="pill zone" id="dkind" style="display:none"></span><button class="btn" id="findbtn" onclick="event.stopPropagation();s3Open()" aria-label="Find a run, lift or place on this mountain">Find</button></div>
+  <div id="sbox" style="display:none"><div class="srbox"><input class="inp srq" id="sq" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Find a run, lift or place" aria-label="Find a run, lift or place on this mountain" oninput="s3Type(this.value)" onkeydown="s3Key(event,this)"><button class="srx" id="sqx" onclick="s3X()" aria-label="Clear or close the search">&#10005;</button></div></div>
   <div class="zsub" id="dsub"></div>
   <div id="body"></div>
 </div>
@@ -208,6 +222,8 @@ var RUN_WIDTH_M=9, RUN_LIFT_M=4.5, LIFT_WIDTH_M=6, LIFT_LIFT_M=12, TOWER_EVERY_M
     SHADOW_RGBA=[0x20/255,0x24/255,0x2c/255,0.22], HI_PULSE_MS=1500,
     LIFT_FROM_ZOOM=15.5, LIFT_PER_ZOOM_M=22, LIFT_MAX_M=110, XRAY_BELOW_ZOOM=14.2, MIN_WIDTH_PX=2.2,
     HI_WIDEN=2.6, HI_RAISE_M=6, HI_DIM_OTHERS=0.55,
+    HI_PART_MIX=0.78, HI_PART_WIDEN=1.7,  // the OTHER parts of a picked run (Lower when Upper is picked): most of the way to the highlight yellow, steady (no pulse), and narrower than the pick
+    LINK_NEAR_M=150,                      // two parts of one run count as joined when their lines come within this many metres
     CORNER_RADIUS_M=30, CORNER_STEPS=6,   // ribbon corners are rounded over up to 30 m each side (Copper's lines are dense OSM traces; Delirium's are a few straight strokes)
     MAX_PIXEL_RATIO=2, TILE_CACHE=24,      // phone GPU memory (see the Map constructor)
     GHOST_ALPHA=0.30,          // a run hidden behind a ridge or under the coarse mesh is drawn through it at this strength — never lost (Tanner, Sep 4: "one of the runs just vanishes")
@@ -255,7 +271,7 @@ function b64d(x){var b=atob(x),a=new Uint8Array(b.length);for(var i=0;i<b.length
    maps/3d/<m>.bundle = [u32 header length][JSON header][AES-GCM ciphertext of all parts].
    Downloaded with progress, unlocked in memory, never written anywhere. */
 var Q=new URLSearchParams(location.search), M=(Q.get('m')||'revelstoke').replace(/[^a-z0-9-]/g,'');
-var PARTS=null, MAN=null, GEOM=null, NAMES=null, map=null, ribbons=null, SEL=null, ZONE=null, TREES=null, SHOW_TREES=true, EXAG=null, PROTOCOL=null, SVC={}, SVC_MARKERS=[], HOME=null;
+var PARTS=null, MAN=null, GEOM=null, NAMES=null, map=null, ribbons=null, SEL=null, SELSET=[], SELDIM=[], ZONE=null, TREES=null, SHOW_TREES=true, EXAG=null, PROTOCOL=null, SVC={}, SVC_MARKERS=[], HOME=null;
 /* &trees=0 opens with the cones off (the headless test uses it: software GL cannot push 80,000 cones a frame) */
 if(Q.get('trees')==='0') SHOW_TREES=false;
 if(Q.get('names')==='0') LABELS.on=false;
@@ -263,7 +279,7 @@ if(Q.get('names')==='0') LABELS.on=false;
    drawer maps with our sick 3d map"). The app's own zone chips and run list drive it through postMessage; this page is just the
    picture — no chips, no drawer, no back button; the compass and a small Names / Trees pill stay. Messages in:
    {t:'zone', id} · {t:'select', name, zone} · {t:'view'}; messages out: {t:'ready', names:[…]} · {t:'selected', name, ref} · {t:'nomatch', name}. */
-var EMBED=Q.get('embed')==='1'; if(EMBED)document.documentElement.classList.add('embed');
+var EMBED_ASKED=false; var EMBED=Q.get('embed')==='1'; if(EMBED)document.documentElement.classList.add('embed');
 var LAB=Q.get('lab')==='1';
 /* Relief. Huck locked 1.5× on Copper; after trying 1× / 1.25× / 1.5× on Revelstoke and Sunshine, Tanner locked
    1.5× for every mountain (Sep 4: "really happy with keeping the 1.5 relief permanent"). The manifest carries it
@@ -336,6 +352,7 @@ function start(){
   MAN=JSON.parse(new TextDecoder().decode(PARTS['manifest.json']));
   GEOM=JSON.parse(new TextDecoder().decode(PARTS['geometry.json']));
   NAMES=JSON.parse(new TextDecoder().decode(PARTS['names.json']));
+  buildGroups();
   var protocol=new pmtiles.Protocol(); PROTOCOL=protocol;
   maplibregl.addProtocol('pmtiles',function(req,abort){return protocol.tile(req,abort);});
   ['terrain','texture','furniture'].forEach(function(k){ protocol.add(new pmtiles.PMTiles(new MemSource(PARTS[k+'.pmtiles'],M+'-'+k))); });
@@ -358,6 +375,7 @@ function start(){
       /* glades and other skiable shapes: a light ink wash on the snow (the coloured outline is a 3D ribbon in the layer below) */
       {id:'areas-fill',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','level'],'area'],paint:{'fill-color':'#241E2C','fill-opacity':0}},
       {id:'areas-sel',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','zone_id'],'-'],paint:{'fill-color':'#FFC53D','fill-opacity':AREA_GLOW_ALPHA}},
+      {id:'areas-part',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','zone_id'],'-'],paint:{'fill-color':'#FFC53D','fill-opacity':AREA_GLOW_ALPHA*0.45}},   /* the other parts of a picked glade: a fainter tint */
       /* the flat lines are invisible tap targets; the 3D ribbons are what you see */
       {id:'runs-hit',type:'line',source:'furniture','source-layer':'runs',paint:{'line-color':'#000','line-width':18,'line-opacity':0}},
       {id:'lifts-hit',type:'line',source:'furniture','source-layer':'lifts',filter:['!=',['get','status'],'proposed'],paint:{'line-color':'#000','line-width':18,'line-opacity':0}}
@@ -398,11 +416,12 @@ function start(){
     if(EMBED){ embedBar(); embedListen(); }
     if(Q.get('run')) whenReady(function(){ select(Q.get('run'),true); });
     /* &q=<app run name> — the crew app links by the name it shows, not by our ref_id */
-    if(Q.get('q')){ var want=normName(Q.get('q')), hit=Object.keys(NAMES.runs).filter(function(k){var n=NAMES.runs[k];return normName(n.pr)===want||normName(n.osm)===want;})[0];
-      if(hit) whenReady(function(){ select(hit,true); }); else toast('No line drawn yet for '+Q.get('q')); }
+    if(Q.get('q')){ var qf=embedFind(Q.get('q'),Q.get('zone')||null);
+      if(qf) whenReady(function(){ select(qf.ref,true,qf.also); }); else toast('No line drawn yet for '+Q.get('q')); }
   });
   map.on('click',function(ev){
     if(typeof edClick==='function'&&edClick(ev))return;      /* edit mode takes the tap first */
+    if(S3ON)s3Close();                                        /* a tap on the map ends a search */
     var p=ev.point, box=[[p.x-10,p.y-10],[p.x+10,p.y+10]];
     var hits=map.queryRenderedFeatures(box,{layers:['runs-hit','lifts-hit']});
     if(hits.length){ select(hits[0].properties.ref_id,false); return; }
@@ -429,9 +448,11 @@ function start(){
   map.on('sourcedata',function(e){ if(e.sourceId==='terrain'&&e.isSourceLoaded)settleCentre(); });
   $('north').onclick=function(){ var home=viewFor(ZONE); if(Math.abs(map.getBearing())<0.5) map.easeTo({bearing:home.bearing,pitch:home.pitch,duration:600}); else map.easeTo({bearing:0,duration:600}); };
   setTheme('paper');   // one look only: Tanner, Sep 4 — "I don't think I need a night mode for my canadian hills"
-  $('grab').onclick=$('bar').onclick=function(){ $('drawer').classList.toggle('open'); };
+  $('grab').onclick=$('bar').onclick=function(){ if(S3ON){ s3Close(); return; } $('drawer').classList.toggle('open'); };
+  if(window.visualViewport){ window.visualViewport.addEventListener('resize',s3Fit); window.visualViewport.addEventListener('scroll',s3Fit); }
   var dy0=null; $('drawer').addEventListener('touchstart',function(e){dy0=e.touches[0].clientY;},{passive:true});
-  $('drawer').addEventListener('touchend',function(e){ if(dy0==null)return; var d=e.changedTouches[0].clientY-dy0; if(d>60)$('drawer').classList.remove('open'); if(d<-60)$('drawer').classList.add('open'); dy0=null; },{passive:true});
+  $('drawer').addEventListener('touchend',function(e){ if(dy0==null)return; if(S3ON){ dy0=null; return; }   /* searching: a drag scrolls the results, it does not move the drawer */
+    var d=e.changedTouches[0].clientY-dy0; if(d>60)$('drawer').classList.remove('open'); if(d<-60)$('drawer').classList.add('open'); dy0=null; },{passive:true});
 }
 
 /* ====================== RUN NAMES ====================== */
@@ -483,7 +504,13 @@ function setExag(x){   /* kept for the console / &lab work; the drawer no longer
 
 /* ====================== ZONES + DRAWER ====================== */
 function zoneName(id){ var z=NAMES.zones[id]; return z?z.name.replace(/\s*\((gated|mellow)\)\s*$/,''):id; }
-function runLabel(ref){ var n=NAMES.runs[ref]||{}; return n.label||n.pr||n.osm||'(unnamed run)'; }   /* label = a rename over an app-joined line; pr = the app's name; osm = the line's own */
+/* runLabel(ref) — the line's name exactly as the data has it: label = a rename over an app-joined line; pr = the app's
+   name; osm = the line's own. Edit mode writes this name into its edits, so it must stay untouched.
+   shownName(ref) — the name the crew reads: the same, with a trailing "(2)" taken off. The map data numbers the separate
+   stands of one glade ("Glades of Glory (2)"); to the crew it is one glade. */
+function runLabel(ref){ var n=NAMES.runs[ref]||{}; return n.label||n.pr||n.osm||'(unnamed run)'; }
+function plainName(x){ return String(x==null?'':x).replace(/\s*\(\d+\)\s*$/,''); }
+function shownName(ref){ return plainName(runLabel(ref)); }
 /* A glade's centreline (load_osm_areas.py / load_edits.py areas) is a tool: it gives the glade a list entry and a reach answer, but the
    crew sees the OUTLINE, never the line (Tanner, Sep 4: "I don't want those on the map, they're only a tool for you"). */
 function isCentreline(ref){ var n=NAMES.runs[ref]||{}; return /centreline/.test(n.src||''); }
@@ -497,7 +524,9 @@ function buildChips(){
 }
 function viewFor(zid){ return MAN.views.filter(function(v){return (zid?v.id===zid:v.level==='mountain');})[0]||MAN.views[0]; }
 function openZone(zid,fly){
-  ZONE=zid; SEL=null; if(ribbons)ribbons.setHighlight(null);
+  if(S3ON)s3Close();                                   /* so does a zone chip */
+  ZONE=zid; SEL=null; SELSET=[]; SELDIM=[]; if(ribbons)ribbons.setHighlight(null);
+  areaTint([],[]);
   var kids=$('chips').children; for(var i=0;i<kids.length;i++){ kids[i].className=(kids[i].dataset.id===(zid||''))?'on':''; if(kids[i].className==='on')kids[i].scrollIntoView({inline:'center',block:'nearest'}); }
   var v=viewFor(zid); if(fly&&v) map.flyTo({center:v.center,zoom:v.zoom,pitch:v.pitch,bearing:v.bearing,duration:1400,essential:true});
   renderDrawer();
@@ -505,8 +534,187 @@ function openZone(zid,fly){
 function runsInZone(zid){
   return MAN.runs.filter(function(r){ var n=NAMES.runs[r.ref_id]||{}; return zid?(n.zone===zid||(r.zones||[]).indexOf(zid)>=0):true; });
 }
+function editOn(){ return typeof EDIT!=='undefined'&&EDIT; }
+
+/* ====================== ONE BUTTON PER RUN (Oct 4 2026) ======================
+   WHAT  The list, the search and a tap on the map all work on a RUN, not on a drawn line. A run that is drawn as
+         several lines (Banff Ave.: two lines with a gap; Stoney Trail: two branches) is ONE button, and a pick lights
+         every one of its lines.
+   WHY   Tanner, Oct 4: "I'm also confused why things like banff ave are shown 4 times instead of 1 button that
+         selects 4 segments." The page listed one row per drawn line and could light one line only.
+   HOW   buildGroups() puts every line with the same displayed name (spelling marks and capitals ignored) into one
+         group = one button. Lines are kept top of the hill first. The dots show each colour the run has, top first.
+   PARTS Some runs are split into named parts: Upper / Middle / Lower (or "X - Upper"), or one app row that names
+         two or more lines ("Wiwaxy / Eagle Meadows", "Booster / Raven's Nest"). Each part keeps its own button. When
+         the parts are JOINED on the snow (their lines come within LINK_NEAR_M), a pick lights the picked part bright
+         and the other parts dim, and the drawer lists the parts so you can jump between them. Parts that are not
+         joined (Louise's Upper and Lower Meadowlark are 1.2 km apart) stay apart.
+   EDIT MODE (&edit=1)  A tap picks ONE line, because the fix tools (rename, cut, move) work on one line. The other
+         lines of the same button light dim, and the drawer lists the pieces. */
+var GRP_LIST=[], GRP_OF=Object.create(null), GRP_BY_KEY=Object.create(null);   /* create(null): a run called "Constructor" must not find a built-in */
+var PART_RE=/^(upper|lower|middle|mid)\s+(.+)$|^(.+?)\s*[-\u2013]\s*(upper|lower|middle|mid)$/i;
+function baseName(x){ x=String(x==null?'':x).replace(/^\s+|\s+$/g,''); var m=PART_RE.exec(x); return srNorm(m?(m[2]||m[3]):x); }   /* "Upper Grizzly Paw" → "grizzly paw" */
+function refZ(ref){ var g=GEOM.runs[ref], lo=1e9, hi=-1e9; if(!g||!g.length)return [0,0]; for(var i=0;i<g.length;i++){ var z=g[i][2]||0; if(z<lo)lo=z; if(z>hi)hi=z; } return [lo,hi]; }
+function refLenM(ref){ var g=GEOM.runs[ref]||[], L=0; for(var i=1;i<g.length;i++){ var lat=(g[i][1]+g[i-1][1])/2*Math.PI/180; L+=Math.hypot((g[i][0]-g[i-1][0])*111320*Math.cos(lat),(g[i][1]-g[i-1][1])*110540); } return L; }
+function uniqPush(arr,v){ if(v&&arr.indexOf(v)<0)arr.push(v); }
+function buildGroups(){
+  GRP_LIST=[]; GRP_OF=Object.create(null); GRP_BY_KEY=Object.create(null); GRP_DIST={}; S3IDX=null;
+  MAN.runs.forEach(function(r){ var ref=r.ref_id, name=shownName(ref), key=srNorm(name); if(!key||name==='(unnamed run)')key='~'+ref;   /* a line with no name stays on its own */
+    var g=GRP_BY_KEY[key]; if(!g){ g=GRP_BY_KEY[key]={key:key,name:name,refs:[],runs:{},i:GRP_LIST.length}; GRP_LIST.push(g); }
+    g.refs.push(ref); g.runs[ref]=r; GRP_OF[ref]=g; });
+  GRP_LIST.forEach(function(g){
+    g.refs.sort(function(a,b){ return refZ(b)[1]-refZ(a)[1]||(a<b?-1:1); });          /* top of the hill first */
+    g.diffs=[]; g.zones=[]; g.homes=[]; g.pr=[]; g.osm=[]; g.fam=Object.create(null); if(g.key.charAt(0)!=='~')g.fam[baseName(g.name)]=1;   /* fam = the names this button can share with its other parts; a line with no name has none */
+    g.refs.forEach(function(ref){ var r=g.runs[ref], n=NAMES.runs[ref]||{}, d=r.difficulty||'unknown';
+      if(d!=='unknown'&&g.diffs[g.diffs.length-1]!==d)g.diffs.push(d);                 /* a colour is listed again only where it changes */
+      uniqPush(g.homes,n.zone); uniqPush(g.zones,n.zone); (r.zones||[]).forEach(function(z){ uniqPush(g.zones,z); });
+      uniqPush(g.pr,n.pr); uniqPush(g.osm,n.osm); if(n.pr)g.fam[baseName(n.pr)]=1; });
+    if(!g.diffs.length)g.diffs=['unknown']; });
+}
+function groupsInZone(zid){ return GRP_LIST.filter(function(g){ return !zid||g.zones.indexOf(zid)>=0; }); }
+/* the lines that stand for one run entry when distances are measured: its own line, plus the outline when it is a glade */
+function refLines(ref){ var out=[]; if(GEOM.runs[ref])out.push(GEOM.runs[ref]);
+  var a=isCentreline(ref)&&areaOfRun(ref), raw=a&&GEOM.areas&&GEOM.areas[a]; if(raw&&raw.length){ (typeof raw[0][0]!=='number'?raw:[raw]).forEach(function(ring){ out.push(ring); }); } return out; }
+/* the least distance in metres between two lines (lists of [lon, lat, …]); stops looking once under 1 m */
+function lineDistM(A,B){
+  var lat0=A[0][1]*Math.PI/180, kx=111320*Math.cos(lat0), ky=110540, best=1e9;
+  function seg(px,py,ax,ay,bx,by){ var dx=bx-ax, dy=by-ay, L=dx*dx+dy*dy, t=L?((px-ax)*dx+(py-ay)*dy)/L:0; t=t<0?0:t>1?1:t; return Math.hypot(px-(ax+t*dx),py-(ay+t*dy)); }
+  function pass(P,Qs){ for(var i=0;i<P.length&&best>1;i++){ var px=P[i][0]*kx, py=P[i][1]*ky; if(Qs.length===1){ best=Math.min(best,Math.hypot(px-Qs[0][0]*kx,py-Qs[0][1]*ky)); continue; }
+      for(var j=1;j<Qs.length;j++){ var d=seg(px,py,Qs[j-1][0]*kx,Qs[j-1][1]*ky,Qs[j][0]*kx,Qs[j][1]*ky); if(d<best)best=d; } } }
+  function crosses(){ for(var i=1;i<A.length;i++){ var ax=A[i-1][0]*kx, ay=A[i-1][1]*ky, bx=A[i][0]*kx, by=A[i][1]*ky;
+      for(var j=1;j<B.length;j++){ var cx=B[j-1][0]*kx, cy=B[j-1][1]*ky, dx=B[j][0]*kx, dy=B[j][1]*ky, den=(bx-ax)*(dy-cy)-(by-ay)*(dx-cx); if(Math.abs(den)<1e-9)continue;
+        var t=((cx-ax)*(dy-cy)-(cy-ay)*(dx-cx))/den, u=((cx-ax)*(by-ay)-(cy-ay)*(bx-ax))/den; if(t>=0&&t<=1&&u>=0&&u<=1)return true; } } return false; }
+  pass(A,B); pass(B,A); if(best>1&&best<1e9&&A.length>1&&B.length>1&&crosses())best=0; return best; }
+var GRP_DIST={};
+function grpDistM(a,b){ var k=a.i<b.i?a.i+'|'+b.i:b.i+'|'+a.i; if(GRP_DIST[k]!=null)return GRP_DIST[k]; var best=1e9;
+  a.refs.forEach(function(ra){ refLines(ra).forEach(function(la){ b.refs.forEach(function(rb){ refLines(rb).forEach(function(lb){ if(best>1&&la.length&&lb.length){ var d=lineDistM(la,lb); if(d<best)best=d; } }); }); }); });
+  return GRP_DIST[k]=best; }
+/* grpLinked(g) — the OTHER buttons that are parts of the same run as g and joined to it on the snow, top first */
+function grpLinked(g){
+  if(g.linked)return g.linked;
+  /* walk outward: from each part found, look at the buttons that share a name with THAT part (Upper Wiwaxy shares a name
+     with Wiwaxy; Wiwaxy shares an app row with Eagle Meadows), and keep the ones joined to it. Every part of one set
+     gets the same answer, whichever is picked. */
+  var comp=[g], todo=[g];
+  while(todo.length){ var a=todo.pop(); GRP_LIST.forEach(function(o){ if(comp.indexOf(o)>=0)return; var shares=false; for(var k in o.fam){ if(a.fam[k]){ shares=true; break; } }
+      if(shares&&grpDistM(a,o)<=LINK_NEAR_M){ comp.push(o); todo.push(o); } }); }
+  comp.forEach(function(x){ x.linked=comp.filter(function(o){ return o!==x; }).sort(function(p,q){ return refZ(q.refs[0])[1]-refZ(p.refs[0])[1]; }); });
+  return g.linked; }
+var DIFF_WORD={green:'green',blue:'blue',black:'black',double:'double black',unknown:'unrated'};
+function diffWords(diffs){ return diffs.map(function(d){ return DIFF_WORD[d]||'run'; }).join(', then '); }      /* "blue, then green" = top to bottom */
+function dotsHtml(diffs){ return '<span class="zds">'+diffs.map(function(d){ return '<span class="zd c-'+esc(d)+'"></span>'; }).join('')+'</span>'; }
+/* a tap on a run's button: pick the run. The line taken as "the pick" is one in the open zone when there is one. */
+function pickG(i){ var g=GRP_LIST[i]; if(!g)return; var ref=g.refs.filter(function(x){ return ZONE&&(NAMES.runs[x]||{}).zone===ZONE; })[0]||g.refs[0]; select(ref,true); }
+
+/* ====================== SEARCH (Oct 4 2026) ======================
+   WHAT  The "Find" button in the drawer opens a box. Type a name: the runs, lifts, zones and places (bars, lodges,
+         parking) of THIS mountain that match are listed, best first. Tap one: the map flies to it and lights it.
+   WHY   Tanner, Oct 4: "I wanted the search in the 3d view, too." The crew app's mountain search got it on Oct 2.
+   SAME RULES AS THE APP  srNorm, srKey, srDist, srAllow and srScore below are copied letter for letter from
+         crew-app/index.html (its SEARCH section), so the two searches agree on what matches: accents, apostrophes
+         and "&" never matter, and each typed word may be wrong by 1 letter (3–4 letters long), 2 (5–7) or 3 (8+).
+         If you change them in one file, change them in the other (the 3D page test compares the two).
+   NO NETWORK  Everything searched is already inside the open bundle. */
+function srNorm(s){ s=String(s==null?'':s).toLowerCase();
+  try{ s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }catch(e){}                 /* accents off: n-tilde reads as n */
+  return s.replace(/[\u2018\u2019'`\u201c\u201d"]/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').replace(/^ +| +$/g,''); }
+function srKey(s){ var n=srNorm(s); return {n:n,w:n?n.split(' '):[],s:n.replace(/ /g,'')}; }
+/* srDist(a,b,max) — how many single-letter fixes turn a into b (wrong / missing / extra letter, or two neighbours
+   swapped). Stops counting once past max and returns max+1. */
+function srDist(a,b,max){
+  var la=a.length, lb=b.length; if(Math.abs(la-lb)>max)return max+1; if(a===b)return 0;
+  var pp=null, p=[], c, i, j; for(j=0;j<=lb;j++)p[j]=j;
+  for(i=1;i<=la;i++){ c=[i]; var best=i;
+    for(j=1;j<=lb;j++){ var cost=(a.charCodeAt(i-1)===b.charCodeAt(j-1))?0:1;
+      var v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+cost);
+      if(i>1&&j>1&&a.charCodeAt(i-1)===b.charCodeAt(j-2)&&a.charCodeAt(i-2)===b.charCodeAt(j-1))v=Math.min(v,pp[j-2]+1);
+      c[j]=v; if(v<best)best=v; }
+    if(best>max)return max+1; pp=p; p=c; }
+  return p[lb]; }
+function srAllow(len){ return len<=2?0:len<=4?1:len<=7?2:3; }
+/* srScore(q,c) — how well the typed text q matches one name c (both from srKey). 0 = not a match. */
+function srScore(q,c){
+  if(!q.n||!c.n)return 0;
+  if(c.n===q.n)return 100;
+  if(c.n.indexOf(q.n)===0)return 92;
+  var i, j, all=true;
+  for(i=0;i<q.w.length&&all;i++){ var hit=false; for(j=0;j<c.w.length;j++)if(c.w[j].indexOf(q.w[i])===0){ hit=true; break; } if(!hit)all=false; }
+  if(all)return 84;
+  if(q.s.length>=2&&c.s.indexOf(q.s)===0)return 80;      /* "jr" → "J.R. Trees", "feuzb" → "Feuz Bowl" */
+  if(q.n.length>=2&&c.n.indexOf(q.n)>=0)return 74;
+  if(q.s.length>=3&&c.s.indexOf(q.s)>=0)return 70;
+  /* near misses, word by word: each typed word must be close to a whole word of the name, or (4+ letters typed) to
+     the start of one — so a half-typed, misspelled word still finds its run */
+  var edits=0, ok=true;
+  for(i=0;i<q.w.length&&ok;i++){ var qt=q.w[i], al=srAllow(qt.length), best=al+1;
+    for(j=0;j<c.w.length&&best>0;j++){ var ct=c.w[j], d=srDist(qt,ct,al); if(d<best)best=d;
+      if(qt.length>=4&&ct.length>qt.length){ var pm=Math.min(al,1); d=srDist(qt,ct.slice(0,qt.length),pm); if(d<=pm&&d<best)best=d; } }
+    if(best>al)ok=false; else edits+=best; }
+  var sc=ok?(62-7*edits):0;
+  /* …and the whole thing with the spaces out: "feuzbowl", "kill thebanker" */
+  if(q.s.length>=5){ var al2=srAllow(q.s.length), d2=srDist(q.s,c.s,al2); if(d2<=al2)sc=Math.max(sc,58-6*d2);
+    if(c.s.length>q.s.length){ d2=srDist(q.s,c.s.slice(0,q.s.length),Math.min(al2,2)); if(d2<=Math.min(al2,2))sc=Math.max(sc,54-6*d2); } }
+  if(sc>0&&q.s.charAt(0)!==c.s.charAt(0))sc-=5;   /* people usually get the first letter right */
+  return sc>0?sc:0; }
+/* ---- what follows is this page's own: what can be found here, how a result looks, what a tap does ---- */
+var S3IDX=null, S3Q='', S3ON=false, SR_MAX=12;
+/* s3Index() — every findable thing on this mountain: {t:'run'|'place'|'lift'|'zone', name, alt:[other names], …}.
+   A run is a BUTTON (see above), so a run drawn in pieces is found once. alt = the app's name and the map's own name
+   when they differ from the name shown ("also called"). */
+function s3Index(){
+  if(S3IDX)return S3IDX; var out=[];
+  function add(it){ var k0=srKey(it.name); if(!k0.n)return; var seen={}; seen[k0.n]=1; it.c=[{k:k0,aka:''}];
+    if(k0.w.length>1&&k0.w[0]==='the')it.c.push({k:srKey(k0.w.slice(1).join(' ')),aka:''});      /* "stoke" finds "The Stoke" as a start-of-name match */
+    (it.alt||[]).forEach(function(a){ var ka=srKey(plainName(a)); if(!ka.n||seen[ka.n])return; seen[ka.n]=1;
+      it.c.push({k:ka,aka:(' '+k0.n+' ').indexOf(' '+ka.n+' ')>=0?'':plainName(a)}); });      /* still matched by it; "also called" only when it is a different name */
+    it.i=out.length; out.push(it); }
+  GRP_LIST.forEach(function(g){ if(g.key.charAt(0)==='~')return; add({t:'run',name:g.name,alt:g.pr.concat(g.osm),g:g}); });
+  (MAN.services||[]).forEach(function(sv){ add({t:'place',name:sv.name,alt:[sv.name.replace(/\s*\(.*\)\s*$/,'')],id:sv.id,sub:SVC_WORD[sv.subtype]||sv.subtype,col:SVC_COL[sv.subtype]||'#736A7B'}); });
+  MAN.lifts.forEach(function(l){ var n=NAMES.lifts[l.ref_id]||{}; add({t:'lift',name:l.name||n.name||'Lift',alt:[n.pr,n.name],ref:l.ref_id,sub:(n.type||l.liftType||'lift').replace('_',' ')}); });
+  MAN.views.forEach(function(v){ if(v.level!=='mountain')add({t:'zone',name:zoneName(v.id),alt:[(NAMES.zones[v.id]||{}).name],id:v.id}); });
+  return S3IDX=out; }
+/* s3Find(q) — the ranked results (the app's srFind without the trail-number part: this page holds no numbers) */
+function s3Find(q){
+  var K=srKey(q), out=[]; if(!K.n)return out;
+  s3Index().forEach(function(it){ var best=0, via='';
+    it.c.forEach(function(c){ var sc=srScore(K,c.k); if(K.n.length<2&&sc<84)sc=0; if(c.aka)sc-=1; if(sc>best){ best=sc; via=c.aka; } });
+    if(best>0)out.push({it:it,s:best,via:via}); });
+  var TO={run:0,place:1,lift:2,zone:3};
+  out.sort(function(a,b){ return (b.s-a.s)||(TO[a.it.t]-TO[b.it.t])||(a.it.name<b.it.name?-1:a.it.name>b.it.name?1:0); });
+  var strong=out.filter(function(x){ return x.s>=70; });
+  if(strong.length)out=strong;                         /* a proper match exists: leave the near misses off */
+  return out; }
+function s3Row(x){
+  var it=x.it, tap=' onclick="s3Go('+it.i+')"', aka=x.via?('<div class="zsb">also called '+esc(x.via)+'</div>'):'';
+  if(it.t==='run'){ var sub=it.g.homes.slice(0,2).map(zoneName); sub.push(diffWords(it.g.diffs));
+    return '<div class="zrr"'+tap+'>'+dotsHtml(it.g.diffs)+'<span class="znm">'+esc(it.name)+'<div class="zsb">'+esc(sub.join(' · '))+'</div>'+aka+'</span></div>'; }
+  if(it.t==='lift') return '<div class="zrr k-lift"'+tap+'><span class="zd"></span><span class="znm">'+esc(it.name)+'<div class="zsb">'+esc(it.sub)+'</div>'+aka+'</span></div>';
+  if(it.t==='place') return '<div class="zrr"'+tap+'><span class="zd" style="background:'+it.col+'"></span><span class="znm">'+esc(it.name)+'<div class="zsb">'+esc(it.sub)+'</div></span></div>';
+  return '<div class="zrr"'+tap+'><span class="znm">'+esc(it.name)+aka+'</span><span class="pill zone">zone</span></div>'; }
+function s3Html(q){
+  var res=s3Find(q), h='';
+  if(!res.length)return '<div class="zempty">No match on this mountain. Try fewer letters.</div>';
+  res.slice(0,SR_MAX).forEach(function(x){ h+=s3Row(x); });
+  if(res.length>SR_MAX)h+='<div class="zempty">'+(res.length-SR_MAX)+' more. Keep typing to narrow it down.</div>';
+  return h; }
+/* s3Go(i) — a tap on result i: the search closes, the map flies to the thing and lights it */
+function s3Go(i){ var it=s3Index()[i]; if(!it)return; s3Close();
+  if(it.t==='run')pickG(it.g.i); else if(it.t==='lift')select(it.ref,true); else if(it.t==='place')select(it.id,true); else openZone(it.id,true); }
+function s3Open(){ S3ON=true; S3Q=''; var d=$('drawer'), q=$('sq'); d.classList.add('searching'); d.classList.add('open'); $('sbox').style.display=''; q.value=''; s3Fit(); renderDrawer(); q.focus(); }
+function s3Close(){ if(!S3ON)return; S3ON=false; S3Q=''; var d=$('drawer'); d.classList.remove('searching'); d.classList.remove('open'); $('sbox').style.display='none'; $('sq').blur(); s3Fit(); renderDrawer(); }
+function s3Type(v){ S3Q=v||''; renderDrawer(); $('body').scrollTop=0; }
+function s3X(){ var q=$('sq'); if(q.value){ q.value=''; s3Type(''); q.focus(); } else s3Close(); }      /* the X: first empties the box, then closes the search */
+function s3Key(e,el){ if(!e)return; if(e.key==='Enter')el.blur(); else if(e.key==='Escape')s3Close(); }   /* Enter: put the keyboard away so the results are in view */
+/* s3Fit() — while searching, keep the drawer inside the part of the screen the keyboard has left visible (a phone
+   keyboard covers the bottom of the page; the results must sit above it) */
+function s3Fit(){ var d=$('drawer'), vv=window.visualViewport;
+  if(S3ON&&vv){ d.style.bottom=Math.max(0,window.innerHeight-vv.height-vv.offsetTop)+'px'; d.style.maxHeight=Math.max(160,vv.height-56)+'px'; }
+  else { d.style.bottom=''; d.style.maxHeight=''; } }
 function renderDrawer(){
   var body=$('body'), h='';
+  if(S3ON){   /* searching: the results replace everything under the box, for the whole mountain */
+    $('dtitle').textContent=MAN.name; $('dkind').style.display='none'; $('dsub').textContent='';
+    body.innerHTML=srNorm(S3Q)?s3Html(S3Q):'<div class="zempty">Type a name: a run, a lift, a zone or a place. The spelling does not have to be right.</div>'; return; }
   if(SEL&&isService(SEL)){
     var sv=SVC[SEL]; $('dtitle').textContent=sv.name; $('dkind').style.display=''; $('dkind').className='pill'; $('dkind').textContent=SVC_WORD[sv.subtype]||sv.subtype;
     $('dsub').textContent=[sv.skiIn?'ski-in':'not ski-in — '+(sv.subtype==='transit_stop'?'in town':'walk or drive'),sv.hours,sv.note].filter(Boolean).join(' · ');
@@ -518,13 +726,23 @@ function renderDrawer(){
   }
   if(SEL){
     var isLift=!!NAMES.lifts[SEL], n=isLift?NAMES.lifts[SEL]:(NAMES.runs[SEL]||{}), r=MAN.runs.filter(function(x){return x.ref_id===SEL;})[0];
-    $('dtitle').textContent=isLift?(n.name||'Lift'):runLabel(SEL);
+    var sg=isLift?null:(GRP_OF[SEL]||null), ed=editOn(), whole=sg&&!ed;      /* whole = the pick is the whole run (every piece), not one line */
+    $('dtitle').textContent=isLift?(n.name||'Lift'):(sg?sg.name:shownName(SEL));
     $('dkind').style.display=''; $('dkind').className='pill '+(isLift?'lift':'');
-    $('dkind').textContent=isLift?(n.type||'lift').replace('_',' '):(r?({green:'green',blue:'blue',black:'black',double:'double black',unknown:'unrated'}[r.difficulty]||'run'):'run');
-    var bits=[]; if(!isLift){ if(n.zone)bits.push(zoneName(n.zone)); if(n.label&&n.pr)bits.push('in the app: '+n.pr); else if(n.osm&&n.pr&&n.osm!==n.pr)bits.push('map name: '+n.osm); if(isCentreline(SEL)){ var ak=((NAMES.zones||{})[areaOfRun(SEL)]||{}).kind; bits.push((ak||'glade')+(/osm-polygon/.test(n.src)?' · outline from OpenStreetMap':' · outline drawn in edit mode')); } else if(n.src&&n.src!=='osm')bits.push('line: '+n.src+(n.fidelity?' · '+n.fidelity.toLowerCase():'')); if(n.grooming)bits.push(n.grooming); }
+    $('dkind').textContent=isLift?(n.type||'lift').replace('_',' '):(whole?diffWords(sg.diffs):(r?(DIFF_WORD[r.difficulty]||'run'):'run'));
+    var bits=[]; if(!isLift){ if(whole&&sg.homes.length)bits.push(sg.homes.map(zoneName).join(', ')); else if(n.zone)bits.push(zoneName(n.zone)); if(n.label&&n.pr)bits.push('in the app: '+n.pr); else if(n.osm&&n.pr&&n.osm!==n.pr)bits.push('map name: '+n.osm); if(isCentreline(SEL)){ var ak=((NAMES.zones||{})[areaOfRun(SEL)]||{}).kind; bits.push((ak||'glade')+(/osm-polygon/.test(n.src)?' · outline from OpenStreetMap':' · outline drawn in edit mode')); } else if(n.src&&n.src!=='osm')bits.push('line: '+n.src+(n.fidelity?' · '+n.fidelity.toLowerCase():'')); if(n.grooming)bits.push(n.grooming); }
     $('dsub').textContent=bits.join(' · ');
     h+='<div class="tog"><button class="btn" onclick="zoomSel()">Zoom to it</button><button class="btn" onclick="select(null)">Clear</button></div>';
     if(typeof edFixHtml==='function') h+=edFixHtml(SEL);
+    if(sg&&ed&&sg.refs.length>1){   /* edit mode: this button is drawn as several lines — list them, the picked one marked */
+      h+='<div class="zlab">Pieces of this run<span class="zct">'+sg.refs.length+'</span></div>';
+      sg.refs.forEach(function(x,k){ var rr=sg.runs[x], nn=NAMES.runs[x]||{};
+        h+='<div class="zrr'+(x===SEL?' on':'')+'" onclick="select(\''+x+'\',true)">'+dotsHtml([rr.difficulty||'unknown'])+'<span class="znm">Piece '+(k+1)+' of '+sg.refs.length+'<div class="zsb">'+esc([Math.round(refLenM(x)).toLocaleString()+' m',DIFF_WORD[rr.difficulty]||'unrated',nn.osm&&nn.osm!==sg.name?'map name: '+nn.osm:'',x].filter(Boolean).join(' · '))+'</div></span></div>'; }); }
+    if(whole){ var parts=grpLinked(sg); if(parts.length){   /* the named parts of one run (Upper / Lower …): this one bright on the map, the others dim */
+      var all=[sg].concat(parts).sort(function(a,b){ return refZ(b.refs[0])[1]-refZ(a.refs[0])[1]; });
+      /* two kinds of "parts": Upper / Lower of one name, or the runs the app lists on ONE row ("Booster / Raven's Nest") */
+      var sameRow=parts.filter(function(o){ return o.pr.some(function(p){ return sg.pr.indexOf(p)>=0; }); }).length;      /* how many of the others are on this run's own app row */
+      h+='<div class="zlab">'+(sameRow===0?'Parts of this run, top first':sameRow===parts.length?'Listed together in the app, top first':'Parts and runs listed with it, top first')+'<span class="zct">'+all.length+'</span></div>'; all.forEach(function(o){ h+=rowG(o); }); } }
     if(isLift) h+=homeLine(SEL);
     var rc=reachFor(SEL); if(rc) h+=reachHtml(rc);
     if(isLift){ body.innerHTML=h; return; }                 /* a lift's drawer is its reach list; the zone list is for runs */
@@ -534,16 +752,18 @@ function renderDrawer(){
     h+='<div class="tog"><label><input type="checkbox" '+(LABELS.on?'checked':'')+' onchange="setNames(this.checked)"> Names</label>'+(TREES?'<label><input type="checkbox" '+(SHOW_TREES?'checked':'')+' onchange="setTrees(this.checked)"> Trees <span class="zsb" style="margin:0">'+TREES.count.toLocaleString()+(TREES.total>TREES.count?' of '+TREES.total.toLocaleString():'')+'</span></label>':'')
       +'</div>';
   }
-  var runs=runsInZone(ZONE).slice().sort(function(a,b){return runLabel(a.ref_id).localeCompare(runLabel(b.ref_id));});
-  var named=runs.filter(function(r){return (NAMES.runs[r.ref_id]||{}).pr;}), other=runs.filter(function(r){return !(NAMES.runs[r.ref_id]||{}).pr;});
-  if(named.length){ h+='<div class="zlab">Runs the app knows<span class="zct">'+named.length+'</span></div>'; named.forEach(function(r){h+=row(r);}); }
-  if(other.length){ h+='<div class="zlab">Also on the map<span class="zct">'+other.length+'</span></div>'; other.forEach(function(r){h+=row(r);}); }
+  var runs=groupsInZone(ZONE).slice().sort(function(a,b){return a.name.localeCompare(b.name);});      /* one button per run, not one per drawn line */
+  var named=runs.filter(function(g){return g.pr.length;}), other=runs.filter(function(g){return !g.pr.length;});
+  if(named.length){ h+='<div class="zlab">Runs the app knows<span class="zct">'+named.length+'</span></div>'; named.forEach(function(g){h+=rowG(g);}); }
+  if(other.length){ h+='<div class="zlab">Also on the map<span class="zct">'+other.length+'</span></div>'; other.forEach(function(g){h+=rowG(g);}); }
   var lifts=MAN.lifts.filter(function(l){return !ZONE||l.zone===ZONE||true;});
   if(!ZONE&&lifts.length){ h+='<div class="zlab">Lifts<span class="zct">'+lifts.length+'</span></div>'; lifts.forEach(function(l){ h+='<div class="zrr k-lift'+(SEL===l.ref_id?' on':'')+'" onclick="select(\''+l.ref_id+'\',true)"><span class="zd"></span><span class="znm">'+esc(l.name)+'<div class="zsb">'+esc((l.liftType||'').replace('_',' '))+'</div></span></div>'; }); }
   body.innerHTML=h;
 }
-function row(r){ var n=NAMES.runs[r.ref_id]||{}, sub=[]; if(n.pr&&n.osm&&n.pr!==n.osm)sub.push(n.osm); if(!ZONE&&n.zone)sub.push(zoneName(n.zone));
-  return '<div class="zrr lv-'+r.difficulty+(SEL===r.ref_id?' on':'')+'" onclick="select(\''+r.ref_id+'\',true)"><span class="zd"></span><span class="znm">'+esc(runLabel(r.ref_id))+(sub.length?'<div class="zsb">'+esc(sub.join(' · '))+'</div>':'')+'</span></div>'; }
+/* rowG(g) — one run's button: its colour dots (top first), its name, and under it the map's own name when that
+   differs and (on the whole-hill list) its zone */
+function rowG(g){ var sub=[], alt=g.pr.length?g.osm.map(plainName).filter(function(o,i,a){ return srNorm(o)!==g.key&&a.indexOf(o)===i; }):[]; if(alt.length)sub.push(alt.join(', ')); if(!ZONE&&g.homes.length)sub.push(g.homes.slice(0,2).map(zoneName).join(', '));
+  return '<div class="zrr'+(SEL&&GRP_OF[SEL]===g?' on':'')+'" onclick="pickG('+g.i+')">'+dotsHtml(g.diffs)+'<span class="znm">'+esc(g.name)+(sub.length?'<div class="zsb">'+esc(sub.join(' · '))+'</div>':'')+'</span></div>'; }
 /* ====================== SERVICES — bars, restaurants, lodging, parking, the bus (load_edits.py → manifest.services) ======================
    Each is a pill pinned to the ground. Tap one: its drawer lists the lifts that ski to it (the reach model treats a
    ski-in service as a tiny run). "Set as home" remembers your hotel on this phone; every lift's drawer then says
@@ -580,7 +800,8 @@ function reachRows(){ return (MAN.reach&&MAN.reach.rows)||[]; }
 function reachFor(ref){
   /* {byRef: {other ref_id: class}, groups: [{cls, items:[ref_ids]}], kind: 'lift'|'run'} for the selected line */
   if(!ref) return null;
-  var isLift=!!NAMES.lifts[ref], rows=reachRows().filter(function(x){return isLift?x.access===ref:x.run===ref;}), byRef={}, groups={};
+  var isLift=!!NAMES.lifts[ref], mine={}; ((!isLift&&ref===SEL&&SELSET.length)?SELSET:[ref]).forEach(function(x){ mine[x]=1; });   /* a picked run = all its pieces */
+  var rows=reachRows().filter(function(x){return isLift?x.access===ref:mine[x.run]===1;}), byRef={}, groups={};
   rows.forEach(function(x){ var other=isLift?x.run:x.access; if(byRef[other]==null||REACH_ORDER.indexOf(x.cls)<REACH_ORDER.indexOf(byRef[other])){ byRef[other]=x.cls; } });
   Object.keys(byRef).forEach(function(o){ (groups[byRef[o]]=groups[byRef[o]]||[]).push(o); });
   return {kind:isLift?'lift':'run', byRef:byRef, groups:REACH_ORDER.filter(function(c){return groups[c];}).map(function(c){ return {cls:c, items:groups[c].sort(function(a,b){return (isLift?runLabel(a):(NAMES.lifts[a]||{}).name||'').localeCompare(isLift?runLabel(b):(NAMES.lifts[b]||{}).name||'');})}; })};
@@ -590,7 +811,9 @@ function reachHtml(rc){
   var h='';
   if(rc.kind==='lift'){
     if(!rc.groups.length) return '<div class="zsb" style="margin:6px 0 10px">No named run from this lift.</div>';
-    rc.groups.forEach(function(g){ var runs=g.items.filter(function(r){return !isService(r);}); if(!runs.length)return; h+='<div class="zlab">'+REACH_WORDS[g.cls]+'<span class="zct">'+runs.length+'</span></div>'; runs.forEach(function(r){ var run=MAN.runs.filter(function(x){return x.ref_id===r;})[0]; if(run)h+=row(run); }); });
+    /* one row per RUN: a run drawn in pieces is listed once, under the best way any of its pieces is reached */
+    var seenG={}; rc.groups.forEach(function(g){ var btns=[]; g.items.forEach(function(r){ var G=!isService(r)&&GRP_OF[r]; if(G&&!seenG[G.i]){ seenG[G.i]=1; btns.push(G); } }); if(!btns.length)return;
+      btns.sort(function(a,b){ return a.name.localeCompare(b.name); }); h+='<div class="zlab">'+REACH_WORDS[g.cls]+'<span class="zct">'+btns.length+'</span></div>'; btns.forEach(function(G){ h+=rowG(G); }); });
     h+=svcRows(rc.groups);
   } else {
     if(!rc.groups.length) return '<div class="zlab">Lifts that get you here<span class="zct">0</span></div><div class="zsb" style="margin:0 0 10px">No lift reaches this line (a hike over '+115+' m of climb, or a line outside the area).</div>';
@@ -599,32 +822,54 @@ function reachHtml(rc){
   }
   return h;
 }
-function select(ref,fly){
-  var was=SEL; SEL=ref||null; var selArea=(SEL&&isCentreline(SEL)&&areaOfRun(SEL))||null;
-  if(ribbons){ ribbons.setHighlight(isService(SEL)?null:(selArea||SEL)); var rc=reachFor(SEL); ribbons.setReach(rc?rc.byRef:{}); }
-  if(map&&map.getLayer('areas-sel'))map.setFilter('areas-sel',['==',['get','zone_id'],selArea||'-']);
+/* areaTint(bright, dim) — tint the inside of these glades: the picked ones, and (fainter) the other parts */
+function areaTint(bright,dim){ if(!map)return; [['areas-sel',bright],['areas-part',dim]].forEach(function(x){ if(map.getLayer(x[0]))map.setFilter(x[0],x[1].length?['in',['get','zone_id'],['literal',x[1]]]:['==',['get','zone_id'],'-']); }); }
+/* hiRef(ref) — what the ribbon layer lights for a run entry: its line, or its outline when the entry is a glade */
+function hiRef(ref){ return (isCentreline(ref)&&areaOfRun(ref))||ref; }
+/* select(ref, fly, also) — pick a line, a lift or a place (null = clear the pick).
+   A run: every line of the same button lights bright (SELSET) and the joined parts of the same run light dim (SELDIM).
+   In edit mode only the tapped line lights bright; the other lines of its button light dim.
+   also (optional) = more lines to light bright: the crew app asks for a run by its app name, and one app row can be
+   drawn as lines with different names. */
+function select(ref,fly,also){
+  if(S3ON)s3Close();                                   /* a pick (a place pill, a ribbon, a list row) ends a search */
+  var was=SEL; SEL=ref||null; SELSET=[]; SELDIM=[]; var sg=SEL?GRP_OF[SEL]:null;
+  if(SEL&&!isService(SEL)){
+    if(!sg) SELSET=[SEL];                                                                    /* a lift */
+    else if(editOn()){ SELSET=[SEL]; SELDIM=sg.refs.filter(function(x){ return x!==SEL; }); }
+    else { SELSET=sg.refs.slice(); (also||[]).forEach(function(x){ if(SELSET.indexOf(x)<0)SELSET.push(x); });
+      grpLinked(sg).forEach(function(o){ o.refs.forEach(function(x){ if(SELSET.indexOf(x)<0)SELDIM.push(x); }); }); } }
+  var selAreas=SELSET.filter(isCentreline).map(areaOfRun).filter(Boolean), dimAreas=SELDIM.filter(isCentreline).map(areaOfRun).filter(Boolean);
+  if(ribbons){ ribbons.setHighlight(SELSET.map(hiRef),SELDIM.map(hiRef)); var rc=reachFor(SEL); ribbons.setReach(rc?rc.byRef:{}); }
+  areaTint(selAreas,dimAreas);
   if(SEL&&fly){ if(isService(SEL)) map.flyTo({center:SVC[SEL].at,zoom:16,pitch:55,duration:1200}); else zoomSel(); }
-  if(SEL){ var n=NAMES.runs[SEL]; if(n&&n.zone&&n.zone!==ZONE){ ZONE=n.zone; var kids=$('chips').children; for(var i=0;i<kids.length;i++){ kids[i].className=(kids[i].dataset.id===ZONE)?'on':''; if(kids[i].className==='on')kids[i].scrollIntoView({inline:'center',block:'nearest'}); } } }
+  if(SEL){ var n=NAMES.runs[SEL]; if(n&&n.zone&&n.zone!==ZONE&&!(sg&&ZONE&&sg.zones.indexOf(ZONE)>=0)){ ZONE=n.zone; var kids=$('chips').children; for(var i=0;i<kids.length;i++){ kids[i].className=(kids[i].dataset.id===ZONE)?'on':''; if(kids[i].className==='on')kids[i].scrollIntoView({inline:'center',block:'nearest'}); } } }
   renderDrawer(); if(SEL)$('drawer').classList.remove('open');
-  if(EMBED&&window.parent!==window&&SEL!==was)window.parent.postMessage({t:'selected',ref:SEL,name:SEL?(isService(SEL)?SVC[SEL].name:runLabel(SEL)):null,zone:SEL?((NAMES.runs[SEL]||{}).zone||null):null},location.origin);
+  /* tell the app what was tapped — but not when the app itself asked for this pick (EMBED_ASKED): it has marked its row already,
+     and an echo could move that mark to a different row. name = the name shown here; app = the app's own row name for the line. */
+  if(EMBED&&window.parent!==window&&SEL!==was&&!EMBED_ASKED)window.parent.postMessage({t:'selected',ref:SEL,name:SEL?(isService(SEL)?SVC[SEL].name:shownName(SEL)):null,app:SEL&&!isService(SEL)?((NAMES.runs[SEL]||{}).pr||null):null,zone:SEL?((NAMES.runs[SEL]||{}).zone||null):null},location.origin);
 }
 /* ---- embed mode: the crew app drives this page ---- */
 function embedBar(){ var a=$('eb-names'),b=$('eb-trees'); if(a)a.className=LABELS.on?'on':''; if(b){ b.className=SHOW_TREES?'on':''; b.style.display=TREES?'':'none'; } }
 function embedFind(name,zid){ var want=normName(name); if(!want)return null;
-  var hits=Object.keys(NAMES.runs).filter(function(k){ var n=NAMES.runs[k]; return normName(n.pr)===want||normName(n.osm)===want; });
+  var hits=Object.keys(NAMES.runs).filter(function(k){ return normName(NAMES.runs[k].pr)===want; });      /* the app's row name first… */
+  if(!hits.length)hits=Object.keys(NAMES.runs).filter(function(k){ return normName(NAMES.runs[k].osm)===want; });   /* …then a line's own map name (Revelstoke: a line called Ninja Traverse sits on the row Last Chance) */
   if(!hits.length){ /* the app's combo names: "A / B" or "A + B" — any part */
     var parts=name.split(/\s*[\/+]\s*/).map(normName).filter(Boolean);
     hits=Object.keys(NAMES.runs).filter(function(k){ var n=NAMES.runs[k]; return parts.indexOf(normName(n.pr))>=0||parts.indexOf(normName(n.osm))>=0; }); }
-  var same=hits.filter(function(k){ return (NAMES.runs[k]||{}).zone===zid; });
-  return (same[0]||hits[0])||null; }
+  if(!hits.length){ var kg=GRP_BY_KEY[srNorm(name)]; if(kg)hits=kg.refs.slice(); }      /* …or the name as this page shows it (a renamed line) */
+  if(!hits.length)return null;
+  var same=hits.filter(function(k){ return (NAMES.runs[k]||{}).zone===zid; }), ref=same[0]||hits[0], pr=(NAMES.runs[ref]||{}).pr;
+  /* also = the other lines that draw the same app row (they may carry their own names on this page), so the whole row lights */
+  return {ref:ref, also:hits.filter(function(k){ return k!==ref&&pr&&(NAMES.runs[k]||{}).pr===pr; })}; }
 function embedListen(){
   var names={}; Object.keys(NAMES.runs).forEach(function(k){ var n=NAMES.runs[k]; if(n.pr)names[normName(n.pr)]=1; if(n.osm)names[normName(n.osm)]=1; });
   function post(m){ if(window.parent!==window)window.parent.postMessage(m,location.origin); }
   window.addEventListener('message',function(ev){ if(ev.origin!==location.origin||!ev.data||!ev.data.t)return; var d=ev.data;
     if(d.t==='zone'){ if(d.id!==ZONE)openZone(d.id||null,true); }
-    else if(d.t==='select'){ var ref=embedFind(d.name,d.zone||ZONE); if(ref){ if(d.zone&&d.zone!==ZONE)ZONE=d.zone; select(ref,true); } else post({t:'nomatch',name:d.name}); }
+    else if(d.t==='select'){ var f=embedFind(d.name,d.zone||ZONE); if(f){ if(d.zone&&d.zone!==ZONE)ZONE=d.zone; EMBED_ASKED=true; try{ select(f.ref,true,f.also); }finally{ EMBED_ASKED=false; } } else post({t:'nomatch',name:d.name}); }
     else if(d.t==='view'){ var v=viewFor(ZONE); if(v)map.flyTo({center:v.center,zoom:v.zoom,pitch:v.pitch,bearing:v.bearing,duration:1200}); }
-    else if(d.t==='clear'){ select(null); } });
+    else if(d.t==='clear'){ EMBED_ASKED=true; try{ select(null); }finally{ EMBED_ASKED=false; } } });
   post({t:'ready',mountain:M,names:Object.keys(names)});
 }
 function bearingBetween(a,b){ var r=Math.PI/180, f1=a[1]*r,f2=b[1]*r,dl=(b[0]-a[0])*r; var y=Math.sin(dl)*Math.cos(f2), x=Math.cos(f1)*Math.sin(f2)-Math.sin(f1)*Math.cos(f2)*Math.cos(dl); return ((Math.atan2(y,x)*180/Math.PI)+360)%360; }
@@ -635,6 +880,12 @@ function zoomSel(){
      tilt), zoom from the run's real length, tilt fixed, bearing from bottom to top. */
   var t=MAN.runs.concat(MAN.lifts).filter(function(x){return x.ref_id===SEL;})[0]; if(!t||!t.bbox)return;
   var top=t.top||[t.bbox[2],t.bbox[3]], bot=t.bottom||[t.bbox[0],t.bbox[1]];
+  if(SELSET.length>1){   /* a run drawn in pieces: the view holds ALL of them — the highest top, the lowest bottom, one box round the lot */
+    var hiZ=-1e9, loZ=1e9, bb=[180,90,-180,-90];
+    SELSET.forEach(function(ref){ var x=MAN.runs.filter(function(q){return q.ref_id===ref;})[0]; if(!x||!x.bbox)return; var z=refZ(ref);
+      if(z[1]>hiZ){ hiZ=z[1]; top=x.top||[x.bbox[2],x.bbox[3]]; } if(z[0]<loZ){ loZ=z[0]; bot=x.bottom||[x.bbox[0],x.bbox[1]]; }
+      bb=[Math.min(bb[0],x.bbox[0]),Math.min(bb[1],x.bbox[1]),Math.max(bb[2],x.bbox[2]),Math.max(bb[3],x.bbox[3])]; });
+    t={bbox:bb}; }
   var bearing=(top[0]!==bot[0]||top[1]!==bot[1])?bearingBetween(bot,top):map.getBearing();
   var lat=(top[1]+bot[1])/2, dx=(top[0]-bot[0])*111320*Math.cos(lat*Math.PI/180), dy=(top[1]-bot[1])*110540;
   var bx=(t.bbox[2]-t.bbox[0])*111320*Math.cos(lat*Math.PI/180), by=(t.bbox[3]-t.bbox[1])*110540;
@@ -648,10 +899,16 @@ function zoomSel(){
 /* ====================== RIBBONS3D — Huck's custom WebGL layer, in plain JS ======================
    Every vertex sits at (ground height × exaggeration) + its float height, in the map's own
    mercator units relative to an origin near the mountain (float32 would jitter otherwise). */
+var LOOKUP_W=2048;   /* how many line ids the two lookups below can hold (the biggest hill has about 500 lines) */
 /* u_reach: a 1-row lookup, one texel per line id — how far THAT line fades while something is selected
    (0 = stays fully lit: a run the selected lift reaches, or a lift that reaches the selected run; 1 = the usual fade) */
-var VS='#version 300 es\nprecision highp float;\nuniform mat4 u_matrix;uniform float u_hi;uniform vec4 u_hicol;uniform float u_pulse;uniform float u_lift;uniform float u_widen;uniform float u_hiwiden;uniform float u_hiraise;uniform float u_dim;uniform float u_onlyhi;uniform float u_ghost;uniform sampler2D u_reach;\nin vec3 a_pos;in vec2 a_side;in vec4 a_col;in float a_id;out vec4 v_col;\nvoid main(){bool hi=a_id==u_hi;float w=u_widen*(hi?u_hiwiden:1.0);float z=a_pos.z+u_lift+(hi?u_hiraise:0.0);gl_Position=u_matrix*vec4(a_pos.xy+a_side*w,z,1.0);if(u_onlyhi>0.5&&!hi)gl_Position=vec4(2.0,2.0,2.0,1.0);vec4 c=a_col;if(hi)c=vec4(mix(a_col.rgb,u_hicol.rgb*a_col.a,u_pulse),a_col.a);else if(u_hi>=0.0&&a_id>=0.0){float f=texelFetch(u_reach,ivec2(int(a_id),0),0).r;c.rgb=mix(c.rgb,vec3(0.45),u_dim*f);}c.a*=u_ghost;v_col=c;}';
-var LOOKUP_W=2048, REACH_DIM={skiable:0,partial:0.2,traverse:0.4,hike:0.4};   // Huck Ribbons3D.ts: how far each reach class fades
+/* u_sel (Oct 4 2026): a second 1-row lookup, one texel per line id — is THAT line part of the pick?
+   1.0 = lit bright (every piece of the picked run), about 0.5 = lit dim (the other parts of the same run, e.g. the
+   Lower half when the Upper half is picked), 0 = not picked. Before this the shader could light one line only
+   (a_id==u_hi), which is why a run drawn in four pieces lit one piece. u_hi stays: it is the first lit line, and
+   "u_hi >= 0" still means "something is picked, fade the rest". */
+var VS='#version 300 es\nprecision highp float;\nuniform mat4 u_matrix;uniform float u_hi;uniform vec4 u_hicol;uniform float u_pulse;uniform float u_lift;uniform float u_widen;uniform float u_hiwiden;uniform float u_hiraise;uniform float u_dim;uniform float u_onlyhi;uniform float u_ghost;uniform float u_partmix;uniform float u_partwiden;uniform sampler2D u_reach;uniform sampler2D u_sel;\nin vec3 a_pos;in vec2 a_side;in vec4 a_col;in float a_id;out vec4 v_col;\nvoid main(){bool known=a_id>=0.0&&a_id<'+LOOKUP_W+'.0;float s=known?texelFetch(u_sel,ivec2(int(a_id),0),0).r:0.0;bool hi=(a_id==u_hi)||s>0.75;bool part=!hi&&s>0.25;float w=u_widen*(hi?u_hiwiden:(part?u_partwiden:1.0));float z=a_pos.z+u_lift+((hi||part)?u_hiraise:0.0);gl_Position=u_matrix*vec4(a_pos.xy+a_side*w,z,1.0);if(u_onlyhi>0.5&&!(hi||part))gl_Position=vec4(2.0,2.0,2.0,1.0);vec4 c=a_col;if(hi)c=vec4(mix(a_col.rgb,u_hicol.rgb*a_col.a,u_pulse),a_col.a);else if(part)c=vec4(mix(a_col.rgb,u_hicol.rgb*a_col.a,u_partmix),a_col.a);else if(u_hi>=0.0&&known){float f=texelFetch(u_reach,ivec2(int(a_id),0),0).r;c.rgb=mix(c.rgb,vec3(0.45),u_dim*f);}c.a*=u_ghost;v_col=c;}';
+var REACH_DIM={skiable:0,partial:0.2,traverse:0.4,hike:0.4};   // Huck Ribbons3D.ts: how far each reach class fades
 var FS='#version 300 es\nprecision mediump float;in vec4 v_col;out vec4 fragColor;void main(){fragColor=vec4(v_col.rgb*v_col.a,v_col.a);}';
 /* Huck's TREE_VS: one unit cone, drawn once per tree (instanced) with its own place, size and shade */
 /* Names: every letter is its own little flat tile laid ON the ribbon, following the line's curve, sized on the CPU each
@@ -668,6 +925,7 @@ function Ribbons3D(geom,colours,exag,centre,diffOf){
   this.ids={}; this.hi=-1; this.hiSince=0; this.batches=[]; this.built=false; this.origin=[0,0]; this.unitPerMetre=0;
   this.trees=null; this.showTrees=true; this.treeProg=null; this.treeVao=null; this.treeCount=0;
   this.reachTex=null; this.reachData=new Uint8Array(LOOKUP_W).fill(255);
+  this.selTex=null; this.selData=new Uint8Array(LOOKUP_W); this.hiIds={}; this.partIds={}; this.hiStamp=0;   /* the pick: bright ids, dim ids (see u_sel) */
   this.lines=[]; this.labelProg=null; this.labelVao=null; this.labelBuf=null; this.labelTex=null; this.labelVerts=0; this.labelsDirty=true; this.lastM=null;
 }
 /* with a lift (or run) selected: which OTHER lines stay lit and how much — {ref_id: class word} */
@@ -677,7 +935,15 @@ Ribbons3D.prototype.setReach=function(byRef){
   var gl=this.gl; if(gl&&this.reachTex){ gl.bindTexture(gl.TEXTURE_2D,this.reachTex); gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,LOOKUP_W,1,gl.RED,gl.UNSIGNED_BYTE,this.reachData); }
   if(this.map)this.map.triggerRepaint();
 };
-Ribbons3D.prototype.setHighlight=function(ref){ this.hi=ref?(this.ids[ref]==null?-1:this.ids[ref]):-1; this.hiSince=performance.now(); if(this.map)this.map.triggerRepaint(); };
+/* setHighlight(refs, dimRefs) — light these lines. refs: one ref_id, a list of them, or null (nothing picked): lit
+   bright, pulsing. dimRefs (optional list): lit dim and steady — the other parts of the same run. */
+Ribbons3D.prototype.setHighlight=function(refs,dimRefs){
+  var self=this; refs=refs?[].concat(refs):[]; dimRefs=dimRefs||[];
+  this.selData.fill(0); this.hiIds={}; this.partIds={}; this.hi=-1;
+  dimRefs.forEach(function(r){ var id=self.ids[r]; if(id!=null&&id<LOOKUP_W){ self.selData[id]=128; self.partIds[id]=1; } });
+  refs.forEach(function(r){ var id=self.ids[r]; if(id==null)return; if(self.hi<0)self.hi=id; self.hiIds[id]=1; delete self.partIds[id]; if(id<LOOKUP_W)self.selData[id]=255; });
+  var gl=this.gl; if(gl&&this.selTex){ gl.bindTexture(gl.TEXTURE_2D,this.selTex); gl.pixelStorei(gl.UNPACK_ALIGNMENT,1); gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,LOOKUP_W,1,gl.RED,gl.UNSIGNED_BYTE,this.selData); }
+  this.hiSince=performance.now(); this.hiStamp++; if(this.map)this.map.triggerRepaint(); };
 Ribbons3D.prototype.onAdd=function(map,gl){
   this.map=map; this.gl=gl;
   function mk(t,src){var s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
@@ -689,6 +955,10 @@ Ribbons3D.prototype.onAdd=function(map,gl){
   this.treeProg=tp;
   this.reachTex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,this.reachTex); gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,LOOKUP_W,1,0,gl.RED,gl.UNSIGNED_BYTE,this.reachData);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  this.selTex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,this.selTex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,LOOKUP_W,1,0,gl.RED,gl.UNSIGNED_BYTE,this.selData);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
   var lp=gl.createProgram(); gl.attachShader(lp,mk(gl.VERTEX_SHADER,LABEL_VS)); gl.attachShader(lp,mk(gl.FRAGMENT_SHADER,LABEL_FS)); gl.linkProgram(lp);
@@ -717,12 +987,12 @@ Ribbons3D.prototype.buildTrees=function(gl){
   gl.enableVertexAttribArray(aH); gl.vertexAttribPointer(aH,1,gl.FLOAT,false,24,20); gl.vertexAttribDivisor(aH,1);
   gl.bindVertexArray(null); this.treeVao=vao; this.treeCount=t.count;
 };
-Ribbons3D.prototype.onRemove=function(map,gl){ this.batches.forEach(function(b){gl.deleteVertexArray(b.vao);}); this.batches=[]; this.built=false; if(this.prog)gl.deleteProgram(this.prog); if(this.treeProg)gl.deleteProgram(this.treeProg); if(this.treeVao)gl.deleteVertexArray(this.treeVao); if(this.labelVao)gl.deleteVertexArray(this.labelVao); if(this.labelBuf)gl.deleteBuffer(this.labelBuf); if(this.labelProg)gl.deleteProgram(this.labelProg); if(this.labelTex)gl.deleteTexture(this.labelTex); if(this.haloTex)gl.deleteTexture(this.haloTex); this.labelVao=null; this.labelProg=null; this.prog=null; this.treeProg=null; this.treeVao=null; this.map=null; this.gl=null; };
+Ribbons3D.prototype.onRemove=function(map,gl){ this.batches.forEach(function(b){gl.deleteVertexArray(b.vao);}); this.batches=[]; this.built=false; if(this.prog)gl.deleteProgram(this.prog); if(this.treeProg)gl.deleteProgram(this.treeProg); if(this.treeVao)gl.deleteVertexArray(this.treeVao); if(this.labelVao)gl.deleteVertexArray(this.labelVao); if(this.labelBuf)gl.deleteBuffer(this.labelBuf); if(this.labelProg)gl.deleteProgram(this.labelProg); if(this.labelTex)gl.deleteTexture(this.labelTex); if(this.haloTex)gl.deleteTexture(this.haloTex); if(this.selTex)gl.deleteTexture(this.selTex); if(this.reachTex)gl.deleteTexture(this.reachTex); this.selTex=null; this.reachTex=null; this.labelVao=null; this.labelProg=null; this.prog=null; this.treeProg=null; this.treeVao=null; this.map=null; this.gl=null; };
 Ribbons3D.prototype.build=function(gl){
   var self=this; this.batches.forEach(function(b){gl.deleteVertexArray(b.vao);}); this.batches=[];
   var o=maplibregl.MercatorCoordinate.fromLngLat({lng:this.centre[0],lat:this.centre[1]},0);
   this.origin=[o.x,o.y]; var mPerUnit=1/o.meterInMercatorCoordinateUnits(), unit=1/mPerUnit; this.unitPerMetre=unit; var ex=this.exag;
-  var opaque=[], shadow=[], glow=[], nextId=0;
+  var opaque=[], shadow=[], glow=[], nextId=Object.keys(self.ids).length;   /* carry on after the ids already given out (a rebuild in edit mode adds lines) */
   function idOf(ref){ if(self.ids[ref]==null)self.ids[ref]=nextId++; return self.ids[ref]; }
   function local(line){ var bb=MAN.bounds; line=line.filter(function(q){ return q[0]>=bb[0]&&q[0]<=bb[2]&&q[1]>=bb[1]&&q[1]<=bb[3]; });   /* clipped to the tiled box: past its edge there is no ground to float over (Healy Pass Trail runs 4.8 km west of Sunshine's box) */
     return fillet(line.map(function(q){ var m=maplibregl.MercatorCoordinate.fromLngLat({lng:q[0],lat:q[1]},0); return [(m.x-o.x)*mPerUnit,-(m.y-o.y)*mPerUnit,(q[2]||0)*ex]; }),CORNER_RADIUS_M); }
@@ -777,7 +1047,7 @@ Ribbons3D.prototype.build=function(gl){
   Object.keys(this.geom.runs).forEach(function(ref){ if(ref in ov&&ov[ref]===null)return; if(typeof isCentreline==='function'&&isCentreline(ref))return; var pts=local(ref in ov?ov[ref]:self.geom.runs[ref]), id=idOf(ref), d=self.diffOf(ref);
     ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
     ribbon(opaque,pts,RUN_WIDTH_M,RUN_LIFT_M+extra,self.colours.run[d]||self.colours.run.unknown,id);
-    var n=(typeof NAMES!=='undefined'&&NAMES.runs[ref])||{}, nm=(self.nameOverrides&&self.nameOverrides[ref])||n.label||n.pr||n.osm||''; pins(ref,pts,d in LABELS.ink?d:'unknown',nm,RUN_LIFT_M+extra,id); });
+    var n=(typeof NAMES!=='undefined'&&NAMES.runs[ref])||{}, nm=(self.nameOverrides&&self.nameOverrides[ref])||(typeof shownName==='function'&&(n.label||n.pr||n.osm)?shownName(ref):(n.label||n.pr||n.osm||'')); pins(ref,pts,d in LABELS.ink?d:'unknown',nm,RUN_LIFT_M+extra,id); });
   /* edit mode: extra ribbons that are not (yet) in the package — the lower half of a cut run, drawn like its parent so it doesn't look deleted */
   Object.keys(self.extras||{}).forEach(function(key){ var x=self.extras[key], pts=local(x.pts), id=idOf(x.ref), d=x.d||'unknown';
     ribbon(shadow,pts,RUN_WIDTH_M-2,SHADOW_LIFT_M,SHADOW_RGBA,-2,SHADOW_RUN_OFFSET_M,SHADOW_RUN_OFFSET_M);
@@ -802,7 +1072,7 @@ Ribbons3D.prototype.build=function(gl){
      (the flat 'areas-sel' layer) and a glow band fades OUT past the edge, so the boundary reads soft, not surveyed. */
   Object.keys(this.geom.areas||{}).forEach(function(ref){ var raw=self.geom.areas[ref], rings=(raw.length&&raw[0].length&&typeof raw[0][0]!=='number')?raw:[raw];   /* one ring, or several (a glade in separate stands) */
     var run=(typeof runOfArea==='function')?runOfArea(ref):null, d=run?run.difficulty:null, col=(d&&self.colours.run[d])||self.colours.area, id=idOf(ref);
-    var label=(run&&typeof runLabel==='function')?runLabel(run.ref_id):((typeof areaLabel==='function')?areaLabel(ref):'');
+    var label=(run&&typeof shownName==='function')?shownName(run.ref_id):((typeof areaLabel==='function')?areaLabel(ref):'');
     var ak=(typeof areaKind==='function')?areaKind(ref):null;
     if(ak==='closure'||ak==='oob'){   /* a permanent closure (red) or an out-of-bounds-but-open area (amber): a solid outline, no glow, the word along it */
       var oc=(ak==='oob')?self.colours.oob:self.colours.closure, ow=(ak==='oob')?'OUT OF BOUNDS · not patrolled · ':'PERMANENT CLOSURE · ';
@@ -866,13 +1136,13 @@ Ribbons3D.prototype.placeLabels=function(gl,M,liftM,W,H){
     var wM=l.wpx*dpr/pxPerM;                                   // the name's length in metres at this spot
     if(wM*1.15>l.len||l.s0-wM/2<0||l.s0+wM/2>l.len)return;     // the line is too short here to carry it
     var rx=p1[0]-p0[0], ry=p1[1]-p0[1], flip=(rx<-0.3*pxPerM)||(Math.abs(rx)<=0.3*pxPerM&&ry<0);   /* read left→right, or upward when the line stands on screen */
-    cand.push({i:i,x:p0[0],y:p0[1],w:l.wpx*dpr+LABELS.pad*dpr,h:l.hpx*dpr+LABELS.pad*dpr,pri:(self.hi>=0&&l.id===self.hi?3:0)+(l.kind==='lift'?1:0),len:l.len,flip:flip,wM:wM,s0:l.s0}); });
+    cand.push({i:i,x:p0[0],y:p0[1],w:l.wpx*dpr+LABELS.pad*dpr,h:l.hpx*dpr+LABELS.pad*dpr,pri:(self.hiIds[l.id]?3:0)+(l.kind==='lift'?1:0),len:l.len,flip:flip,wM:wM,s0:l.s0}); });
   cand.sort(function(a,b){ return b.pri-a.pri||b.len-a.len; });
   var placed=[], data=[], spans={};
   cand.forEach(function(cd){ for(var k=0;k<placed.length;k++){ var q=placed[k]; if(Math.abs(q.x-cd.x)<(q.w+cd.w)/2&&Math.abs(q.y-cd.y)<(q.h+cd.h)/2)return; }
     var ref=self.lines[cd.i].ref, sp=spans[ref]||(spans[ref]=[]), lo=cd.s0-cd.wM/2-cd.wM*0.5, hi=cd.s0+cd.wM/2+cd.wM*0.5;   /* a repeat keeps half a name's length clear of the last one */
     for(var k2=0;k2<sp.length;k2++){ if(lo<sp[k2][1]&&hi>sp[k2][0])return; } sp.push([lo,hi]); placed.push(cd);
-    var l=self.lines[cd.i], f=(self.hi>=0&&l.id!==self.hi&&l.id<LOOKUP_W)?self.reachData[l.id]/255:0, alpha=1-0.7*f, sgn=cd.flip?-1:1;
+    var l=self.lines[cd.i], f=(self.hi>=0&&!self.hiIds[l.id]&&!self.partIds[l.id]&&l.id>=0&&l.id<LOOKUP_W)?self.reachData[l.id]/255:0, alpha=1-0.7*f, sgn=cd.flip?-1:1;
     var sd=l.s0-sgn*cd.wM/2;                                   // start of the name along the line
     for(var ci=0;ci<l.chars.length;ci++){ var ch=l.chars[ci], q=at(l,sd), p0=proj(q.p[0],q.p[1],q.p[2]); if(!p0){ sd+=sgn*ch.advpx*dpr/1; continue; }
       var t=[q.d[0]*sgn,q.d[1]*sgn,q.d[2]*sgn], pe=[-t[1],t[0],0];              // along the line (reading direction) and across it, flat on the ribbon
@@ -909,6 +1179,8 @@ Ribbons3D.prototype.render=function(gl,args){
   var u=function(n){return gl.getUniformLocation(this.prog,n);}.bind(this);
   gl.uniformMatrix4fv(u('u_matrix'),false,M32); gl.uniform1f(u('u_hi'),this.hi); gl.uniform4fv(u('u_hicol'),this.colours.highlight);
   var t=(performance.now()-this.hiSince)/HI_PULSE_MS, pulse=this.hi<0?0:(t<1?0.45+0.55*Math.abs(Math.sin(t*Math.PI*3)):1);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,this.selTex); gl.uniform1i(u('u_sel'),1);
+  gl.uniform1f(u('u_partmix'),HI_PART_MIX); gl.uniform1f(u('u_partwiden'),HI_PART_WIDEN);
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,this.reachTex); gl.uniform1i(u('u_reach'),0);
   gl.uniform1f(u('u_pulse'),pulse); gl.uniform1f(u('u_lift'),lift); gl.uniform1f(u('u_widen'),widen); gl.uniform1f(u('u_hiwiden'),HI_WIDEN); gl.uniform1f(u('u_hiraise'),HI_RAISE_M*this.unitPerMetre); gl.uniform1f(u('u_dim'),HI_DIM_OTHERS);
   gl.depthFunc(gl.LEQUAL); gl.disable(gl.CULL_FACE);
@@ -927,8 +1199,8 @@ Ribbons3D.prototype.render=function(gl,args){
   if(LABELS.on&&this.labelProg&&this.labelVao&&this.lines.length&&zoom>=LABELS.fromZoom){
     var want=Math.round(2*Math.min(LABELS.sizeMax,Math.max(LABELS.size,LABELS.sizeVsRibbon*RUN_WIDTH_M/mpp)))/2;   /* letters grow with the ribbon close in */
     if(want!==this.atlasSize) this.buildLabels(gl,want);
-    var W=gl.drawingBufferWidth, Hh=gl.drawingBufferHeight, changed=this.labelsDirty||!this.lastM||this.lastLift!==lift||this.lastHi!==this.hi; if(!changed){ for(var k=0;k<16;k++){ if(this.lastM[k]!==M32[k]){changed=true;break;} } }
-    if(changed){ this.placeLabels(gl,M32,liftM,W,Hh); this.lastM=Float32Array.from(M32); this.lastLift=lift; this.lastHi=this.hi; this.labelsDirty=false; }
+    var W=gl.drawingBufferWidth, Hh=gl.drawingBufferHeight, changed=this.labelsDirty||!this.lastM||this.lastLift!==lift||this.lastHi!==this.hiStamp; if(!changed){ for(var k=0;k<16;k++){ if(this.lastM[k]!==M32[k]){changed=true;break;} } }
+    if(changed){ this.placeLabels(gl,M32,liftM,W,Hh); this.lastM=Float32Array.from(M32); this.lastLift=lift; this.lastHi=this.hiStamp; this.labelsDirty=false; }
     if(this.labelVerts){ gl.useProgram(this.labelProg); var L=function(n){return gl.getUniformLocation(this.labelProg,n);}.bind(this);
       gl.uniformMatrix4fv(L('u_matrix'),false,M32); gl.uniform1f(L('u_lift'),lift); gl.uniform1f(L('u_bias'),LABELS.depthBias);
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(false); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA); gl.disable(gl.CULL_FACE);
@@ -940,7 +1212,19 @@ Ribbons3D.prototype.render=function(gl,args){
   gl.bindVertexArray(null); gl.depthMask(true); gl.enable(gl.DEPTH_TEST);
   if(this.hi>=0&&t<1&&this.map)this.map.triggerRepaint();
 };
-/* ====================== EDIT MODE — the "add stuff" tool (ADD-STUFF-TOOL-PLAN.md) ======================
+/* edit.js — the 3D map's EDIT MODE (the drawing tools)
+   WHAT:  lets Tanner draw, move, cut, join, hide and name runs, areas, services, features and views on the 3D map.
+          Every change is one row of <mountain>-edits.geojson, kept in this browser until Save/Export or Share.
+   WHY:   so the map can be fixed on a phone or in the 3D Editor instead of in QGIS (Sep 5, 2026). Claude loads the
+          file with 04-app-build/3d/scripts/load_edits.py — the targeted steps, never a full rebuild of the hill.
+   HOW TO RUN: not on its own. build_viewer.py (beside this file) pastes it into 3d.html at the EDIT_JS marker:
+          - the 3D Editor's page: double-click 3D-Editor/REBUILD.bat after a change, then refresh the browser tab;
+          - the crew app's page: see HOW TO RUN in build_viewer.py (python, from the trip folder).
+          The tools only appear with &edit=1 on the end of the page address.
+   SOURCE: this file (3D-Editor/src/edit.js) is the only copy since Sep 24, 2026. The Sep 7 original (edit.js.orig)
+          was moved to _retired/3D-Editor/src/ that day. Plain-English guides: 3D-Editor/README.md, 04-app-build/3d/EDIT-TOOL-GUIDE.md.
+
+   ====================== EDIT MODE — the "add stuff" tool (ADD-STUFF-TOOL-PLAN.md) ======================
    Opened with &edit=1 (Tanner only; the crew never sees it). Everything you add or change becomes one row in an
    edits file — <mountain>-edits.geojson — whose property names are the package's own column names, so
    scripts/load_edits.py writes it straight into huck-<m>.gpkg and the normal rebuild does the rest.
@@ -1050,14 +1334,14 @@ function edLayers(){
   map.addLayer({id:'ed-hit',type:'line',source:'edits',filter:['any',['==',['geometry-type'],'LineString'],['==',['geometry-type'],'MultiLineString']],paint:{'line-color':'#000','line-opacity':0,'line-width':26}});   /* fat invisible target: a pending line is tappable even where the pink line hides under cones */
   map.addLayer({id:'ed-draft-line',type:'line',source:'ed-draft',filter:['==',['geometry-type'],'LineString'],paint:{'line-color':'#FFC53D','line-width':3}});
   map.addLayer({id:'ed-draft-fill',type:'fill',source:'ed-draft',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':'#FFC53D','fill-opacity':0.2}});
-  map.addLayer({id:'ed-vtx',type:'circle',source:'ed-draft',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':7,'circle-color':'#FFC53D','circle-stroke-color':'#241E2C','circle-stroke-width':1.5}});
+  map.addLayer({id:'ed-vtx',type:'circle',source:'ed-draft',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':['case',['==',['get','sel'],1],9,7],'circle-color':['case',['==',['get','sel'],1],'#1FC9B7','#FFC53D'],'circle-stroke-color':['case',['==',['get','sel'],1],'#FBF6EC','#241E2C'],'circle-stroke-width':['case',['==',['get','sel'],1],2.5,1.5]}});
 }
 function edRefresh(){
   if(!map.getSource('edits'))return;
   map.getSource('edits').setData({type:'FeatureCollection',features:ED.feats.filter(function(f){return f.geometry;})});
   var d=[]; if(ED.draft.length){ if(ED.mode==='area'&&ED.draft.length>2) d.push({type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[ED.draft.concat([ED.draft[0]])]}});
     else if(ED.draft.length>1) d.push({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:ED.draft}});
-    ED.draft.forEach(function(p,i){ d.push({type:'Feature',properties:{i:i},geometry:{type:'Point',coordinates:p}}); }); }
+    ED.draft.forEach(function(p,i){ d.push({type:'Feature',properties:{i:i,sel:(ED.mode==='vertex'&&ED.vsel&&ED.vsel.indexOf(i)>=0)?1:0},geometry:{type:'Point',coordinates:p}}); }); }
   map.getSource('ed-draft').setData({type:'FeatureCollection',features:d});
   var e=$('ed-count'); if(e)e.textContent=(ED.feats.length?ED.feats.length+' pending':'none pending')+((ED.final||[]).length?' · '+ED.final.length+' in the map':'');
   var l=$('ed-list'); if(l&&l.style.display!=='none')edList();
@@ -1166,6 +1450,7 @@ function edForm(f,existing){
   else { h+='<div class="zsb">'+esc(p.ref_id||'')+'</div>'; }
   h+='<label>Notes for Claude <textarea id="f-cn" rows="2" placeholder="anything the form can\'t say — e.g. every separate glade in this box is this run">'+esc(p.claude_note||'')+'</textarea></label>';
   h+='<label>Your name <input id="f-editor" value="'+esc(ED.editor||'')+'" placeholder="who is editing"></label>';
+  if(f.geometry&&f.geometry.type==='LineString') h+='<div class="tog"><button class="btn" onclick="edShapeIt()">Shape it — move / add points</button></div>';
   h+='<div class="tog"><button class="btn pri" onclick="edCommit()">'+(existing?'Update':'Keep it')+'</button><button class="btn" onclick="edCancel()">'+(existing?'Close':'Discard')+'</button>'+(existing?'<button class="btn" onclick="edDelete(\''+p.uid+'\');edCancel()">Delete</button>':'')+'</div>';
   box.innerHTML=h; box.style.display=''; ED.pending=f; ED.pendingExisting=!!existing; setTimeout(function(){ var n=$('f-name'); if(n&&!existing)n.focus(); },50);
 }
@@ -1237,23 +1522,144 @@ function edFix(what){
   ED.feats.push(mf); ED.moved[ref]=coords; edRebuildRibbons(); edStore(); ED.sel=mf.properties.uid;
   if(what==='move'){ edVertexMode(mf); }
 }
-/* vertex dragging: the moved line's points become handles; drag one, the line follows. Flat mode helps here. */
+/* ============================================================================
+   VERTEX MODE — moving the points of a line.
+   ----------------------------------------------------------------------------
+   Tap "Move points" on a run and its shape is copied into ED.draft: a plain
+   list of positions, drawn as yellow dots you can drag. Nothing is committed
+   until you tap Done (edVertexDone), so you can back out at any time.
+
+   Sep 7: a drag can now move MANY dots at once, because on a long run the dots
+   sit too close together to grab one at a time. The dots you have picked are
+   the SELECTION — ED.vsel, just a list of dot numbers. Ways to pick:
+
+       click a dot           only that one
+       ctrl+click a dot      add it, or take it back out if it was in
+       shift+click a dot     everything between the last dot clicked and this
+       drag a box            everything inside the box  (ctrl = add to what
+                             you already had, instead of starting over)
+       Esc                   clear the selection
+
+   Then drag ANY picked dot and the whole selection moves together by the same
+   amount. Picked dots are teal and slightly larger; unpicked ones stay yellow.
+
+   Boxing only takes over the drag when you ask for it — the Box button is on,
+   or you are holding shift or ctrl. Otherwise dragging empty space still pans
+   the map the way it always did, which is what you want most of the time.
+   ============================================================================ */
 function edVertexMode(mf,part){
-  ED.dragFeat=mf; ED.dragPart=part; ED.draft=(part==null?mf.geometry.coordinates:mf.geometry.coordinates[part]).slice(); edRefresh(); edHint('Drag the yellow points. Tap Done when the shape is right.'); $('ed-done').style.display='';
+  ED.dragFeat=mf; ED.dragPart=part; ED.draft=(part==null?mf.geometry.coordinates:mf.geometry.coordinates[part]).slice();
+  ED.vsel=[]; ED.vanchor=null;
+  edRefresh(); edVertexTools();
+  edHint('Drag the points. Ctrl+click adds one · shift+click fills in between · box-select a group · DOUBLE-CLICK the line to add a point · Delete removes the picked ones. Done when the shape is right.');
+  $('ed-done').style.display='';
   ED.mode='vertex';
 }
+/* the little strip of controls that only exists while you are moving points */
+function edVertexTools(){
+  var o=$('ed-opts'); if(!o)return;
+  o.innerHTML='<button class="btn'+(ED.boxMode?' on':'')+'" onclick="edBoxMode()">Box select</button>'
+    +'<button class="btn" onclick="edVselAll()">All</button>'
+    +'<button class="btn" onclick="edVselNone()">None</button>'
+    +'<span id="ed-vcount" class="zsb" style="margin-left:8px"></span>';
+  edVcount();
+}
+function edVcount(){ var e=$('ed-vcount'); if(!e)return;
+  e.textContent=ED.vsel&&ED.vsel.length?ED.vsel.length+' of '+ED.draft.length+' points picked':ED.draft.length+' points — none picked'; }
+/* Box button: while it is on, dragging empty map draws a selection box instead of panning */
+function edBoxMode(){ ED.boxMode=!ED.boxMode; edVertexTools(); edHint(ED.boxMode?'Box select ON — drag a box over the points you want. Hold ctrl while dragging to ADD to the selection. Turn it off to pan the map again.':'Box select off — dragging pans the map. Hold shift or ctrl while dragging to box anyway.'); }
+
+/* --- the selection, kept as a sorted list of dot numbers --- */
+function edVselHas(i){ return ED.vsel&&ED.vsel.indexOf(i)>=0; }
+function edVselSort(){ ED.vsel.sort(function(a,b){return a-b;}); }
+function edVselSet(list){ ED.vsel=list.slice(); edVselSort(); edVcount(); }
+function edVselAdd(list){ if(!ED.vsel)ED.vsel=[]; list.forEach(function(i){ if(ED.vsel.indexOf(i)<0)ED.vsel.push(i); }); edVselSort(); edVcount(); }
+function edVselToggle(i){ if(!ED.vsel)ED.vsel=[]; var k=ED.vsel.indexOf(i); if(k>=0)ED.vsel.splice(k,1); else ED.vsel.push(i); edVselSort(); edVcount(); }
+/* shift+click: the dots of a line are stored in order top to bottom, so "everything
+   between the two" is simply every number from one to the other — no guesswork */
+function edVselRange(a,b){ var lo=Math.min(a,b), hi=Math.max(a,b), out=[]; for(var i=lo;i<=hi;i++)out.push(i); edVselAdd(out); }
+function edVselAll(){ var out=[]; for(var i=0;i<ED.draft.length;i++)out.push(i); edVselSet(out); edRefresh(); }
+function edVselNone(){ ED.vsel=[]; ED.vanchor=null; edVcount(); edRefresh(); }
+/* which dots fall inside a screen rectangle. map.project turns a position on the
+   ground into a spot on your screen, so this stays correct with the map tilted —
+   the box catches exactly what looks like it is inside it */
+function edPtsInBox(x0,y0,x1,y1){
+  var lx=Math.min(x0,x1), ly=Math.min(y0,y1), hx=Math.max(x0,x1), hy=Math.max(y0,y1), out=[];
+  ED.draft.forEach(function(c,i){ var p=map.project(c); if(p.x>=lx&&p.x<=hx&&p.y>=ly&&p.y<=hy)out.push(i); });
+  return out;
+}
+
 /* a split's halves are dragged one at a time; the split feature (pending or already kept) is what gets edited */
 function edSplitDrag(part){ var f=ED.pending; if(!f||f.properties.edit_kind!=='split')return; ED.splitReturn=f; $('ed-form').style.display='none'; edVertexMode(f,part); }
+
 function edDragInit(){
-  function down(e){ if(ED.mode!=='vertex')return; var hits=map.queryRenderedFeatures(e.point,{layers:['ed-vtx']}); if(!hits.length)return; ED.dragging=hits[0].properties.i; map.dragPan.disable(); e.preventDefault(); }
-  function move(e){ if(ED.dragging==null)return; ED.draft[ED.dragging]=[+e.lngLat.lng.toFixed(6),+e.lngLat.lat.toFixed(6)]; edRefresh(); }
-  function up(){ if(ED.dragging==null)return; ED.dragging=null; map.dragPan.enable(); }
-  map.on('mousedown',down); map.on('touchstart',down); map.on('mousemove',move); map.on('touchmove',move); map.on('mouseup',up); map.on('touchend',up);
+  /* the dashed rectangle you see while box-selecting — a plain div over the map, not a map layer */
+  var box=document.createElement('div'); box.id='ed-box';
+  box.style.cssText='position:fixed;display:none;pointer-events:none;z-index:9;border:1.5px dashed #1FC9B7;background:rgba(31,201,183,.12);border-radius:2px';
+  document.body.appendChild(box);
+  var B=null;   /* a box drag in progress */
+  var G=null;   /* a group drag in progress */
+  function mods(e){ var o=e.originalEvent||{}; return {ctrl:!!(o.ctrlKey||o.metaKey), shift:!!o.shiftKey}; }
+
+  function down(e){
+    if(ED.mode!=='vertex')return;
+    var m=mods(e), hits=map.queryRenderedFeatures(e.point,{layers:['ed-vtx']});
+    if(hits.length){
+      var i=hits[0].properties.i;
+      if(m.ctrl){ edVselToggle(i); ED.vanchor=i; edRefresh(); e.preventDefault(); return; }
+      if(m.shift){ edVselRange(ED.vanchor==null?i:ED.vanchor,i); ED.vanchor=i; edRefresh(); e.preventDefault(); return; }
+      /* a plain grab on a dot that was not picked starts a fresh selection of just that dot;
+         a plain grab on one that WAS picked keeps the group, so you can drag the whole lot */
+      if(!edVselHas(i)) edVselSet([i]);
+      ED.vanchor=i;
+      G={origin:e.lngLat, base:{}};
+      ED.vsel.forEach(function(k){ G.base[k]=ED.draft[k].slice(); });
+      map.dragPan.disable(); edRefresh(); e.preventDefault(); return;
+    }
+    /* empty map: box only when asked, so an ordinary drag still pans */
+    if(ED.boxMode||m.shift||m.ctrl){
+      var r=map.getCanvas().getBoundingClientRect();
+      B={x0:e.point.x, y0:e.point.y, left:r.left, top:r.top, add:m.ctrl};
+      map.dragPan.disable(); map.dragRotate.disable();
+      box.style.display=''; box.style.left=(r.left+B.x0)+'px'; box.style.top=(r.top+B.y0)+'px'; box.style.width='0px'; box.style.height='0px';
+      e.preventDefault();
+    }
+  }
+  function move(e){
+    if(G){
+      var dx=e.lngLat.lng-G.origin.lng, dy=e.lngLat.lat-G.origin.lat;
+      ED.vsel.forEach(function(k){ var b=G.base[k]; if(b)ED.draft[k]=[+(b[0]+dx).toFixed(6),+(b[1]+dy).toFixed(6)]; });
+      edRefresh(); return;
+    }
+    if(B){
+      var x=e.point.x, y=e.point.y;
+      box.style.left=(B.left+Math.min(B.x0,x))+'px'; box.style.top=(B.top+Math.min(B.y0,y))+'px';
+      box.style.width=Math.abs(x-B.x0)+'px'; box.style.height=Math.abs(y-B.y0)+'px';
+    }
+  }
+  function up(e){
+    if(G){ G=null; map.dragPan.enable(); return; }
+    if(B){
+      var x=(e&&e.point)?e.point.x:B.x0, y=(e&&e.point)?e.point.y:B.y0;
+      var got=edPtsInBox(B.x0,B.y0,x,y);
+      if(B.add)edVselAdd(got); else edVselSet(got);
+      box.style.display='none'; B=null; map.dragPan.enable(); map.dragRotate.enable();
+      edRefresh(); toast(ED.vsel.length?ED.vsel.length+' point'+(ED.vsel.length===1?'':'s')+' picked':'nothing in the box');
+    }
+  }
+  map.on('mousedown',down); map.on('touchstart',down);
+  map.on('mousemove',move); map.on('touchmove',move);
+  map.on('mouseup',up); map.on('touchend',up);
+  /* Esc clears the selection (but stays in vertex mode — Done is what commits) */
+  document.addEventListener('keydown',function(ev){
+    if(ev.key==='Escape'&&ED.mode==='vertex'&&ED.vsel&&ED.vsel.length){ edVselNone(); ev.preventDefault(); }
+  });
 }
+
 function edVertexDone(){ var mf=ED.dragFeat, part=ED.dragPart;
-  if(part==null){ mf.geometry.coordinates=ED.draft.slice(); ED.moved[mf.properties.ref_id]=mf.geometry.coordinates; }
+  if(part==null){ mf.geometry.coordinates=ED.draft.slice(); if(mf.properties.ref_id)ED.moved[mf.properties.ref_id]=mf.geometry.coordinates; }
   else { mf.geometry.coordinates[part]=ED.draft.slice(); if(part===0)ED.moved[mf.properties.ref_id]=mf.geometry.coordinates[0]; mf.properties[part===0?'upper_m':'lower_m']=Math.round(edLineLenM(mf.geometry.coordinates[part])); }
-  ED.dragFeat=null; ED.dragPart=null; ED.draft=[]; edRebuildRibbons(); if(ED.feats.indexOf(mf)>=0)edStore(); else edRefresh();
+  ED.dragFeat=null; ED.dragPart=null; ED.draft=[]; ED.vsel=[]; ED.vanchor=null; if($('ed-opts'))$('ed-opts').innerHTML=''; edRebuildRibbons(); if(ED.feats.indexOf(mf)>=0)edStore(); else edRefresh();
   ED.mode='select'; var b=$('ed-modes').children; for(var i=0;i<b.length;i++)b[i].className=b[i].dataset.m==='select'?'on':'';
   if(ED.splitReturn){ var f=ED.splitReturn; ED.splitReturn=null; edForm(f,ED.feats.indexOf(f)>=0); toast('Points kept — Keep it / Update to save'); } else toast('Shape kept'); }
 function edRebuildRibbons(){ if(!ribbons||!ribbons.gl)return; ribbons.overrides={}; Object.keys(ED.hidden).forEach(function(r){ribbons.overrides[r]=null;});
@@ -1327,7 +1733,7 @@ function edGps(){ if(!navigator.geolocation)return; try{ navigator.geolocation.w
 
 /* ---------- start ---------- */
 function edInit(){
-  if(!EDIT)return; edLoad(); edLayers(); edPanel(); edDragInit(); edGps();
+  if(!EDIT)return; edLoad(); edLayers(); edPanel(); edDragInit(); edExtrasInit(); edGps();
   ED.feats.forEach(function(f){ var p=f.properties; if(p.edit_kind==='hide')ED.hidden[p.ref_id]=true; if(p.edit_kind==='move'&&f.geometry)ED.moved[p.ref_id]=f.geometry.coordinates;
     if(p.edit_kind==='split'&&f.geometry)ED.moved[p.ref_id]=f.geometry.coordinates[0]; if(p.edit_kind==='merge'&&f.geometry){ ED.moved[p.ref_id]=f.geometry.coordinates; ED.hidden[p.ref_id_other]=true; } });
   if(Object.keys(ED.hidden).length||Object.keys(ED.moved).length||ED.feats.some(function(f){return f.properties.edit_kind==='split'||f.properties.edit_kind==='add'||f.properties.edit_kind==='rename';})) edRebuildRibbons();
@@ -1348,6 +1754,239 @@ function edMarkStart(){
   edHint((kind==='area'?'Tap around ':'Tap the top, then the bottom of ')+mk+(w&&w.note?' — '+w.note:''));
   toast('Marking: '+mk);
 }
+
+/* ############################################################################
+   COORDS + FATMAP + POINT INSERT — added Sep 7 2026
+   ############################################################################ */
+
+/* ============================ 1. GO TO A COORDINATE =========================
+   Paste a Google Maps link (or a bare "lat, lon"), fly there, drop a point.
+   Handles the link shapes Google actually produces:
+       maps?q=50.9646263,-118.0884724          ← the share-a-pin form
+       maps/@50.96,-118.08,15z                 ← the address-bar form
+       maps/place/Some Name/@50.96,-118.08,17z ← a place page
+       maps/search/?api=1&query=50.96,-118.08
+       50.9646263, -118.0884724                ← just the numbers
+   NOT handled: short maps.app.goo.gl / goo.gl/maps links. Those carry no
+   coordinates at all — they are lookups that need Google to resolve them, and
+   this page has no internet. Paste the long link or the numbers instead.
+   ========================================================================== */
+function edParseLL(s){
+  if(!s)return null;
+  s=(''+s).trim();
+  if(/goo\.gl|maps\.app/i.test(s)&&!/[-+]?\d{1,3}\.\d+\s*,\s*[-+]?\d{1,3}\.\d+/.test(s))
+    return {err:'That is a short Google link — it does not contain the coordinates. Open it, then copy the long link or the numbers.'};
+  var m=s.match(/[?&](?:q|query|ll|daddr)=(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/i)   /* ?q= / ?query= / ?ll= */
+      || s.match(/@(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/)                            /* /@lat,lon,zoom */
+      || s.match(/(-?\d{1,3}\.\d+)\s*[, ]\s*(-?\d{1,3}\.\d+)/);                         /* bare numbers */
+  if(!m)return {err:'No coordinates in that. Expected something like 50.9646263, -118.0884724'};
+  var lat=parseFloat(m[1]), lon=parseFloat(m[2]);
+  /* Google always writes lat first. If the pair is obviously the other way round
+     (a latitude cannot exceed 90) swap it rather than flying somewhere silly. */
+  if(Math.abs(lat)>90&&Math.abs(lon)<=90){ var t=lat; lat=lon; lon=t; }
+  if(Math.abs(lat)>90||Math.abs(lon)>180)return {err:'Those numbers are not a lat/long.'};
+  return {lat:lat, lon:lon};
+}
+/* is this inside the mountain we currently have open? MAN.bounds = [W,S,E,N] */
+function edInBounds(lon,lat){
+  var b=(MAN&&MAN.bounds)||null; if(!b)return true;
+  return b[0]<=lon&&lon<=b[2]&&b[1]<=lat&&lat<=b[3];
+}
+function edLLToggle(){
+  var w=$('ed-ll');
+  if(w){ w.parentNode.removeChild(w); return; }
+  w=document.createElement('div'); w.id='ed-ll'; w.className='tog'; w.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px';
+  w.innerHTML='<input id="ed-ll-in" placeholder="paste a Google Maps link or 50.96, -118.08" style="flex:1;min-width:220px">'
+    +'<button class="btn pri" onclick="edLLGo()">Go</button>'
+    +'<span class="zsb">flies there and drops a point</span>';
+  $('ed-opts').parentNode.insertBefore(w,$('ed-actions'));
+  var i=$('ed-ll-in'); i.focus();
+  i.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); edLLGo(); } });
+}
+function edLLGo(){
+  var v=$('ed-ll-in').value, r=edParseLL(v);
+  if(!r){ return; }
+  if(r.err){ toast(r.err); return; }
+  var ll=[+r.lon.toFixed(6), +r.lat.toFixed(6)];
+  map.easeTo({center:ll, zoom:Math.max(map.getZoom(),15.5), duration:900});
+  if(!edInBounds(ll[0],ll[1])) toast('Flying there — but that is outside this mountain’s map, so there is no terrain under it.');
+  $('ed-ll-in').value='';
+  /* what gets dropped depends on the mode you are in — the same thing a tap there would make */
+  setTimeout(function(){
+    if(ED.mode==='line'||ED.mode==='area'||(ED.mode==='feature'&&ED.sub!=='point')){
+      ED.draft.push(ll); edRefresh(); toast('Point '+ED.draft.length+' added from coordinates'); return; }
+    if(ED.mode==='feature'){ edForm({type:'Feature',properties:{edit_kind:'feature',uid:edUid(),derivation_method:'imagery_interpreted'},geometry:{type:'Point',coordinates:ll}}); return; }
+    edForm({type:'Feature',properties:{edit_kind:'service',uid:edUid(),service_subtype:'poi',ski_in:0},geometry:{type:'Point',coordinates:ll}});
+  },950);
+}
+
+/* ====================== 2. THE FATMAP REFERENCE LAYER =======================
+   38 ski/freeride lines recovered from Internet Archive snapshots of FATMAP,
+   filtered to the ones inside these nine 3D maps (src/tools/make_fatmap_layer.py).
+
+   These are REFERENCE ONLY. They are drawn from their own map source, they are
+   never part of ED.feats, and an export cannot contain them — so nothing here
+   can duplicate a run that is already in the map. When you want one for real,
+   open it and press "Make this an edit"; that and only that creates a normal
+   pending edit you can shape and name.
+
+   ⚠ The straight dashed line between the two ends is NOT the real shape of the
+   run. FATMAP's drawn track was never recovered — the CSV holds only where each
+   line starts and where it finishes. Treat it as "it goes roughly that way, that
+   far", then insert points along it to draw what is actually there.
+   ========================================================================== */
+var FM={list:[], on:false, sel:null};
+function edFmLoad(){
+  fetch('fatmap-lines.json').then(function(r){ return r.ok?r.json():null; }).then(function(j){
+    if(!j||!j.hills)return;
+    FM.list=j.hills[M]||[];
+    if(FM.list.length){ edFmLayers(); var b=$('ed-fm-btn'); if(b)b.textContent='FatMap ('+FM.list.length+')'; }
+  }).catch(function(){});
+}
+function edFmLayers(){
+  if(map.getSource('fm'))return;
+  map.addSource('fm',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+  map.addLayer({id:'fm-line',type:'line',source:'fm',filter:['==',['geometry-type'],'LineString'],
+    paint:{'line-color':'#9AA4B2','line-width':2,'line-dasharray':[1.5,1.5],'line-opacity':0.85}});
+  map.addLayer({id:'fm-hit',type:'line',source:'fm',filter:['==',['geometry-type'],'LineString'],
+    paint:{'line-color':'#000','line-opacity':0,'line-width':24}});
+  map.addLayer({id:'fm-pt',type:'circle',source:'fm',filter:['==',['geometry-type'],'Point'],
+    paint:{'circle-radius':['case',['==',['get','end'],1],5,7],
+           'circle-color':['case',['==',['get','end'],1],'#12151A','#9AA4B2'],
+           'circle-stroke-color':'#9AA4B2','circle-stroke-width':2}});
+  edFmRefresh();
+}
+function edFmRefresh(){
+  if(!map.getSource('fm'))return;
+  var f=[];
+  if(FM.on) FM.list.forEach(function(r,i){
+    if(r.end) f.push({type:'Feature',properties:{i:i},geometry:{type:'LineString',coordinates:[r.start,r.end]}});
+    f.push({type:'Feature',properties:{i:i,end:0},geometry:{type:'Point',coordinates:r.start}});
+    if(r.end) f.push({type:'Feature',properties:{i:i,end:1},geometry:{type:'Point',coordinates:r.end}});
+  });
+  map.getSource('fm').setData({type:'FeatureCollection',features:f});
+}
+function edFmToggle(){
+  if(!FM.list.length){ toast('No FatMap lines inside this mountain'); return; }
+  FM.on=!FM.on; edFmRefresh();
+  var b=$('ed-fm-btn'); if(b)b.className='btn'+(FM.on?' on':'');
+  toast(FM.on?FM.list.length+' FatMap lines shown — grey dot = top, hollow = bottom':'FatMap lines hidden');
+  if(!FM.on&&FM.sel!=null){ FM.sel=null; $('ed-form').style.display='none'; }
+}
+/* tapping one opens its card */
+function edFmOpen(i){
+  var r=FM.list[i]; if(!r)return; FM.sel=i;
+  var box=$('ed-form');
+  box.innerHTML='<b>'+esc(r.name)+'</b> <span class="tag">FatMap · reference</span>'
+    +'<div class="zsb" style="margin:6px 0 8px;line-height:1.7">'
+    +esc(r.act.replace(/_/g,' ').toLowerCase())
+    +(r.fmdiff?' · FatMap grade '+esc(r.fmdiff)+'/5':'')
+    +(r.down_m!=null?' · '+r.down_m+' m down':'')
+    +(r.len_m!=null?' · '+r.len_m+' m long':'')
+    +'<br>top '+r.start[1].toFixed(5)+', '+r.start[0].toFixed(5)
+    +(r.end?'<br>bottom '+r.end[1].toFixed(5)+', '+r.end[0].toFixed(5):'<br>no bottom point recorded')
+    +'<br><i>the dashed line is a straight guess, not the real shape</i></div>'
+    +'<div class="tog">'
+    +'<button class="btn pri" onclick="edFmAdopt('+i+')">Make this an edit</button>'
+    +(r.end?'<button class="btn" onclick="edFmFly('+i+',1)">Go to the bottom</button>':'')
+    +'<button class="btn" onclick="edFmFly('+i+',0)">Go to the top</button>'
+    +(r.strava?'<button class="btn" onclick="window.open(\''+r.strava+'\',\'_blank\')">Strava</button>':'')
+    +'<button class="btn" onclick="edFmClose()">Close</button></div>';
+  box.style.display='';
+}
+function edFmClose(){ FM.sel=null; $('ed-form').style.display='none'; }
+function edFmFly(i,end){ var r=FM.list[i]; if(!r)return; var c=(end&&r.end)?r.end:r.start;
+  map.easeTo({center:c,zoom:Math.max(map.getZoom(),15.5),duration:800}); }
+/* the one door from reference into a real edit */
+function edFmAdopt(i){
+  var r=FM.list[i]; if(!r)return;
+  var coords=r.end?[r.start.slice(),r.end.slice()]:[r.start.slice(),r.start.slice()];
+  var f={type:'Feature',properties:{
+      edit_kind:'add', kind:'run', uid:edUid(), name:r.name,
+      difficulty:r.diff||undefined,
+      source_note:'FatMap line '+r.id+(r.fmdiff?' (grade '+r.fmdiff+'/5)':'')+' — straight two-point guess, shape it'
+    },geometry:{type:'LineString',coordinates:coords}};
+  edForm(f);
+  toast('Name and keep it, then Shape it to draw the real line');
+}
+
+/* ============ 3. INSERTING AND DELETING POINTS IN VERTEX MODE ===============
+   Moving points was never enough on a line that starts life with only two ends
+   (every adopted FatMap line does). So:
+       double-click ON the line   insert a new point right there
+       Delete / Backspace         remove every picked point
+   Insert finds the segment your double-click was nearest to — measured on the
+   screen, so it behaves the same whether the map is flat or tilted — and puts
+   the new point between that segment's two ends, keeping the order of the line.
+   ========================================================================== */
+function edSegNearest(pt){
+  /* returns the index to insert AT (i.e. before the existing point at that index) */
+  var best=-1, bestD=Infinity;
+  for(var i=0;i<ED.draft.length-1;i++){
+    var a=map.project(ED.draft[i]), b=map.project(ED.draft[i+1]);
+    var vx=b.x-a.x, vy=b.y-a.y, wx=pt.x-a.x, wy=pt.y-a.y;
+    var len=vx*vx+vy*vy, t=len?Math.max(0,Math.min(1,(wx*vx+wy*vy)/len)):0;
+    var dx=a.x+t*vx-pt.x, dy=a.y+t*vy-pt.y, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<bestD){ bestD=d; best=i+1; }
+  }
+  return {at:best, dist:bestD};
+}
+function edVertexInsert(e){
+  if(ED.mode!=='vertex'||ED.draft.length<2)return false;
+  var s=edSegNearest(e.point);
+  if(s.at<0||s.dist>28)return false;           /* not near enough to the line — let the map have the double-click */
+  var ll=[+e.lngLat.lng.toFixed(6),+e.lngLat.lat.toFixed(6)];
+  ED.draft.splice(s.at,0,ll);
+  /* everything picked at or after the insert shifts up one, or the selection would point at the wrong dots */
+  if(ED.vsel&&ED.vsel.length) ED.vsel=ED.vsel.map(function(k){ return k>=s.at?k+1:k; });
+  edVselAdd([s.at]); ED.vanchor=s.at;
+  edRefresh(); toast('Point added — '+ED.draft.length+' now');
+  return true;
+}
+function edVertexDelete(){
+  if(ED.mode!=='vertex'||!ED.vsel||!ED.vsel.length)return;
+  if(ED.draft.length-ED.vsel.length<2){ toast('A line needs at least two points'); return; }
+  var kill={}; ED.vsel.forEach(function(k){kill[k]=1;});
+  var n=ED.vsel.length;
+  ED.draft=ED.draft.filter(function(_,i){ return !kill[i]; });
+  ED.vsel=[]; ED.vanchor=null; edVcount(); edRefresh();
+  toast('Removed '+n+' point'+(n===1?'':'s')+' — '+ED.draft.length+' left');
+}
+
+/* ---------------- wiring: the two new buttons, the taps, the keys ---------- */
+function edExtrasInit(){
+  /* buttons into the actions row */
+  var a=$('ed-actions');
+  if(a&&!$('ed-fm-btn')){
+    var c=document.createElement('button'); c.className='btn'; c.textContent='⌖ Coords';
+    c.title='paste a Google Maps link or a lat/long'; c.onclick=edLLToggle;
+    var f=document.createElement('button'); f.className='btn'; f.id='ed-fm-btn'; f.textContent='FatMap';
+    f.title='show the recovered FatMap lines for this mountain (reference only)'; f.onclick=edFmToggle;
+    a.insertBefore(c,a.firstChild); a.insertBefore(f,c.nextSibling);
+  }
+  /* tapping a FatMap line or marker opens its card (only while it is shown) */
+  map.on('click',function(e){
+    if(!FM.on||ED.mode==='vertex')return;
+    var h=map.queryRenderedFeatures([[e.point.x-8,e.point.y-8],[e.point.x+8,e.point.y+8]],{layers:['fm-pt','fm-hit']});
+    if(h.length){ edFmOpen(h[0].properties.i); e.preventDefault&&e.preventDefault(); }
+  });
+  /* double-click inserts a point; swallow the map's own zoom when it lands on the line */
+  map.on('dblclick',function(e){ if(edVertexInsert(e)){ e.preventDefault(); } });
+  /* Delete removes the picked ones */
+  document.addEventListener('keydown',function(ev){
+    if(ED.mode!=='vertex')return;
+    if(ev.key==='Delete'||ev.key==='Backspace'){
+      var t=ev.target&&ev.target.tagName; if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;
+      edVertexDelete(); ev.preventDefault();
+    }
+  });
+  edFmLoad();
+}
+
+/* Shape it: hop from a pending line's form straight into moving/adding its points,
+   then come back to the same form when you tap Done (the same trip a split's halves make) */
+function edShapeIt(){ var f=ED.pending; if(!f||!f.geometry||f.geometry.type!=='LineString')return;
+  ED.splitReturn=f; $('ed-form').style.display='none'; edVertexMode(f); }
 
 boot();
 </script>

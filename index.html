@@ -1208,7 +1208,8 @@ function z3dUrl(k,zoneName,runName){ return '3d.html?m='+encodeURIComponent(k)+'
 /* ---- the 3D frame (Sep 4 2026): "replace the snow tab terrain drawer maps with our sick 3d map" ----
    3D is the standard for a resort with a bundle; the painted panel is one tap away (Map) and comes back by itself when
    you tap a run that has no 3D line yet. The frame is 3d.html?embed=1 — no chips, no drawer of its own — and talks over
-   postMessage: we send {t:'zone'} / {t:'select', name} / {t:'clear'}; it answers {t:'ready', names} / {t:'selected'} / {t:'nomatch'}. */
+   postMessage: we send {t:'zone'} / {t:'select', name} / {t:'clear'}; it answers {t:'ready', names} / {t:'selected', name, app} / {t:'nomatch'}.
+   Since Oct 4 2026 it sends 'selected' only for a tap on the 3D map itself, not as an echo of our own 'select'. */
 var Z3D={mode:'3d',m:null,ready:false,names:{},queue:[]};
 function z3dOn(){ return !!(BUNDLES3D[ZR]&&Z3D.mode==='3d'); }
 function z3dPost(msg){ var f=$('z3d'); if(!f||!f.contentWindow)return; if(!Z3D.ready){ Z3D.queue.push(msg); return; } f.contentWindow.postMessage(msg,location.origin); }
@@ -1249,9 +1250,12 @@ window.addEventListener('message',function(ev){
   if(d.t==='ready'){ Z3D.ready=true; Z3D.names={}; (d.names||[]).forEach(function(n){ Z3D.names[n]=1; }); var q=Z3D.queue; Z3D.queue=[]; q.forEach(z3dPost); zRenderRuns(); }
   else if(d.t==='selected'){ /* a tap on the 3D map: light the matching row in the list (no flight — the map already moved) */
     if(!d.name){ ZRUN=-1; ZRT=-1; zClearPulse(true); zRenderRuns(); zUpdateReflash(); return; }
-    var want=d.name.toLowerCase(), list=zList(), hit=-1;
-    list.forEach(function(r,i){ if(hit<0&&r.name&&r.name.toLowerCase()===want)hit=i; });
-    if(hit<0)list.forEach(function(r,i){ if(hit<0&&r.name&&r.name.toLowerCase().split(/\s*[\/+]\s*/).indexOf(want)>=0)hit=i; });
+    /* d.name = the name the 3D map shows for the line; d.app (Oct 4 2026) = the app row the line is joined to.
+       Try the shown name first (a line called Mother-in-Law has its own row), then the app row (Kicking Horse shows
+       "15 - Buffalo Jump" for the row Buffalo Jump), then either as one part of a combined row ("A / B"). */
+    var wants=[d.name,d.app].filter(Boolean).map(function(x){ return String(x).toLowerCase(); }), list=zList(), hit=-1;
+    wants.forEach(function(want){ list.forEach(function(r,i){ if(hit<0&&r.name&&r.name.toLowerCase()===want)hit=i; }); });
+    wants.forEach(function(want){ if(hit<0)list.forEach(function(r,i){ if(hit<0&&r.name&&r.name.toLowerCase().split(/\s*[\/+]\s*/).indexOf(want)>=0)hit=i; }); });
     if(hit>=0){ ZRUN=hit; ZRT=-1; zRenderRuns(); zUpdateReflash(); var row=document.querySelector('#zruns .zrr.on'); if(row)row.scrollIntoView({block:'nearest'}); } }
   else if(d.t==='nomatch'){ z3dMode('map'); if(ZRUN>=0)zFlash(ZRUN); toast('Not drawn in 3D yet \u2014 showing the painted map'); }
 });
