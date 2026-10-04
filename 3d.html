@@ -352,6 +352,7 @@ function start(){
   MAN=JSON.parse(new TextDecoder().decode(PARTS['manifest.json']));
   GEOM=JSON.parse(new TextDecoder().decode(PARTS['geometry.json']));
   NAMES=JSON.parse(new TextDecoder().decode(PARTS['names.json']));
+  dropLinks();
   buildGroups();
   var protocol=new pmtiles.Protocol(); PROTOCOL=protocol;
   maplibregl.addProtocol('pmtiles',function(req,abort){return protocol.tile(req,abort);});
@@ -377,7 +378,7 @@ function start(){
       {id:'areas-sel',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','zone_id'],'-'],paint:{'fill-color':'#FFC53D','fill-opacity':AREA_GLOW_ALPHA}},
       {id:'areas-part',type:'fill',source:'furniture','source-layer':'zones',filter:['==',['get','zone_id'],'-'],paint:{'fill-color':'#FFC53D','fill-opacity':AREA_GLOW_ALPHA*0.45}},   /* the other parts of a picked glade: a fainter tint */
       /* the flat lines are invisible tap targets; the 3D ribbons are what you see */
-      {id:'runs-hit',type:'line',source:'furniture','source-layer':'runs',paint:{'line-color':'#000','line-width':18,'line-opacity':0}},
+      {id:'runs-hit',type:'line',source:'furniture','source-layer':'runs',filter:['!',['in',['get','ref_id'],['literal',LINK_HIDDEN]]],paint:{'line-color':'#000','line-width':18,'line-opacity':0}},   /* the filter: a link piece is no tap target (see LINK PIECES) */
       {id:'lifts-hit',type:'line',source:'furniture','source-layer':'lifts',filter:['!=',['get','status'],'proposed'],paint:{'line-color':'#000','line-width':18,'line-opacity':0}}
     ],
     terrain:{source:'terrain',exaggeration:MAN.camera.exaggeration},
@@ -535,6 +536,34 @@ function runsInZone(zid){
   return MAN.runs.filter(function(r){ var n=NAMES.runs[r.ref_id]||{}; return zid?(n.zone===zid||(r.zones||[]).indexOf(zid)>=0):true; });
 }
 function editOn(){ return typeof EDIT!=='undefined'&&EDIT; }
+
+/* ====================== LINK PIECES (Oct 4 2026) ======================
+   WHAT  A "link" is a drawn line that is a connection, not a run (names.json: fidelity 'link'; load_edits.py, edit kind
+         link). The ski-to model keeps it. This page does not show it: dropLinks() takes every link out of the page's
+         data before anything is built, so it is not drawn, not listed, not found by the search and not a tap target.
+   WHY   Tanner, Oct 4: "Look for other little tiny runs, beginner at pano for example, it's clearly a mistake." The map
+         data joins runs at a junction with little pieces, 4 to 100 m long. Taking them out of the package cost 76
+         ski-to answers at Panorama: the model crosses the flat base along them. So they stay in the package and
+         leave the map here.
+   ANSWERS  A link that has a run's name (a 63 m piece of "Highway 1") hands its ski-to rows to a drawn line of that
+         run, so "which lifts get me here" for the run stays what the crew app says. A link with no name, or with a
+         name no drawn line has, has no rows to hand over.
+   EDIT MODE  The same: a link is off the map there too, because a link starts as a line Tanner HID in edit mode and a
+         hidden line must not come back. To see the links (to check one, or to take the mark off with an "unlink"
+         edit), add &links=1 to the page address: then nothing is taken out, the pieces are drawn and can be picked,
+         and the drawer says "link piece". */
+var LINK_HIDDEN=[];
+function dropLinks(){
+  LINK_HIDDEN=[]; if(Q.get('links')==='1')return;
+  var isL={}; Object.keys(NAMES.runs).forEach(function(k){ if(NAMES.runs[k].fidelity==='link'){ isL[k]=1; LINK_HIDDEN.push(k); } });
+  if(!LINK_HIDDEN.length)return;
+  var byName={}; MAN.runs.forEach(function(r){ if(isL[r.ref_id])return; var nm=shownName(r.ref_id), k=srNorm(nm); if(k&&nm!=='(unnamed run)'&&!byName[k])byName[k]=r.ref_id; });
+  var host={}; LINK_HIDDEN.forEach(function(k){ host[k]=byName[srNorm(shownName(k))]||null; });
+  if(MAN.reach&&MAN.reach.rows){ var rows=[]; MAN.reach.rows.forEach(function(x){ if(!isL[x.run]){ rows.push(x); return; } if(!host[x.run])return;
+      var y={}; for(var q in x)y[q]=x[q]; y.run=host[x.run]; rows.push(y); }); MAN.reach.rows=rows; }
+  MAN.runs=MAN.runs.filter(function(r){ return !isL[r.ref_id]; });
+  LINK_HIDDEN.forEach(function(k){ delete GEOM.runs[k]; delete NAMES.runs[k]; });
+}
 
 /* ====================== ONE BUTTON PER RUN (Oct 4 2026) ======================
    WHAT  The list, the search and a tap on the map all work on a RUN, not on a drawn line. A run that is drawn as
@@ -730,7 +759,7 @@ function renderDrawer(){
     $('dtitle').textContent=isLift?(n.name||'Lift'):(sg?sg.name:shownName(SEL));
     $('dkind').style.display=''; $('dkind').className='pill '+(isLift?'lift':'');
     $('dkind').textContent=isLift?(n.type||'lift').replace('_',' '):(whole?diffWords(sg.diffs):(r?(DIFF_WORD[r.difficulty]||'run'):'run'));
-    var bits=[]; if(!isLift){ if(whole&&sg.homes.length)bits.push(sg.homes.map(zoneName).join(', ')); else if(n.zone)bits.push(zoneName(n.zone)); if(n.label&&n.pr)bits.push('in the app: '+n.pr); else if(n.osm&&n.pr&&n.osm!==n.pr)bits.push('map name: '+n.osm); if(isCentreline(SEL)){ var ak=((NAMES.zones||{})[areaOfRun(SEL)]||{}).kind; bits.push((ak||'glade')+(/osm-polygon/.test(n.src)?' · outline from OpenStreetMap':' · outline drawn in edit mode')); } else if(n.src&&n.src!=='osm')bits.push('line: '+n.src+(n.fidelity?' · '+n.fidelity.toLowerCase():'')); if(n.grooming)bits.push(n.grooming); }
+    var bits=[]; if(!isLift){ if(whole&&sg.homes.length)bits.push(sg.homes.map(zoneName).join(', ')); else if(n.zone)bits.push(zoneName(n.zone)); if(n.label&&n.pr)bits.push('in the app: '+n.pr); else if(n.osm&&n.pr&&n.osm!==n.pr)bits.push('map name: '+n.osm); if(isCentreline(SEL)){ var ak=((NAMES.zones||{})[areaOfRun(SEL)]||{}).kind; bits.push((ak||'glade')+(/osm-polygon/.test(n.src)?' · outline from OpenStreetMap':' · outline drawn in edit mode')); } else if(n.src&&n.src!=='osm')bits.push('line: '+n.src+(n.fidelity?' · '+n.fidelity.toLowerCase():'')); if(n.grooming)bits.push(n.grooming); if(n.fidelity==='link')bits.push('link piece: kept for the ski-to answers, not on the crew\'s map'); }
     $('dsub').textContent=bits.join(' · ');
     h+='<div class="tog"><button class="btn" onclick="zoomSel()">Zoom to it</button><button class="btn" onclick="select(null)">Clear</button></div>';
     if(typeof edFixHtml==='function') h+=edFixHtml(SEL);
