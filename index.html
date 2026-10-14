@@ -541,17 +541,101 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .card.ready{cursor:pointer;padding:12px 15px}
 .card.ready .rnext{font-size:12.5px;color:var(--pr-text-2);margin-top:3px}
 .card.ready .chev{font-size:20px;line-height:1;color:var(--pr-pink-text);padding-left:4px}
-/* snow-so-far table: dense 13px rows, numbers right-aligned, hairline dividers */
-.sft{display:grid;grid-template-columns:minmax(0,1fr) 44px 52px 80px 44px;column-gap:0;align-items:stretch;font-size:13px}
-.sft.off{grid-template-columns:minmax(0,1fr) 96px 44px}
-.sft>div{padding:6px 0;border-bottom:1px solid rgba(14,98,133,.12);min-width:0;display:flex;flex-direction:column;justify-content:center}
-.sft>div.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:6px}
-.sft>div.hd{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-blue-text);padding:0 0 5px}
-.sft>div.hl{font-weight:600;min-width:0}.sft>div.hl>span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sft>div.ty{text-align:right;line-height:1.15;padding-left:6px}.sft .ty small{display:block;font-size:11px;color:var(--pr-text-2)}
-.sft>div.cam{text-align:right;font-size:11.5px;font-weight:600;white-space:nowrap;padding-left:6px}
-.sft:not(.off)>div:nth-last-child(-n+5){border-bottom:none}.sft.off>div:nth-last-child(-n+3){border-bottom:none}
-.sft>div.d2{display:none} /* second header set: desktop only (two hills per row) */
+/* ===================== live snow + weather (Oct 14 2026) =====================
+   Colour comes from two custom properties set per hill: --hn (the hill's neon) and --ht (its text-safe shade),
+   the same pairs the Itinerary's rails use (ACCENTS). The freeze line is always teal: it is weather, not a hill. */
+/* quick-link chips on the Snow tab — same look as the Itinerary's */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 14px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;color:var(--pr-text-2);background:var(--pr-card);border:1px solid var(--pr-border);border-radius:999px;padding:3px 9px 3px 6px;cursor:pointer}
+.chip span{width:9px;height:9px;border-radius:99px;display:inline-block}
+/* a hill card on the Snow tab: warm-white card, 3px rail and name in the hill's colour */
+.card.hill{border-left:3px solid var(--hn);padding-left:14px}
+.card.hill .hname{font-weight:700;font-size:15px;color:var(--ht)}
+/* the four-row weather table: label column, then base / mid / summit */
+.cols{margin-top:10px;display:grid;grid-template-columns:minmax(0,1fr) 70px 78px 70px;font-size:13px}
+.cols>div{padding:6px 0;border-bottom:1px solid var(--pr-hairline);min-width:0}
+.cols>div:nth-last-child(-n+4){border-bottom:none}
+.cols .ch{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ht);text-align:right;line-height:1.15;padding-bottom:5px;align-self:end}
+.cols .ch small{display:block;font-weight:600;letter-spacing:0;text-transform:none;color:var(--pr-text-2);font-size:10.5px;margin-top:2px;font-variant-numeric:tabular-nums}
+.cols .rl{font-weight:600;font-size:12.5px;color:var(--pr-text-2)}
+.cols .rl b{display:block;color:var(--pr-ink);font-size:13px}
+.cols .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600;padding-left:6px}
+.cols .v.vb{font-family:var(--pr-font-app-display);font-weight:400;font-size:20px;color:var(--ht);line-height:1}
+/* the freeze gauge: a base → summit bar, ticks at base / mid / summit, the teal marker at the 0 °C height */
+.gauge{margin-top:12px}
+.gauge .gl{font-size:11px;font-weight:700;color:var(--pr-teal-text);margin-bottom:6px}
+.gauge .trk{position:relative;height:22px;margin-bottom:18px}
+.gauge .bar{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:var(--pr-hairline)}
+.gauge .tk{position:absolute;top:5px;width:2px;height:12px;background:var(--ht);transform:translateX(-1px)}
+.gauge .tlb{position:absolute;top:24px;font-size:10.5px;font-weight:700;color:var(--pr-text-2);transform:translateX(-50%);white-space:nowrap}
+.gauge .tlb.first{transform:none}.gauge .tlb.last{transform:translateX(-100%)}
+.gauge .mk{position:absolute;top:0;width:12px;height:22px;transform:translateX(-50%)}
+.gauge .mk::before{content:"";position:absolute;left:5px;top:0;bottom:0;border-left:2px dashed var(--pr-teal)}
+.gauge .mk::after{content:"";position:absolute;left:1px;top:-6px;border:5px solid transparent;border-top:7px solid var(--pr-teal-text)}
+/* the two buttons that open Recent snow / 7-day forecast inside the card */
+.xrow{margin-top:11px;display:flex;gap:6px;flex-wrap:wrap}
+.xrow .btn.on{background:var(--ht);color:#fff;border-color:var(--ht)}
+.xp{margin-top:10px;border-top:1px solid var(--pr-border);padding-top:8px}
+.xp .xh{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ht);display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.xp .xh span{font-weight:600;letter-spacing:0;text-transform:none;color:var(--pr-text-2)}
+/* a segmented toggle (Base / mid / Summit on the forecast; Summit / Mid on Snow so far) */
+.seg{display:flex;gap:4px;background:var(--pr-hairline);border-radius:999px;padding:3px;margin:4px 0 8px}
+.seg div{flex:1;text-align:center;font-size:11.5px;font-weight:700;padding:5px 6px;border-radius:999px;color:var(--pr-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.seg div:nth-child(2):nth-last-child(2){flex:1.7}   /* the middle of three gets room for a place name */
+.seg div.on{background:var(--pr-card);color:var(--ht,var(--pr-blue-text))}
+/* the 7-day forecast rows */
+.fc{display:grid;grid-template-columns:minmax(0,1fr) 58px 68px 44px 50px;font-size:13px}
+.fc>div{padding:6px 0;border-bottom:1px solid var(--pr-hairline);min-width:0}
+.fc>div.h{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ht);text-align:right;padding-bottom:4px}
+.fc>div.h:first-child{text-align:left}
+.fc>div.d{font-weight:600;white-space:nowrap}
+.fc>div.d small{display:block;font-weight:500;font-size:11px;color:var(--pr-text-2);margin-top:1px}
+.fc>div.v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:6px}
+.fc>div.v.sky{font-size:12px;color:var(--pr-text-2);font-weight:600}
+.fc>div.v.sn{font-family:var(--pr-font-app-display);font-size:16px;color:var(--ht);line-height:1}
+.fc>div.v.sn.z{font-family:var(--pr-font-app);font-size:13px;color:var(--pr-text-muted)}
+.fc>div:nth-last-child(-n+5){border-bottom:none}
+/* recent snow as a 7-day strip: dates across, summit / mid / base down */
+.rs{display:grid;grid-template-columns:62px repeat(7,minmax(0,1fr));font-size:12.5px;column-gap:2px}
+.rs>div{padding:4px 0;border-bottom:1px solid var(--pr-hairline);min-width:0;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rs>div.h{font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--ht);padding-bottom:3px}
+.rs>div.l{text-align:left;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px}
+.rs>div.z{color:var(--pr-text-muted)}
+.rs>div.hi{font-weight:700;color:var(--ht)}
+.rs>div:nth-last-child(-n+8){border-bottom:none}
+.rs .tot{font-size:11px;color:var(--pr-text-2);margin-top:6px;grid-column:1 / -1;text-align:left;border:none;padding:0;white-space:normal}
+/* Home: the powder-alert rows carry the hill's rail and tap through */
+.card.pow .prow{border-left:3px solid var(--hn);margin-left:-15px;padding-left:22px;cursor:pointer}
+.card.pow .ph .chev{font-weight:400;color:var(--ht);margin-left:5px}
+.card.pow .pin small{display:block;font-family:var(--pr-font-app);font-size:11px;font-weight:700;color:var(--pr-text-2);text-shadow:none;margin-top:4px;letter-spacing:.2px;white-space:normal;max-width:150px;margin-left:auto;text-align:right}
+/* Home: today & tomorrow — a row per hill with a three-cell strip, no card title */
+.card.ttc{padding-top:9px}
+.tt{border-left:3px solid var(--hn);margin-left:-15px;padding:7px 0 7px 22px;border-bottom:1px solid rgba(14,98,133,.14);cursor:pointer}
+.tt:last-child{border-bottom:none}
+.tt .t1{font-weight:700;font-size:15px;color:var(--ht)}
+.tt .t2{font-size:11.5px;color:var(--pr-text-2)}
+.strip{display:flex;margin-top:7px;border:1px solid rgba(14,98,133,.18);border-radius:11px;overflow:hidden;background:var(--pr-card)}
+.strip>div{flex:1;padding:6px 8px;text-align:center;border-right:1px solid rgba(14,98,133,.14);min-width:0}
+.strip>div:last-child{border-right:none}
+.strip>div:nth-child(2){flex:1.5}   /* room for a place name like Mackenzie Outpost */
+.strip .k{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip .v{font-family:var(--pr-font-app-display);font-size:18px;color:var(--ht);margin-top:2px;line-height:1}
+.strip .e{font-size:9.5px;font-weight:500;color:var(--pr-text-muted);font-variant-numeric:tabular-nums;margin-top:3px}
+.tt .fz{font-size:11.5px;font-weight:700;color:var(--pr-teal-text);margin-top:6px}
+.tt .fz:empty{display:none}
+/* Home: snow so far as bars — the bar is the season, the dark tip the last 7 days */
+.board .br{display:grid;grid-template-columns:82px minmax(0,1fr) 78px;align-items:center;gap:8px;padding:5px 0;cursor:pointer}
+.board .br.hd{padding:0 0 2px;cursor:default}
+.board .bn{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board .bt{position:relative;height:14px;background:rgba(14,98,133,.1);border-radius:7px;overflow:hidden}
+.board .bf{position:absolute;left:0;top:0;bottom:0;background:var(--hn);border-radius:7px}
+.board .b7{position:absolute;top:0;bottom:0;background:var(--ht);border-radius:0 7px 7px 0}
+.board .bv{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:baseline;justify-content:flex-end;gap:5px}
+.board .bv b{font-weight:700;font-size:14px;color:var(--pr-ink)}
+.board .bv small{font-size:11px;font-weight:600;color:var(--pr-text-2)}
+.board .br.hd .bv b{font-size:12px}.board .br.hd .bv small{font-size:10.5px}
+.board .seg{margin:0 0 8px}
+@media (max-width:360px){ .cols{grid-template-columns:minmax(0,1fr) 60px 70px 60px} .fc{grid-template-columns:minmax(0,1fr) 52px 62px 40px 46px} }
 /* phone-only small-caps label above the route strip (desktop uses the sec() header) */
 .plabel{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin:4px 4px 9px;display:flex;align-items:center;gap:5px}
 /* route strip: the 7 stops as a horizontal chain of chips (scrolls on a phone) */
@@ -612,12 +696,6 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
  .rstrip{display:grid;grid-template-columns:auto repeat(7,minmax(0,1fr)) auto;gap:10px;overflow:visible;margin:0;padding:0}
  .rchip{flex:none}
  .linkrow{margin-bottom:0}
- /* snow-so-far: a 9-row table looks lost at 1100px wide, so lay it out two
-    hills per row (10 cells per row; the .d2 header set fills the second half) */
- .sft{grid-template-columns:minmax(0,1fr) 46px 54px 82px 46px minmax(0,1fr) 46px 54px 82px 46px;column-gap:0}
- .sft.off{grid-template-columns:minmax(0,1fr) 100px 46px minmax(0,1fr) 100px 46px}
- .sft>div.d2{display:block}
- .sft>div:nth-child(10n+6),.sft.off>div:nth-child(6n+4){padding-left:22px}
  .drow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--pr-hairline)}
  .drow:last-child{border-bottom:none;padding-bottom:0}
  .drail{border-left:3px solid #E3D9C8;padding-left:11px}
@@ -641,7 +719,6 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .tap44,.alertcard a[href^="tel:"],.alertcard .btn{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
 /* m10 (Sep 24 2026): gloves-and-glare — no crew text under 11px (was 8–10.5px in 60+ places) and every call/911 link on the
    safety cards is at least 44x44 px. m9: on the narrowest phones (320px) the snow table gives the hill name more room. */
-@media (max-width:360px){ .sft:not(.off){grid-template-columns:minmax(76px,1fr) 40px 46px 70px 38px} .sft>div.hl>span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15} }
 </style>
 <meta name="robots" content="noindex, nofollow">
 </head>
@@ -2183,17 +2260,78 @@ function hillOrder(){ var o=[],seen={}; (D.days||[]).forEach(function(d){ if(d.r
 /* fmtIn(n) — inches for display: 0″, 2.5″, 11″ */
 function fmtIn(n){ if(!(n>0.05))return '0″'; return (n<10?n.toFixed(1).replace(/\.0$/,''):String(Math.round(n)))+'″'; }
 
-/* omDaily(rids, query) — ONE open-meteo call for several hills at once. A
-   comma-separated latitude=/longitude= list comes back as a JSON array in the
-   same order (one hill comes back as a plain object, so we wrap it). Resolves
-   to {rid:{time:[dates], snow:[cm per day]}}. Snowfall is in cm — ÷2.54 for ″. */
-function omDaily(rids,q){
-  rids=rids.filter(function(k){ var r=(D.resorts||{})[k]; return r&&r.lat!=null&&r.lon!=null; });
-  if(!rids.length)return Promise.resolve({});
-  var lat=rids.map(function(k){ return D.resorts[k].lat; }).join(','), lon=rids.map(function(k){ return D.resorts[k].lon; }).join(',');
-  return fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&daily=snowfall_sum&'+q+'&timezone=auto').then(function(x){ return x.json(); }).then(function(j){
-    var arr=Array.isArray(j)?j:[j], out={}; rids.forEach(function(k,i){ var d=(arr[i]||{}).daily; if(d&&d.time)out[k]={time:d.time,snow:d.snowfall_sum||[]}; }); return out; });
-}
+/* ===================== LIVE SNOW + WEATHER (rebuilt Oct 14 2026) =====================
+   One call to open-meteo (a free weather-model service: no key, no server) for all nine hills at
+   three heights each: base, mid, summit. The heights come from resorts[].elev (metres, from each
+   resort's own site) and the mid label from resorts[].midName. The service downscales each point
+   to the height we give it, so a storm that rains at the base and snows up top shows as rain /
+   snow / more snow. Snowfall comes back in cm (÷2.54 for inches); temps °F; gusts mph; the
+   freezing level in metres (×3.281 for feet).
+   What the one call carries, per point:
+     current  = temperature + wind gusts right now
+     hourly   = freezing level for the next 24 h (index 0 = this hour, 12 = in 12 h)
+     daily    = snowfall, hi, lo, max gust, sky code — 14 days back + today + 7 ahead
+   Cached WX_TTL (60 min) in localStorage, the stale copy used offline. Home and the Snow tab read
+   the same cache, so one app open costs one request. The season total (since Oct 1) is a second,
+   six-hourly call to the service's archive of past forecasts (same models) — wxSeason(). */
+var WX_TTL=60*60*1000, WX_SEASON_TTL=6*60*60*1000, LVLS=['base','mid','summit'];
+var OM_URL='https://api.open-meteo.com/v1/forecast', OM_HIST='https://historical-forecast-api.open-meteo.com/v1/forecast';
+/* wxPoints() — the 27 points (hill × height) in itinerary order; a hill without elev data is skipped */
+function wxPoints(){ var out=[]; hillOrder().forEach(function(k){ var r=D.resorts[k]; if(!r||r.lat==null||r.lon==null||!r.elev)return; LVLS.forEach(function(l){ if(r.elev[l]!=null)out.push({rid:k,lvl:l,lat:r.lat,lon:r.lon,elev:r.elev[l]}); }); }); return out; }
+function wxUrl(P){ return OM_URL+'?latitude='+P.map(function(p){ return p.lat; }).join(',')+'&longitude='+P.map(function(p){ return p.lon; }).join(',')+'&elevation='+P.map(function(p){ return p.elev; }).join(',')+'&current=temperature_2m,wind_gusts_10m&hourly=freezing_level_height&forecast_hours=24&daily=snowfall_sum,temperature_2m_max,temperature_2m_min,wind_gusts_10m_max,weather_code&past_days=14&forecast_days=8&timezone=auto&temperature_unit=fahrenheit&wind_speed_unit=mph'; }
+/* wxParse(json, points) — the service answers with one object per point, in our order. Folded into
+   {rid:{lvl:{t, g, fl:[24 metres], day0, d:{time, snow(cm), hi, lo, gust, code}}}}; day0 = today's index
+   in the daily arrays (found from the point's own local date, so a Pacific hill is right at 12:30 am Denver). */
+function wxParse(j,P){ var arr=Array.isArray(j)?j:[j], out={}; P.forEach(function(p,i){ var o=arr[i]; if(!o||!o.daily||!o.daily.time)return; var cur=o.current||{}, today=(cur.time||'').slice(0,10), d0=o.daily.time.indexOf(today); if(d0<0)d0=14;
+  out[p.rid]=out[p.rid]||{}; out[p.rid][p.lvl]={t:cur.temperature_2m,g:cur.wind_gusts_10m,fl:(o.hourly&&o.hourly.freezing_level_height)||[],day0:d0,d:{time:o.daily.time,snow:o.daily.snowfall_sum||[],hi:o.daily.temperature_2m_max||[],lo:o.daily.temperature_2m_min||[],gust:o.daily.wind_gusts_10m_max||[],code:o.daily.weather_code||[]}}; }); return out; }
+var WX_PENDING=null;
+/* wxGet(cb) — hands the weather to cb(wx): from the cache, else from the network (one in-flight request shared by
+   every caller); offline, the stale copy; nothing at all → cb(null). On the Jul 4 test date, the demo storm. */
+function wxGet(cb){ if(isDemo()){ cb(wxDemo()); return; } var c=cacheGet('wxCache',WX_TTL); if(c){ cb(c); return; }
+  var P=wxPoints(); if(!P.length){ cb(null); return; }
+  if(!WX_PENDING)WX_PENDING=fetch(wxUrl(P)).then(function(x){ return x.json(); }).then(function(j){ var wx=wxParse(j,P); cachePut('wxCache',wx); WX_PENDING=null; return wx; }).catch(function(){ WX_PENDING=null; return cacheStale('wxCache'); });
+  WX_PENDING.then(cb); }
+/* the season runs Oct 1 → the following spring; Jul–Sep there is no season to count */
+function ymd(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+function seasonStart(){ var n=getNow(), y=n.getMonth()>=9?n.getFullYear():n.getFullYear()-1; return y+'-10-01'; }
+function seasonOff(){ var m=getNow().getMonth(); return m>=6&&m<=8; }
+var WX_SEASON_PENDING=null;
+/* wxSeason(cb) — snow since Oct 1 at mid + summit of every hill, from the service's archive of past forecasts
+   (same models, same heights), summed up to 8 days ago; the card adds the live feed's last-7-days figure on top, so
+   the season total and the 7-day number always agree. One call, cached 6 h. cb({rid:{mid:inches, summit:inches}})
+   or null when there is nothing (offline with no copy, or no season yet). */
+function wxSeason(cb){ if(isDemo()){ cb(wxDemoSeason()); return; } if(seasonOff()){ cb(null); return; } var c=cacheGet('wxSeason',WX_SEASON_TTL); if(c){ cb(c); return; }
+  var P=wxPoints().filter(function(p){ return p.lvl!=='base'; }), n=getNow(), today=ymd(n), cut=ymd(new Date(n.getFullYear(),n.getMonth(),n.getDate()-7,12)); if(!P.length){ cb(null); return; }
+  var url=OM_HIST+'?latitude='+P.map(function(p){ return p.lat; }).join(',')+'&longitude='+P.map(function(p){ return p.lon; }).join(',')+'&elevation='+P.map(function(p){ return p.elev; }).join(',')+'&daily=snowfall_sum&start_date='+seasonStart()+'&end_date='+today+'&timezone=auto';
+  if(!WX_SEASON_PENDING)WX_SEASON_PENDING=fetch(url).then(function(x){ return x.json(); }).then(function(j){ var arr=Array.isArray(j)?j:[j], out={}; P.forEach(function(p,i){ var o=arr[i]; if(!o||!o.daily||!o.daily.time)return; var t=o.daily.time, s=o.daily.snowfall_sum||[], sum=0; for(var q=0;q<t.length;q++){ if(t[q]>=cut)break; sum+=(s[q]||0); } out[p.rid]=out[p.rid]||{}; out[p.rid][p.lvl]=sum/2.54; }); cachePut('wxSeason',out); WX_SEASON_PENDING=null; return out; }).catch(function(){ WX_SEASON_PENDING=null; return cacheStale('wxSeason'); });
+  WX_SEASON_PENDING.then(cb); }
+/* ---- small helpers the snow cards share ---- */
+function toIn(cm){ return (cm||0)/2.54; }
+function ftOf(m){ return (Math.round(m*3.28084/10)*10).toLocaleString('en-US')+' ft'; }   /* to the nearest 10 ft, the way resorts quote heights */
+function midLabel(r){ return (r&&r.midName)||'Mid'; }                                   /* the column header: "Mid" or the place */
+function midShort(r){ return (r&&r.midName&&r.midName!=='Mid')?r.midName:'mid'; }       /* in a sentence: "6″ at mid" / "6″ at Hut One" */
+function lvlLabel(r,l){ return l==='mid'?midLabel(r):l==='base'?'Base':'Summit'; }
+function wxOf(wx,k,l){ return (wx&&wx[k]&&wx[k][l])||null; }
+function hillAcc(k){ var g=GROUPACC[k]; return (g&&ACCENTS[g])||['var(--pr-blue)','var(--pr-blue-text)']; }   /* the hill's Itinerary colour [neon, text] */
+function accStyle(k){ var a=hillAcc(k); return ' style="--hn:'+a[0]+';--ht:'+a[1]+'"'; }
+/* dayVal(point, field, offset) — a daily value by offset from today: -1 yesterday, 0 today, 1 tomorrow */
+function dayVal(p,f,off){ var i=p.day0+off; return (i>=0&&i<p.d[f].length)?p.d[f][i]:null; }
+function snowIn(p,off){ if(!p)return null; var v=dayVal(p,'snow',off); return v==null?null:toIn(v); }
+/* stormOf(point) — the running storm: count back from yesterday adding snowfall while each day had 1″ or more;
+   the first day under 1″ ends it. {total inches, days} */
+function stormOf(p){ var t=0,n=0; for(var off=-1;off>=-14;off--){ var v=snowIn(p,off); if(v==null||v<1)break; t+=v; n++; } return {total:t,days:n}; }
+/* the depth ladder — real heights on a six-foot rider: ankle 4″ · shin 10″ · knee 20″ · nuts 32″ · waist 40″ · tits 50″ · head 72″ */
+function depthWord(n){ return n<4?'a dusting':n<10?'ankle deep':n<20?'shin deep':n<32?'knee deep':n<40?'nuts deep':n<50?'waist deep':n<72?'tits deep':'over the head'; }
+/* skyWord(code) — the WMO weather code as one plain word */
+function skyWord(c){ c=c|0; return c<=1?'clear':c===2?'sun & cloud':c===3?'cloudy':c<=48?'fog':c<=57?'drizzle':(c===66||c===67)?'mixed':c<=67?'rain':c===71?'flurries':c<=77?'snow':c<=82?'showers':c===85?'flurries':c<=86?'snow':'storm'; }
+/* freezeOf(wx, hill) — the freezing level now (metres) with its 12-hour trend, and where it sits on the hill:
+   slot 3 above the summit · 2 between summit and mid · 1 between mid and base · 0 below the base (then it is not shown) */
+function freezeOf(wx,k){ var p=wxOf(wx,k,'mid'), e=(D.resorts[k]||{}).elev; if(!p||!e||!p.fl||p.fl[0]==null)return null; var now=p.fl[0], later=p.fl[Math.min(12,p.fl.length-1)]; if(later==null)later=now; var tr=(later-now)>150?'rising':(now-later)>150?'falling':'holding'; return {m:now,trend:tr,slot:now>e.summit?3:now>e.mid?2:now>e.base?1:0}; }
+function freezeText(f){ return 'Freeze line '+ftOf(f.m)+' · '+f.trend+(f.slot===3?' · above the summit':''); }
+/* goHill(hill) — Snow tab, scrolled to that hill's card */
+function goHill(k){ sw('snow'); setTimeout(function(){ scrollHill(k); },150); }
+function scrollHill(k){ var el=$('sn-'+k); if(el)el.scrollIntoView({behavior:'smooth',block:'start'}); }
+
 /* cacheGet(key, ttlMs) / cachePut(key, data) / cacheStale(key) — a tiny
    localStorage cache: {ts, data}. cacheGet returns null once it's older than
    ttl; cacheStale hands back whatever is there regardless of age (offline fallback). */
@@ -2202,41 +2340,24 @@ function cacheStale(key){ try{ var c=JSON.parse(localStorage.getItem(key)||'null
 function cachePut(key,data){ try{ localStorage.setItem(key,JSON.stringify({ts:Date.now(),data:data})); }catch(e){} }
 
 /* ---- 1. Powder alert ----
-   Shows only when a hill got POW_MIN_IN inches or more YESTERDAY — the last
-   complete day open-meteo reports (past_days=2 → [day-before, yesterday, today];
-   today's number is part forecast so we don't use it). One call covers all nine
-   hills; the answer is cached POW_TTL ms (60 min) so ten opens in a morning
-   cost one request. Several hills → one card, biggest first; on trip days the
-   hill we ride today, then tomorrow, leads. Nothing over the threshold → no card.
-   Screenshot hook: localStorage.powDemo='1' renders POW_FIXTURE instead of
-   fetching. It never fires without that flag. Change the threshold, the cache
-   time or the fixture right here. */
-var POW_MIN_IN=3, POW_TTL=60*60*1000, POW_FIXTURE={revelstoke:11,kickinghorse:6,whitewater:3};
-/* the jargon ladder — numbers stay honest, the words don't */
-function powWord(n){ return n<1?'dust on crust':n<3?'a sprinkle — hunt cord':n<6?'soft refills all morning':n<12?'proper pow day, call in sick':'nuking — blower over-the-hood freshies'; }
-function powDemoOn(){ try{ return localStorage.getItem('powDemo')==='1'; }catch(e){ return false; } }
-/* powFromDaily(res) — yesterday's snowfall per hill, cm → inches: {rid: inches} */
-function powFromDaily(res){ var out={}; Object.keys(res||{}).forEach(function(k){ var t=res[k].time||[], s=res[k].snow||[]; if(t.length<2)return; var v=s[t.length-2]; if(typeof v==='number')out[k]=v/2.54; }); return out; }
-function powCardHtml(inches){
-  var idx=tripDayIdx(), rids=hillOrder().filter(function(k){ return (inches[k]||0)>=POW_MIN_IN; });
+   The one loud card on Home. Shows when a hill got POW_MID inches or more at mid, or POW_TOP or more at the
+   summit, YESTERDAY (the last complete day). One row per hill that qualifies: summit snow big, mid snow under it,
+   the depth word from the storm total ("knee deep · 26″ over 5 days"), "· refills" when 2″+ more is due at mid
+   today. Today's hill leads, then the deepest summit. Rows wear the hill's colour and tap through to its card on
+   the Snow tab. Nothing qualifies → no card. After the trip Home drops it (rHome). */
+var POW_MID=3, POW_TOP=6;
+function powLine(wx,k){ var s=wxOf(wx,k,'summit'), m=wxOf(wx,k,'mid'); if(!s)return ''; var st=stormOf(s), w=depthWord(st.total); if(st.days>1)w+=' · '+fmtIn(st.total)+' over '+st.days+' days'; var td=snowIn(m,0); if(td!=null&&td>=2)w+=' · refills'; return w; }
+function powCardHtml(wx){ if(!wx)return ''; var idx=tripDayIdx(), today=(idx>=0&&D.days[idx])?D.days[idx].rid:null;
+  var rids=hillOrder().filter(function(k){ var ym=snowIn(wxOf(wx,k,'mid'),-1), ys=snowIn(wxOf(wx,k,'summit'),-1); return (ym!=null&&ym>=POW_MID)||(ys!=null&&ys>=POW_TOP); });
   if(!rids.length)return '';
-  var lead={}; if(idx>=0){ var t=D.days[idx]&&D.days[idx].rid, m=D.days[idx+1]&&D.days[idx+1].rid; if(t)lead[t]=2; if(m&&!lead[m])lead[m]=1; }
-  rids.sort(function(a,b){ return ((lead[b]||0)-(lead[a]||0))||(inches[b]-inches[a]); });
-  var top=D.resorts[rids[0]]||{}, camUrl=top.cams||top.snow||'';
-  var h='<div class="card pow"><div class="powhd"><h2>'+ic('snowflake',14)+' Powder alert'+(powDemoOn()?' · demo':'')+'</h2><span class="when">yesterday</span></div>';
-  rids.forEach(function(k,i){ var n=inches[k], tag=lead[k]===2?'today':lead[k]===1?'tomorrow':'';
-    h+='<div class="prow'+(i===0?' lead':'')+'"><div class="pn"><div class="ph">'+esc(shortName(k))+(tag?'<span class="ptag">'+tag+'</span>':'')+'</div><div class="pj">'+esc(powWord(n))+'</div></div><div class="pin">'+fmtIn(n)+'</div></div>'; });
-  h+=(camUrl?'<div class="xs" style="margin-top:9px"><a href="'+esc(camUrl)+'" target="_blank" style="font-weight:700">'+esc(shortName(rids[0]))+' cams ↗</a></div>':'')+'</div>';
-  return h;
-}
-/* powSlot() is the placeholder rHome() prints; fillPow() fills it from the
-   fixture, the cache, or the network (in that order). Empty slot = no card. */
+  rids.sort(function(a,b){ var la=a===today?1:0, lb=b===today?1:0; return (lb-la)||((snowIn(wxOf(wx,b,'summit'),-1)||0)-(snowIn(wxOf(wx,a,'summit'),-1)||0)); });
+  var h='<div class="card pow"><div class="powhd"><h2>'+ic('snowflake',14)+' Powder alert</h2><span class="when">yesterday</span></div>';
+  rids.forEach(function(k,i){ var r=D.resorts[k]||{}, ys=snowIn(wxOf(wx,k,'summit'),-1), ym=snowIn(wxOf(wx,k,'mid'),-1);
+    h+='<div class="prow'+(i===0?' lead':'')+'"'+accStyle(k)+' onclick="goHill(\''+k+'\')"><div class="pn"><div class="ph">'+esc(shortName(k))+'<span class="chev">›</span>'+(k===today?'<span class="ptag">today</span>':'')+'</div><div class="pj">'+esc(powLine(wx,k))+'</div></div><div class="pin">'+(ys==null?'—':fmtIn(ys))+(ym!=null?'<small>'+fmtIn(ym)+' at '+esc(midShort(r))+'</small>':'')+'</div></div>'; });
+  return h+'</div>'; }
+/* powSlot() is the placeholder rHome() prints; fillPow() fills it (or leaves it empty = no card). */
 function powSlot(){ return '<div id="powslot"></div>'; }
-function fillPow(){ var el=$('powslot'); if(!el)return;
-  if(powDemoOn()){ el.innerHTML=powCardHtml(POW_FIXTURE); return; }
-  var c=cacheGet('powCache',POW_TTL); if(c){ el.innerHTML=powCardHtml(powFromDaily(c)); return; }
-  omDaily(hillOrder(),'past_days=2&forecast_days=1').then(function(res){ cachePut('powCache',res); var e2=$('powslot'); if(e2)e2.innerHTML=powCardHtml(powFromDaily(res)); }).catch(function(){ var old=cacheStale('powCache'), e3=$('powslot'); if(old&&e3)e3.innerHTML=powCardHtml(powFromDaily(old)); });
-}
+function fillPow(){ if(!$('powslot'))return; wxGet(function(wx){ var el=$('powslot'); if(el)el.innerHTML=powCardHtml(wx); }); }
 
 /* ---- 2. Get-ready one-liner ----
    Replaces the full checklist on Home: "Get ready · 3 of 10 done · next: RCR
@@ -2268,52 +2389,28 @@ function rReady(){
   setView('v-ready',h);
 }
 
-/* ---- 3. Snow so far + cams ----
-   Nine rows in itinerary order: last 7 days ″, season so far ″, what's typical
-   for our dates (normals: snow in the 2 weeks before our ski day + the usual
-   hi/lo, °C in the data → °F here) and a cam link (resorts[rid].cams, falling
-   back to .snow). ONE open-meteo call with past_days=92 (the API max), cached
-   SNOW_TTL ms (6 h). "Season so far" counts from Nov 1 when Nov 1 is inside the
-   92-day window, otherwise it's honestly labelled "last 92 days". Off-season
-   (Jul–Oct) it skips the call altogether and shows the typical column only.
-   Offline: stale cache if there is one, else "—". */
-var SNOW_TTL=6*60*60*1000;
-function snowOffSeason(){ var m=getNow().getMonth(); return m>=6&&m<=9; }
-function snowSeasonStart(){ var n=getNow(), y=n.getMonth()>=10?n.getFullYear():n.getFullYear()-1; return y+'-11-01'; }
-function snowSoFarCard(){
-  var off=snowOffSeason(), rids=hillOrder();
-  var h='<div class="card snow"><div class="between" style="margin-bottom:8px"><h2 style="margin:0">'+ic('snowflake',13)+' Snow so far</h2><span class="pill muted" id="sfpill">'+(off?'season opens Nov':'…')+'</span></div>';
-  /* header cells are printed twice: the second set (.d2) is hidden on phones and
-     lets desktop lay the table out two hills per row */
-  var hd=off?['Hill','Typical','']:['Hill','7 days','Season','Typical',''];
-  h+='<div class="sft'+(off?' off':'')+'">';
-  [0,1].forEach(function(rep){ hd.forEach(function(t,i){ h+='<div class="hd'+(i?' n':'')+(rep?' d2':'')+'">'+t+'</div>'; }); });
-  rids.forEach(function(k){ var r=D.resorts[k]||{}, nm=(D.normals||{})[k], cam=r.cams||r.snow;
-    h+='<div class="hl"><span>'+esc(shortName(k))+'</span></div>';
-    if(!off)h+='<div class="n" id="sf7-'+k+'">…</div><div class="n" id="sfs-'+k+'">…</div>';
-    h+='<div class="ty">'+(nm?('~'+nm.snowIn+'″<small>'+cF(nm.hiC)+'° / '+cF(nm.loC)+'°F</small>'):'—')+'</div>';
-    h+='<div class="cam">'+(cam?'<a href="'+esc(cam)+'" target="_blank">cam ↗</a>':'')+'</div>';
-  });
-  h+='</div></div>';
-  return h;
-}
-/* snowSums(res) — per hill {d7, season} in inches, plus _label for the pill */
-function snowSums(res){ var start=snowSeasonStart(), out={}, since=false;
-  /* m7 (Sep 24 2026): the last entry is TODAY, which is part forecast — leave it out of both sums
-     (the powder alert already did). "7 days" = the last 7 complete days. */
-  Object.keys(res||{}).forEach(function(k){ var t=res[k].time||[], s=res[k].snow||[], d7=0, se=0, i, end=Math.max(0,t.length-1);
-    for(i=Math.max(0,end-7);i<end;i++)d7+=(s[i]||0);
-    var f=t.indexOf(start); if(f<0)f=0; else since=true;
-    for(i=f;i<end;i++)se+=(s[i]||0);
-    out[k]={d7:d7/2.54,season:se/2.54}; });
-  out._label=since?'since Nov 1':'last 92 days'; return out; }
-function fillSnowSoFar(){ if(snowOffSeason()||!$('sfpill'))return;
-  var apply=function(res){ var s=snowSums(res); hillOrder().forEach(function(k){ var v=s[k], a=$('sf7-'+k), b=$('sfs-'+k); if(a)a.textContent=v?fmtIn(v.d7):'—'; if(b)b.textContent=v?fmtIn(v.season):'—'; }); var p=$('sfpill'); if(p)p.textContent=s._label; };
-  var c=cacheGet('snowSoFarCache',SNOW_TTL); if(c){ apply(c); return; }
-  omDaily(hillOrder(),'past_days=92&forecast_days=1').then(function(res){ cachePut('snowSoFarCache',res); apply(res); }).catch(function(){
-    var old=cacheStale('snowSoFarCache'); if(old){ apply(old); return; }
-    hillOrder().forEach(function(k){ ['sf7-','sfs-'].forEach(function(p){ var e=$(p+k); if(e)e.textContent='—'; }); }); var p=$('sfpill'); if(p)p.textContent='offline'; });
-}
+/* ---- 3. Snow so far (Home) ----
+   Nine bars in itinerary order, each in its hill's colour: the bar = the season since Oct 1, the dark tip = the
+   last 7 days; the 7-day number big and the season total small at the right. Summit by default, Mid on the toggle
+   (remembered on this phone). The 7-day numbers come from the main weather call, the season from the archive call;
+   either missing shows "—" (and with no season at all the bars show the 7 days instead). Jul–Sep: "season opens
+   Oct 1" and no calls. A row taps through to the hill on the Snow tab. */
+function sfLvl(){ try{ return localStorage.getItem('sfLvl')==='mid'?'mid':'summit'; }catch(e){ return 'summit'; } }
+function setSfLvl(l){ try{ localStorage.setItem('sfLvl',l); }catch(e){} fillSnowSoFar(); }
+function snowSoFarCard(){ var off=seasonOff(), lvl=sfLvl();
+  var h='<div class="card snow board" id="sofar"><div class="between" style="margin-bottom:6px"><h2 style="margin:0">Snow so far</h2>'+(off?'<span class="pill muted">season opens Oct 1</span>':'')+'</div>';
+  if(!off)h+='<div class="seg"><div class="'+(lvl==='summit'?'on':'')+'" onclick="setSfLvl(\'summit\')">Summit</div><div class="'+(lvl==='mid'?'on':'')+'" onclick="setSfLvl(\'mid\')">Mid</div></div>';
+  return h+'<div id="sfrows">'+(off?'':'<div class="xs muted">…</div>')+'</div></div>'; }
+function fillSnowSoFar(){ var el=$('sfrows'); if(!el||seasonOff())return; var lvl=sfLvl();
+  var segs=document.querySelectorAll('#sofar .seg div'); if(segs.length===2){ segs[0].className=lvl==='summit'?'on':''; segs[1].className=lvl==='mid'?'on':''; }
+  wxGet(function(wx){ wxSeason(function(se){ var e2=$('sfrows'); if(!e2)return;
+    var rows=hillOrder().map(function(k){ var p=wxOf(wx,k,lvl), d7=null; if(p){ d7=0; for(var o=-7;o<=-1;o++){ var v=snowIn(p,o); if(v!=null)d7+=v; } } var s=(se&&se[k]&&se[k][lvl]!=null&&d7!=null)?se[k][lvl]+d7:null; return {k:k,d7:d7,season:s}; });
+    var anySeason=rows.some(function(r){ return r.season!=null; });
+    var max=Math.max.apply(null,rows.map(function(r){ return (anySeason?r.season:r.d7)||0; }).concat([1]));
+    var h='<div class="br hd"><div></div><div></div><div class="bv"><b>7 days</b><small>season</small></div></div>';
+    rows.forEach(function(r){ var w=((anySeason?r.season:r.d7)||0)/max*100, w7=anySeason?Math.min(w,(r.d7||0)/max*100):w;
+      h+='<div class="br"'+accStyle(r.k)+' onclick="goHill(\''+r.k+'\')"><div class="bn">'+esc(r.k==='kickinghorse'?'KH':shortName(r.k))+'</div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%"></div><div class="b7" style="left:'+(w-w7).toFixed(1)+'%;width:'+w7.toFixed(1)+'%"></div></div><div class="bv"><b>'+(r.d7==null?'—':fmtIn(r.d7))+'</b><small>'+(r.season==null?'—':fmtIn(r.season))+'</small></div></div>'; });
+    e2.innerHTML=h; }); }); }
 
 /* ---- 4. Route strip ----
    The 7 stops as a chain of chips: town, dates, nights, hotel, cost, free-cancel
@@ -2453,7 +2550,7 @@ function rHome(){
   else if(idx>=0){ var td=D.days[idx], r=resortOfDay(td); h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Today · '+td.wd+' '+fmtShort(td.dt)+'</div><div class="hero-ti" style="margin:6px 0 3px">'+esc(td.title)+'</div>'+(choiceLine(td)?'<div class="sm" style="opacity:.9">'+esc(choiceLine(td))+'</div>':'')+(passChip(idx)?'<div style="margin-top:5px">'+passChip(idx)+'</div>':'')+'<button class="btn" onclick="dsToday()" style="margin-top:9px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('map',12)+' Today\u2019s day sheet</button>'+skiSwitchHtml(td,true)+'<div class="stripe"></div></div>'; }
   else { h+='<div class="banner"><div class="hero-ti">That’s a wrap 🎿</div><div class="sm" style="opacity:.85;margin-top:4px">Hope it was deep. Drive safe home.</div><div class="stripe"></div></div>'; }
   if(idx===-2){   /* i16 (Sep 24 2026): after Feb 21 Home is a wrap-up — no powder alert, no deadlines, no countdowns */
-    h+=deskStats()+gnarSlot()+sec('The town &amp; the crew')+dykCard()+crewCard()+picksSlot();
+    h+=deskStats()+gnarSlot()+sec('The town')+dykCard()+picksSlot();
     var lr0=linkRow(); if(lr0)h+=sec('Crew links')+lr0;
     h+='<div class="btn pri" style="width:100%;justify-content:center" onclick="sw(\'days\')">'+ic('calendar',14)+' The whole trip, day by day</div>';
     setView('v-home',h); fillPicks(); fillGnar(); return; }
@@ -2473,7 +2570,7 @@ function rHome(){
   h+=sec('Snow &amp; mountains')+snowSoFarCard();
   h+=sec('The route',(D.stops||[]).length+' stops \u00b7 '+(D.days.length-1)+' nights');
   h+='<div class="plabel phoneonly">'+ic('bed',12)+' The route \u00b7 '+(D.stops||[]).length+' stops \u00b7 '+(D.days.length-1)+' nights</div>'+routeStrip();
-  h+=sec('The town &amp; the crew')+deskTown()+dykCard()+crewCard()+deskCrew()+picksSlot();
+  h+=sec('The town')+deskTown()+dykCard()+picksSlot();
   h+=sec('Deadlines &amp; money');
   var now=getNow(), nx=null;
   /* m1: stays on during the trip too — 5 of the 6 deadlines fall Feb 5–17 (the Regent chase, the Rossland decision) */
@@ -2482,7 +2579,7 @@ function rHome(){
   h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div></div>';
   var lr=linkRow(); if(lr)h+=sec('Crew links')+lr;
   h+='<div class="btn pri" style="width:100%;justify-content:center" onclick="sw(\'days\')">'+ic('calendar',14)+' Full itinerary</div>';
-  setView('v-home',h); initFx(); fillPow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
+  setView('v-home',h); initFx(); fillPow(); fillTodaySnow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
   /* widths shift a few px once the webfonts land — re-run the two strip scrolls then (both are no-ops once correct) */
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){ if(CUR==='home'){ scrollMilestones(); scrollRoute(); } });
 }
@@ -2580,37 +2677,37 @@ function cF(c){ return Math.round(c*9/5+32); }
 function isDemo(){ var n=getNow(); return n.getMonth()===6 && n.getDate()===4; }
 function passLabel(r){ return (r&&r.ticket)?ic('ticket',12)+' Tickets required':''; }
 function roadLink(t){ var rs=D.roads||[], us=/border|Sandpoint|Idaho|US/i.test(t||''), key=us?'511':'drivebc'; for(var i=0;i<rs.length;i++){ if((rs[i].url||'').toLowerCase().indexOf(key)>=0) return rs[i].url; } return us?'https://511.idaho.gov':'https://www.drivebc.ca'; }
-var DPAT=[12,18,8,3,0,6,2], DDROP=[5,8,4,2,0,5,2];
-function scaleOf(k){ var n=(D.normals||{})[k]; return Math.max(0.6,(((n&&n.snowIn)||8))/8); }
-function demoDay(k,off){ return Math.round(DPAT[Math.min(off,DPAT.length-1)]*scaleOf(k)); }
-function demoBase(k){ var n=(D.normals||{})[k]; return Math.round(50+(((n&&n.snowIn)||8))*6); }
-function renderDemo(k){
-  var n=(D.normals||{})[k]||{hiC:-6,loC:-14}, sc=scaleOf(k), lab=['Today','+1','+2','+3','+4','+5','+6'], baseHi=cF(n.hiC), strip='', n24=0, n7=0;
-  for(var i=0;i<7;i++){ var sn=Math.round(DPAT[i]*sc); if(i===0)n24=sn; n7+=sn; strip+='<div style="flex:0 0 auto;width:54px;text-align:center;background:#F9F5EC;border:1px solid var(--pr-hairline);border-radius:10px;padding:7px 4px"><div style="font-size:11px;color:var(--pr-text-muted);font-weight:600">'+lab[i]+'</div><div style="font-size:13px;font-weight:700;margin-top:3px">'+(baseHi-DDROP[i])+'°</div><div style="font-size:11px;color:var(--pr-teal-text);font-weight:700;margin-top:3px">'+(sn>0?sn+'″':'–')+'</div></div>'; }
-  var baseIn=demoBase(k), nowT=cF(n.loC)+6, frz=Math.round(3300-sc*500), gust=18+Math.round(sc*14);
-  var h='<span class="pill ok">🧪 DEMO storm</span><div style="margin-top:6px"><b>'+n24+'″ overnight</b> · '+n7+'″ next 7 days · powder day</div>';
-  h+='<div style="display:flex;gap:6px;overflow-x:auto;margin-top:9px;padding-bottom:2px">'+strip+'</div>';
-  h+='<div class="xs muted" style="margin-top:8px;border-top:1px solid var(--pr-hairline);padding-top:7px">Now at the hill (demo): '+nowT+'°F · base '+baseIn+'″ · freezing lvl '+frz+' ft · gusts '+gust+' mph</div>';
-  $('snb-'+k).innerHTML=h;
-  if($('snp-'+k)){ $('snp-'+k).textContent=nowT+'°F'; $('snp-'+k).className='pill'; }
-}
+/* ---- the Jul 4 demo — a made-up storm so every snow card renders with no network (set the test date to Jul 4) ---- */
+var DPAT=[0,0,2,5,0,0,1,3,0,8,12,3,0,11,6,2,0,0,4,7,1,0];   /* inches at the summit, 14 days back → today (index 14) → 7 ahead */
+function wxDemo(){ var wx={}, n=getNow(), times=[]; for(var i=-14;i<=7;i++)times.push(ymd(new Date(n.getFullYear(),n.getMonth(),n.getDate()+i,12)));
+  var HS={revelstoke:1.3,whitewater:1.2,kickinghorse:1,schweitzer:0.9,red:0.8,panorama:0.7,louise:0.7,sunshine:0.7,norquay:0.5}, LS={base:0.3,mid:0.75,summit:1}, T={base:30,mid:22,summit:14}, G={base:10,mid:16,summit:26};
+  hillOrder().forEach(function(k){ var r=D.resorts[k]; if(!r||!r.elev)return; wx[k]={}; LVLS.forEach(function(l){ var s=(HS[k]||0.8)*LS[l], fl=[]; for(var q=0;q<24;q++)fl.push(r.elev.base+(r.elev.mid-r.elev.base)*0.6+q*8);
+    wx[k][l]={t:T[l],g:G[l],fl:fl,day0:14,d:{time:times,snow:DPAT.map(function(v){ return +(v*s*2.54).toFixed(2); }),hi:DPAT.map(function(){ return T[l]+2; }),lo:DPAT.map(function(){ return T[l]-10; }),gust:DPAT.map(function(v){ return v?22:9; }),code:DPAT.map(function(v){ return v>=3?73:v>0?71:3; })}}; }); });
+  return wx; }
+function wxDemoSeason(){ var out={}, HS={revelstoke:1.3,whitewater:1.2,kickinghorse:1,schweitzer:0.9,red:0.8,panorama:0.7,louise:0.7,sunshine:0.7,norquay:0.5}; hillOrder().forEach(function(k){ var s=HS[k]||0.8; out[k]={mid:Math.round(180*s),summit:Math.round(230*s)}; }); return out; }
+
+/* ---- Today & tomorrow (Home, trip days) ----
+   One row per hill we ride today and tomorrow (a pick day with the pick still open shows both options — R39):
+   "Today · Revelstoke" and the date, the temp at mid now, a three-cell strip of that day's forecast snow at
+   base / mid / summit with the heights under the inches, and the freeze line when it is on the mountain (today's
+   row only). No card title: the first row is the title. Rows wear the hill's colour and tap through to the Snow
+   tab; the drive line keeps its roads link. Pre-trip the card is empty (Jul 4 demo aside). */
 function homeSnowCard(){
   var idx=tripDayIdx(), pairs=[];
-  /* a pick day (R39) with the pick still open shows both options */
-  function addDay(lab,d){ if(!d)return; if(d.rid)pairs.push({lab:lab,d:d,rid:d.rid}); else if(d.opts&&d.ski)d.opts.forEach(function(o){ pairs.push({lab:lab,d:d,rid:o}); }); }
-  if(idx>=0){ addDay('Today',D.days[idx]); addDay('Tomorrow',D.days[idx+1]); }
-  else if(isDemo()){ if(D.days[1])pairs.push({lab:'Today',d:D.days[1],rid:D.days[1].rid}); if(D.days[2])pairs.push({lab:'Tomorrow',d:D.days[2],rid:D.days[2].rid}); }
+  function addDay(lab,d,off){ if(!d)return; if(d.rid)pairs.push({lab:lab,d:d,rid:d.rid,off:off}); else if(d.opts&&d.ski)d.opts.forEach(function(o){ pairs.push({lab:lab,d:d,rid:o,off:off,opt:true}); }); }
+  if(idx>=0){ addDay('Today',D.days[idx],0); addDay('Tomorrow',D.days[idx+1],1); }
+  else if(isDemo()){ if(D.days[1])pairs.push({lab:'Today',d:D.days[1],rid:D.days[1].rid,off:0}); if(D.days[2])pairs.push({lab:'Tomorrow',d:D.days[2],rid:D.days[2].rid,off:1}); }
   if(!pairs.length) return '';
-  var demo=isDemo(), h='<div class="card snow"><h2>'+(demo?'🧪 Snow — today &amp; tomorrow (demo)':'Snow — today &amp; tomorrow')+'</h2>';
-  pairs.forEach(function(p,i){ var r=D.resorts[p.rid]||{name:p.rid}, val=demo?('🌨 '+demoDay(p.rid,i)+'″ new · base '+demoBase(p.rid)+'″'):'<span class="muted">loading…</span>';
-    h+='<div style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="between"><div><div style="font-weight:700">'+p.lab+' · '+esc(r.name)+(p.d.rid?'':' <span class="xs muted">(if picked)</span>')+'</div><div class="xs muted">'+p.d.wd+' '+fmtShort(p.d.dt)+(r.ticket?' · '+ic('ticket',11)+' ticket':'')+'</div></div><div class="sm" id="hs-'+i+'" style="text-align:right;font-weight:600">'+val+'</div></div>'+(p.d.drive?'<div class="xs" style="margin-top:4px"><a href="'+roadLink(p.d.drive)+'" target="_blank">'+ic('car',12)+' '+esc(p.d.drive)+' · check roads ↗</a></div>':'')+'</div>'; });
-  h+='</div>';
-  if(!demo){ pairs.forEach(function(p,i){ fillHomeSnow('hs-'+i,p.rid,p.d.dt); }); }
-  return h;
+  var h='<div class="card snow ttc" id="todaysnow">';
+  pairs.forEach(function(p){ var r=D.resorts[p.rid]||{name:p.rid}, id=p.rid+'-'+p.off;
+    h+='<div class="tt"'+accStyle(p.rid)+' onclick="goHill(\''+p.rid+'\')"><div class="between"><div><div class="t1">'+p.lab+' · '+esc(shortName(p.rid))+(p.opt?' <span class="xs muted">(if picked)</span>':'')+'</div><div class="t2">'+p.d.wd+' '+fmtShort(p.d.dt)+'</div></div><span class="pill muted" id="ttt-'+id+'">…</span></div><div class="strip" id="tts-'+id+'"></div><div class="fz" id="ttf-'+id+'"></div>'+(p.d.drive?'<div class="xs" style="margin-top:6px"><a href="'+roadLink(p.d.drive)+'" target="_blank" onclick="event.stopPropagation()">'+ic('car',12)+' '+esc(p.d.drive)+' · check roads ↗</a></div>':'')+'</div>'; });
+  return h+'</div>';
 }
-function fillHomeSnow(id,rid,dt){ var r=D.resorts[rid]; if(!r)return;
-  fetch('https://api.open-meteo.com/v1/forecast?latitude='+r.lat+'&longitude='+r.lon+'&daily=snowfall_sum,temperature_2m_max,temperature_2m_min&forecast_days=16&timezone=auto&temperature_unit=fahrenheit').then(function(x){return x.json();}).then(function(j){ var el=$(id); if(!el)return; var k=(j.daily&&j.daily.time)?j.daily.time.indexOf(dt):-1; if(k>=0){ var sfIn=(j.daily.snowfall_sum[k]||0)/2.54; el.innerHTML=(sfIn>=0.3?(sfIn<1?sfIn.toFixed(1):Math.round(sfIn))+'″ new':'no new snow')+' · hi '+Math.round(j.daily.temperature_2m_max[k])+'°'; } else { var nm=(D.normals||{})[rid]; el.innerHTML=nm?('~'+nm.snowIn+'″ typical'):'—'; } }).catch(function(){ var el=$(id); if(el){ var nm=(D.normals||{})[rid]; el.textContent=nm?('~'+nm.snowIn+'″ typical'):'—'; } });
-}
+function fillTodaySnow(){ if(!$('todaysnow'))return; wxGet(function(wx){ if(!wx)return;
+  [].slice.call(document.querySelectorAll('#todaysnow .strip')).forEach(function(el){ var id=el.id.slice(4), cut=id.lastIndexOf('-'), rid=id.slice(0,cut), off=+id.slice(cut+1), r=D.resorts[rid]; if(!r||!r.elev)return;
+    el.innerHTML=LVLS.map(function(l){ var v=snowIn(wxOf(wx,rid,l),off); return '<div><div class="k">'+esc(lvlLabel(r,l))+'</div><div class="v">'+(v==null?'—':fmtIn(v))+'</div><div class="e">'+ftOf(r.elev[l])+'</div></div>'; }).join('');
+    var m=wxOf(wx,rid,'mid'), t=$('ttt-'+id); if(t)t.textContent=(m&&m.t!=null)?Math.round(m.t)+'°F':'—';
+    var f=$('ttf-'+id), fz=(off===0)?freezeOf(wx,rid):null; if(f)f.textContent=(fz&&fz.slot>0)?freezeText(fz):''; }); }); }
 function resortSkiDate(rid){ for(var i=0;i<D.days.length;i++){ if(D.days[i].rid===rid) return D.days[i].dt; } return D.meta.start; }
 /* ===================== SAVING MAPS FOR OFFLINE (Snow tab) — rewritten Sep 24 2026 (M10, M13, R20) =====================
    The service worker (sw.js) keeps ONE copy of each map under /maps/ and remembers which fingerprint it holds.
@@ -2756,7 +2853,6 @@ async function s3dGo(){
   if(!failed.length)msg+=' They open in 3D with no signal.';
   try{ var est=await navigator.storage.estimate(); if(est&&est.quota)S3D.free=Math.max(0,est.quota-(est.usage||0)); }catch(e){}
   s3dDraw(msg+keepHtml(keep)); toast(failed.length?saved.length+' saved, '+failed.length+' not saved':'3D maps saved'); }
-function climoHtml(k){ var n=(D.normals||{})[k]; if(!n) return '<span class="muted">No climatology yet.</span>'; var sd=fmtShort(resortSkiDate(k)); return '<div><b>~'+n.snowIn+'″</b> snow in the 2 weeks before '+sd+' <span class="muted">(ranged '+n.minIn+'–'+n.maxIn+'″ · '+n.yrs+'-yr avg)</span><br><span class="muted">typical hi '+cF(n.hiC)+'° / lo '+cF(n.loC)+'°F on '+sd+'</span></div>'; }
 /* ================= zone access + the lift sheet (v.69.29) =================
    Data shipped v.69.25: z.access = ordered [{via,name?,min?,note?}] (the real
    approach, reads like directions) + derived z.lifts. The chips are the
@@ -3415,46 +3511,74 @@ function suggestedHtml(k){
 }
 function toggleSuggested(k){ var el=$('sg-'+k), c=$('sgcar-'+k); if(!el)return; if(!el.style.display||el.style.display==='none'){ el.innerHTML=suggestedHtml(k); el.style.display='block'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
 function toggleTerrain(k){ var el=$('terr-'+k), c=$('terrcar-'+k); if(!el)return; if(!el.style.display||el.style.display==='none'){ el.innerHTML=terrainHtml((D.terrain||{})[k],TMODE[k]||'all',k); el.style.display='block'; if(c)c.textContent='▴'; } else { el.style.display='none'; if(c)c.textContent='▾'; } }
+/* ---- the Snow tab ----
+   Quick-link chips (one per hill, its colour — the Itinerary's chips), the offline-maps button, then one card per
+   hill in itinerary order: the hill's name on its colour rail; Yesterday / Today (forecast) / Now / Wind at base /
+   mid / summit; the freeze gauge when the freeze line is above the base; "Recent snow" and "7-day forecast"
+   buttons that open inside the card; then everything the card always carried (links, stash, search, Meet up,
+   Suggested runs, lift sheet, Terrain). All nine cards fill from the one shared weather call. */
 function rSnow(){
-  var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1>'+(isDemo()?'<div class="sub">🧪 Example storm conditions — set the test date off Jul 4 to exit</div>':'')+'</div><button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button> '+s3dButton()+'<div id="mapstat"></div><div id="snowwrap"></div>';
+  var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1><div class="sub">'+(isDemo()?'🧪 Example storm conditions — set the test date off Jul 4 to exit':'Color = the hill')+'</div></div>';
+  h+='<div class="chips">'+hillOrder().map(function(k){ return '<button class="chip" onclick="scrollHill(\''+k+'\')"><span style="background:'+hillAcc(k)[0]+'"></span>'+esc(shortName(k))+'</button>'; }).join('')+'</div>';
+  h+='<button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button> '+s3dButton()+'<div id="mapstat"></div><div id="snowwrap"></div>';
   setView('v-snow',h); var w=$('snowwrap');
-  Object.keys(D.resorts||{}).forEach(function(k){ var r=D.resorts[k];
-    w.insertAdjacentHTML('beforeend','<div class="card" id="sn-'+k+'"><div class="between"><div><div style="font-weight:700">'+esc(r.name)+'</div>'+(passLabel(r)?'<div class="xs muted">'+passLabel(r)+'</div>':'')+'</div><span class="pill muted" id="snp-'+k+'">…</span></div><div id="snb-'+k+'" class="sm" style="margin-top:9px"></div><div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(BUNDLES3D[k]?'<a class="btn" href="3d.html?m='+encodeURIComponent(k)+z3dV(k)+'">'+ic('mountain',14)+' 3D map</a>':'')+(r.map?'<a class="btn" href="'+mapV(r.map)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+mapV(r.map2)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+mapV(r.map3)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+mapV(r.basemap)+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+(r.cams?'<a class="btn" href="'+r.cams+'" target="_blank">'+ic('mountain',14)+' '+esc(r.camsLabel||'Webcams')+'</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?(srBoxHtml(k)+wkBtnHtml(k)):'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleSuggested(\''+k+'\')"><span>'+ic('mountain',15)+' Suggested runs — the ranked picks</span><span id="sgcar-'+k+'">▾</span></div><div id="sg-'+k+'" style="display:none"></div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
-    fetchSnow(k);
+  hillOrder().forEach(function(k){ var r=D.resorts[k];
+    w.insertAdjacentHTML('beforeend','<div class="card hill" id="sn-'+k+'"'+accStyle(k)+'><div class="hname">'+esc(r.name)+'</div><div id="snb-'+k+'" class="sm" style="margin-top:9px"><div class="xs muted">…</div></div><div class="xrow"><button class="btn" id="xb-'+k+'-rec" onclick="toggleWx(\''+k+'\',\'rec\')">Recent snow ▾</button><button class="btn" id="xb-'+k+'-fc" onclick="toggleWx(\''+k+'\',\'fc\')">7-day forecast ▾</button></div><div id="snx-'+k+'"></div>'+'<div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(BUNDLES3D[k]?'<a class="btn" href="3d.html?m='+encodeURIComponent(k)+z3dV(k)+'">'+ic('mountain',14)+' 3D map</a>':'')+(r.map?'<a class="btn" href="'+mapV(r.map)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+mapV(r.map2)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+mapV(r.map3)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+mapV(r.basemap)+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+(r.cams?'<a class="btn" href="'+r.cams+'" target="_blank">'+ic('mountain',14)+' '+esc(r.camsLabel||'Webcams')+'</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?(srBoxHtml(k)+wkBtnHtml(k)):'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleSuggested(\''+k+'\')"><span>'+ic('mountain',15)+' Suggested runs — the ranked picks</span><span id="sgcar-'+k+'">▾</span></div><div id="sg-'+k+'" style="display:none"></div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
   });
+  fillSnowTab();
 }
-function fetchSnow(k){
-  var r=D.resorts[k];
-  if(isDemo()){ renderDemo(k); return; }
-  $('snb-'+k).innerHTML=climoHtml(k);
-  var skiDate=resortSkiDate(k);
-  var u='https://api.open-meteo.com/v1/forecast?latitude='+r.lat+'&longitude='+r.lon+'&current=temperature_2m,wind_gusts_10m&hourly=snow_depth,freezing_level_height&daily=snowfall_sum,temperature_2m_max,temperature_2m_min&forecast_days=16&timezone=auto&temperature_unit=fahrenheit&wind_speed_unit=mph';
-  fetch(u).then(function(x){return x.json();}).then(function(j){
-    var cur='';
-    if(j.current){
-      var parts=[Math.round(j.current.temperature_2m)+'°F'];
-      try{ var hi=j.hourly.time.indexOf(j.current.time); if(hi>=0){ var sd=j.hourly.snow_depth[hi], fl=j.hourly.freezing_level_height[hi]; if(sd!=null)parts.push('base '+Math.round(sd*39.37)+'″'); if(fl!=null)parts.push('freezing lvl '+Math.round(fl*3.281)+' ft'); } }catch(e){}
-      if(j.current.wind_gusts_10m!=null)parts.push('gusts '+Math.round(j.current.wind_gusts_10m)+' mph');
-      cur='<div class="xs muted" style="margin-top:8px;border-top:1px solid var(--pr-hairline);padding-top:7px">Now at the hill (live): '+parts.join(' · ')+'</div>';
-      $('snp-'+k).textContent=Math.round(j.current.temperature_2m)+'°F'; $('snp-'+k).className='pill';
-    }
-    var lead=climoHtml(k);
-    if(j.daily&&j.daily.time){ var idx=j.daily.time.indexOf(skiDate); if(idx>=0){ var sfIn=(j.daily.snowfall_sum[idx]||0)/2.54; lead='<span class="pill ok">forecast · '+fmtShort(skiDate)+'</span><div style="margin-top:6px"><b>'+(sfIn>=0.3?(sfIn<1?sfIn.toFixed(1):Math.round(sfIn))+'″ snow':'no new snow')+'</b> on your day · hi '+Math.round(j.daily.temperature_2m_max[idx])+'° / lo '+Math.round(j.daily.temperature_2m_min[idx])+'°F</div>'; } }
-    $('snb-'+k).innerHTML=lead+cur;
-  }).catch(function(){ if($('snp-'+k)){$('snp-'+k).textContent='typical';} });
-}
+var WX_OPEN={}, FC_LVL={};   /* which section each card has open; which height its forecast shows (mid by default) */
+function fillSnowTab(){ wxGet(function(wx){ hillOrder().forEach(function(k){ renderHill(k,wx); }); }); }
+/* renderHill(hill, wx) — the weather block at the top of a hill card: the four rows across base / mid / summit, then
+   the freeze gauge (only when the line is on the mountain). "—" where the service gave nothing. */
+function renderHill(k,wx){ var el=$('snb-'+k); if(!el)return; var r=D.resorts[k]||{}, e=r.elev; if(!wx||!wx[k]||!e){ el.innerHTML='<div class="xs muted">No weather right now.</div>'; return; }
+  var pts=LVLS.map(function(l){ return wxOf(wx,k,l); });
+  var h='<div class="cols"><div></div><div class="ch">Base<small>'+ftOf(e.base)+'</small></div><div class="ch">'+esc(midLabel(r))+'<small>'+ftOf(e.mid)+'</small></div><div class="ch">Summit<small>'+ftOf(e.summit)+'</small></div>';
+  function row(lab,sub,fn,cls){ h+='<div class="rl"><b>'+lab+'</b>'+sub+'</div>'; pts.forEach(function(p){ var v=p?fn(p):null; h+='<div class="v'+(cls||'')+'">'+(v==null?'—':v)+'</div>'; }); }
+  row('Yesterday','new snow',function(p){ var v=snowIn(p,-1); return v==null?null:fmtIn(v); },' vb');
+  row('Today','forecast',function(p){ var v=snowIn(p,0); return v==null?null:fmtIn(v); });
+  row('Now','°F',function(p){ return p.t==null?null:Math.round(p.t)+'°'; });
+  row('Wind','gusts mph',function(p){ return p.g==null?null:String(Math.round(p.g)); });
+  h+='</div>';
+  var fz=freezeOf(wx,k); if(fz&&fz.slot>0)h+=gaugeHtml(fz,e,r);
+  el.innerHTML=h; renderWxOpen(k,wx); }
+/* gaugeHtml — the freeze line on a base → summit bar: ticks at base, mid and summit, the teal marker at the 0 °C height */
+function gaugeHtml(fz,e,r){ var span=Math.max(1,e.summit-e.base), p=Math.max(0,Math.min(1,(fz.m-e.base)/span))*100, pm=(e.mid-e.base)/span*100;
+  return '<div class="gauge"><div class="gl">'+esc(freezeText(fz))+'</div><div class="trk"><div class="bar"></div><div class="tk" style="left:0"></div><div class="tk" style="left:'+pm.toFixed(1)+'%"></div><div class="tk" style="left:100%"></div><div class="mk" style="left:'+p.toFixed(1)+'%"></div><div class="tlb first" style="left:0">Base</div><div class="tlb" style="left:'+pm.toFixed(1)+'%">'+esc(midLabel(r))+'</div><div class="tlb last" style="left:100%">Summit</div></div></div>'; }
+function toggleWx(k,which){ WX_OPEN[k]=(WX_OPEN[k]===which)?null:which; wxGet(function(wx){ renderWxOpen(k,wx); }); }
+function setFcLvl(k,l){ FC_LVL[k]=l; wxGet(function(wx){ renderWxOpen(k,wx); }); }
+function renderWxOpen(k,wx){ var box=$('snx-'+k); if(!box)return; var open=WX_OPEN[k];
+  ['rec','fc'].forEach(function(w){ var b=$('xb-'+k+'-'+w); if(b){ b.className='btn'+(open===w?' on':''); b.innerHTML=(w==='rec'?'Recent snow ':'7-day forecast ')+(open===w?'▴':'▾'); } });
+  box.innerHTML=(!open||!wx||!wx[k])?'':(open==='rec'?recentHtml(k,wx):forecastHtml(k,wx)); }
+/* recentHtml — the last 7 days as a strip: dates across, summit / mid / base down, the totals in one line */
+function recentHtml(k,wx){ var r=D.resorts[k]||{}, m=wxOf(wx,k,'mid'); if(!m)return ''; var h='<div class="xp"><div class="xh">Recent snow <span>last 7 days</span></div><div class="rs"><div class="h l"></div>';
+  for(var o=-7;o<=-1;o++){ var dt=dayVal(m,'time',o)||''; h+='<div class="h">'+(dt?+dt.slice(8,10):'')+'</div>'; }
+  var tot={};
+  [['Summit','summit'],[midLabel(r),'mid'],['Base','base']].forEach(function(L){ var p=wxOf(wx,k,L[1]), t=0; h+='<div class="l">'+esc(L[0])+'</div>'; for(var o2=-7;o2<=-1;o2++){ var v=snowIn(p,o2); if(v!=null)t+=v; h+=cellIn(v); } tot[L[1]]=p?t:null; });
+  h+='<div class="tot">7-day total · summit '+(tot.summit==null?'—':fmtIn(tot.summit))+' · '+esc(midShort(r))+' '+(tot.mid==null?'—':fmtIn(tot.mid))+' · base '+(tot.base==null?'—':fmtIn(tot.base))+'</div></div></div>'; return h; }
+function cellIn(v){ if(v==null)return '<div class="z">—</div>'; var z=!(v>0.05); return '<div class="'+(z?'z':v>=6?'hi':'')+'">'+(z?'–':fmtIn(v))+'</div>'; }
+/* forecastHtml — a Base / mid / Summit toggle, then a row per day for that height: sky · hi/lo · gusts · snow */
+function forecastHtml(k,wx){ var r=D.resorts[k]||{}, lvl=FC_LVL[k]||'mid', p=wxOf(wx,k,lvl); if(!p)return '';
+  var h='<div class="xp"><div class="xh">7-day forecast</div><div class="seg">'+LVLS.map(function(l){ return '<div class="'+(l===lvl?'on':'')+'" onclick="setFcLvl(\''+k+'\',\''+l+'\')">'+esc(lvlLabel(r,l))+'</div>'; }).join('')+'</div>';
+  h+='<div class="fc"><div class="h"></div><div class="h">Sky</div><div class="h">Hi / lo</div><div class="h">Gusts</div><div class="h">Snow</div>';
+  for(var o=0;o<=6;o++){ var dt=dayVal(p,'time',o); if(!dt)break; var sn=dayVal(p,'snow',o), z=!(sn>0.1), hi=dayVal(p,'hi',o), lo=dayVal(p,'lo',o), g=dayVal(p,'gust',o);
+    h+='<div class="d">'+(o===0?'Today':['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dObj(dt).getDay()])+'<small>'+fmtShort(dt)+'</small></div><div class="v sky">'+skyWord(dayVal(p,'code',o))+'</div><div class="v">'+(hi==null?'—':Math.round(hi)+'°')+' / '+(lo==null?'—':Math.round(lo)+'°')+'</div><div class="v">'+(g==null?'—':Math.round(g))+'</div><div class="v sn'+(z?' z':'')+'">'+(z?'–':fmtIn(toIn(sn)))+'</div>'; }
+  return h+'</div></div>'; }
 function dirUrl(leg){ var p=leg.split(' → '); if(p.length===2){ return 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(p[0])+'&destination='+encodeURIComponent(p[1]); } return mapsUrl(leg); }
 function legSights(leg){ var al={'Nelson → RED Mountain':'Nelson → Rossland','Rossland → Sandpoint, ID':'Rossland → Sandpoint','Sunshine or Lake Louise → Panorama':'Banff → Panorama'}; var key=al[leg]||leg, rs=D.roadside||[]; for(var i=0;i<rs.length;i++){ if((rs[i].leg||'').split(' · ')[0]===key) return rs[i]; } return null; }
 function dsTg(i){ var e=$('ds-'+i), c=$('dscar-'+i); if(!e)return; if(e.style.display==='none'){ e.style.display='block'; if(c)c.textContent='▴'; } else { e.style.display='none'; if(c)c.textContent='▾'; } }
+/* legAccent(leg) — the colour of where the leg is headed, from the Itinerary's rail colours (ACCENTS); a leg to an
+   airport or any other place off the colour map gets none */
+function legAccent(leg){ var to=String(leg||'').split('\u2192').pop().toLowerCase(), T=[['banff','banff'],['louise','banff'],['sunshine','banff'],['panorama','panorama'],['invermere','panorama'],['golden','kickinghorse'],['kicking','kickinghorse'],['revelstoke','revelstoke'],['nelson','whitewater'],['whitewater','whitewater'],['red mountain','red'],['rossland','red'],['sandpoint','schweitzer'],['schweitzer','schweitzer']]; for(var i=0;i<T.length;i++){ if(to.indexOf(T[i][0])>=0)return ACCENTS[T[i][1]]||null; } return null; }
 function driveCard(x,today){ DS_N++; var i=DS_N, seg=legSights(x.leg), n=(seg&&seg.sights)?seg.sights.length:0, open=!!(today&&n);
-  var h='<div class="card"'+(today?' style="border:1.5px solid var(--pr-btn-primary-bg)"':'')+'><div class="between"><div style="font-weight:700">'+(today?'Today · ':'')+esc(x.leg)+'</div><span class="pill">'+esc(x.t)+'</span></div><div class="xs muted" style="margin-top:3px">'+esc(x.d)+'</div><div class="sm" style="margin-top:5px">'+esc(x.note)+'</div><div style="margin-top:8px"><a class="btn" href="'+dirUrl(x.leg)+'" target="_blank">'+ic('compass',14)+' Directions</a></div>';
+  var acc=legAccent(x.leg), h='<div class="card" style="'+(today?'border:1.5px solid var(--pr-btn-primary-bg);':'')+(acc?'border-left:3px solid '+acc[0]+';padding-left:14px':'')+'"><div class="between"><div style="font-weight:700">'+(today?'Today · ':'')+esc(x.leg)+'</div><span class="pill">'+esc(x.t)+'</span></div><div class="xs muted" style="margin-top:3px">'+esc(x.d)+'</div><div class="sm" style="margin-top:5px">'+esc(x.note)+'</div><div style="margin-top:8px"><a class="btn" href="'+dirUrl(x.leg)+'" target="_blank">'+ic('compass',14)+' Directions</a></div>';
   if(n){ h+='<div style="margin-top:6px"><button class="btn" onclick="dsTg('+i+')" style="gap:7px">'+ic('tip',13)+' '+n+' sight'+(n!==1?'s':'')+' <span id="dscar-'+i+'" style="color:var(--pr-text-muted)">'+(open?'▴':'▾')+'</span></button></div>';
     h+='<div id="ds-'+i+'" style="display:'+(open?'block':'none')+';margin-top:9px;border-top:1px solid var(--pr-hairline)">';
     seg.sights.slice().sort(function(a,b){ var ak=(a.km==null)?1e9:a.km, bk=(b.km==null)?1e9:b.km; return ak-bk; }).forEach(function(sg){ h+='<div style="padding:7px 0;border-bottom:1px solid var(--pr-hairline)"><div class="between"><div style="font-weight:600;font-size:14px">'+esc(sg.name)+(sg.km!=null?' <span style="font-size:11px;font-weight:700;color:var(--pr-teal-text);white-space:nowrap">· '+sg.km+' km'+(sg.det?' · turnoff':'')+'</span>':'')+'</div>'+(sg.g?'<a href="'+sg.g+'" target="_blank" style="font-size:11.5px;font-weight:600;white-space:nowrap">'+ic('pin',11)+' pin ↗</a>':'')+'</div>'+(sg.note?'<div class="xs muted" style="margin-top:1px">'+esc(sg.note)+'</div>':'')+'</div>'; });
     h+='</div>'; }
   h+='</div>'; return h; }
 function rDrive(){ DS_N=0;
-  var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Drives &amp; roads</h1></div>';
+  var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Drives &amp; roads</h1><div class="sub">Color = where we\u2019re headed</div></div>';
   var legs=(D.drives||[]).slice(), todayLegs=[];
   if(idx>=0){ var ds=fmtShort(D.days[idx].dt); todayLegs=legs.filter(function(x){ return (x.d||'').indexOf(ds)>=0; }); legs=legs.filter(function(x){ return todayLegs.indexOf(x)<0; }); }
   todayLegs.forEach(function(x){ h+=driveCard(x,true); });
