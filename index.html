@@ -1277,7 +1277,13 @@ function z3dSlug(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').rep
 /* Sep 5: every 3D bundle has a build stamp in trip-data (maps3d, written by scripts/stamp_bundles.py). It rides on the
    3d.html address as &v= and is left in localStorage, so 3d.html can fetch maps/3d/<m>.bundle?v=<stamp> — a NEW address
    for a rebuilt bundle, which is the only way past the service worker's cache-first rule for /maps/. */
-function z3dV(k){ var v=z3dStamp(k); try{ if(v)localStorage.setItem('pr3d-v-'+k,v); }catch(e){} return v?'&v='+encodeURIComponent(v):''; }
+function z3dV(k){ var v=z3dStamp(k); try{ if(v)localStorage.setItem('pr3d-v-'+k,v); }catch(e){} z3dApp(k); return v?'&v='+encodeURIComponent(v):''; }
+/* z3dApp(k) — what the 3D page's lists need from the app (Oct 15 2026): hill k's lift links (which lifts you can get to from a lift's top),
+   the app ↔ 3D lift names, the Snow tab's ranked picks and each run's other names. Left in localStorage as pr3d-app-<hill> every time the
+   app builds a 3D address (z3dV runs for all of them), so the page has a fresh copy with no network and no password. Never fails the app. */
+function z3dApp(k){ try{ var t=((D&&D.terrain)||{})[k]; if(!t)return; var r=t.reach||{}, picks={}, alias={};
+    (t.zones||[]).forEach(function(z){ (z.runs||[]).forEach(function(run){ if(!run||!run.name)return; if(typeof run.pick==='number'&&!run.mapOnly&&!run.hide)picks[run.name]=run.pick; if(run.alias&&run.alias.length)alias[run.name]=run.alias.slice(); }); });
+    localStorage.setItem('pr3d-app-'+k,JSON.stringify({ts:Date.now(),links:r.links||[],lifts:r.lifts||[],picks:picks,alias:alias})); }catch(e){} }
 /* z3dStamp(k) — hill k's 3D fingerprint (Sep 24 2026): its build stamp, "YYYYMMDDTHHMMSS". Two scripts write it —
    stamp_bundles.py into maps3d, stamp_map_fingerprints.py into mapsFp (as maps/3d/<k>.bundle) — so the LATER stamp
    wins: whichever ran last after a hill rebuild, phones get the new bundle. The service worker keeps one copy per
