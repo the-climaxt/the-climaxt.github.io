@@ -34,6 +34,7 @@
 @font-face{font-family:"Righteous";font-weight:400;src:url(fonts/righteous-latin-400-normal.woff2) format("woff2");font-display:swap}
 :root{--pr-paper:#FAF3D7;--pr-cream:#FBF6EC;--pr-card:#FFFCF2;--pr-ink:#241E2C;--pr-text-2:#5C5462;--pr-text-muted:#736A7B;--pr-border:#EDE0B4;--pr-hairline:#F3EDD6;
 --pr-pink:#FF4D9D;--pr-teal:#1FC9B7;--pr-yellow:#FFC53D;--pr-lime:#B8E332;--pr-pink-text:#C4116B;--pr-teal-text:#0B6E66;--pr-blue-text:#0E6285;--pr-lime-text:#4E6B00;--pr-yellow-text:#7A5200;--pr-danger-text:#9C4A00;
+--pr-teal-tint:#E9F5F1;--pr-blue-tint:#EAF4FB;--pr-ok-bg:#F2F7E2;--pr-ok-text:#4E6B00;--pr-danger-bg:#FCEFE4;
 --pr-font-app:"Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;--pr-font-app-display:"Righteous","Arial Rounded MT Bold",system-ui,sans-serif}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--pr-paper);color:var(--pr-ink);font-family:var(--pr-font-app);min-height:100%}
@@ -54,16 +55,16 @@ h1::after{content:"";display:block;width:54px;height:5px;border-radius:3px;backg
 #chips button small{font-weight:400;color:var(--pr-text-muted);margin-left:4px}
 /* the list */
 .zone{margin:14px 0 6px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--pr-text-muted);display:flex;justify-content:space-between}
-.row{display:block;background:var(--pr-card);border:1px solid var(--pr-border);border-radius:12px;padding:10px 12px;margin:6px 0;text-decoration:none;color:var(--pr-ink)}
+.row{display:block;background:var(--pr-card);border:1px solid var(--pr-border);border-radius:11px;padding:10px 12px;margin:6px 0;text-decoration:none;color:var(--pr-ink)}
 .row.done{opacity:.72;background:var(--pr-hairline)}
 .row .nm{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .row .meta{font-size:12px;color:var(--pr-text-2);margin-top:3px}
 .row .note{font-size:12px;color:var(--pr-text-muted);margin-top:3px;line-height:1.4}
 .pill{font-size:10px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:999px;background:var(--pr-hairline);color:var(--pr-text-2);text-transform:uppercase}
 .pill.pick{background:var(--pr-yellow);color:var(--pr-yellow-text)}
-.pill.area{background:#E9F5F1;color:var(--pr-teal-text)}
+.pill.area{background:var(--pr-teal-tint);color:var(--pr-teal-text)}
 .pill.drawn{background:var(--pr-lime);color:var(--pr-lime-text)}
-.pill.easy{background:#DFF3E4;color:#1E6B3A}.pill.intermediate{background:#EAF4FB;color:var(--pr-blue-text)}.pill.advanced,.pill.expert{background:#2E2A33;color:#fff}
+.pill.easy{background:var(--pr-ok-bg);color:var(--pr-ok-text)}.pill.intermediate{background:var(--pr-blue-tint);color:var(--pr-blue-text)}.pill.advanced,.pill.expert{background:var(--pr-ink);color:#fff}
 #tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
 #summary{font-size:13px;color:var(--pr-text-2);margin:2px 0 8px}
 .filters{display:flex;gap:6px;margin:6px 0 2px}.filters button{font:600 12px var(--pr-font-app);padding:6px 10px;border-radius:999px;border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-ink)}.filters button.on{background:var(--pr-teal);border-color:var(--pr-teal);color:#fff}

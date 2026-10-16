@@ -75,7 +75,7 @@ h1::after{content:"";display:block;width:54px;height:5px;border-radius:3px;backg
 .card .muted{color:var(--pr-text-2)}   /* small gray text on tinted cards uses text-2, never text-muted */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:600 13px var(--pr-font-app);padding:9px 13px;border-radius:10px;border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-ink);cursor:pointer;text-decoration:none}
 .btn.pri{background:var(--pr-pink-text);color:#fff;border-color:var(--pr-pink-text)}
-.btn.pri:active{background:#A30D59}.btn:active{background:var(--pr-hairline)}
+.btn.pri:active{opacity:.7}.btn:active{background:var(--pr-hairline)}
 .btn.wide{width:100%}
 .btn[disabled]{opacity:.45}
 .inp{width:100%;font:15px var(--pr-font-app);padding:10px 12px;border:1px solid var(--pr-border);border-radius:10px;background:#fff;color:var(--pr-ink);margin:4px 0 10px}
@@ -122,7 +122,7 @@ svg.ic{width:14px;height:14px;fill:currentColor;vertical-align:-2px;flex:0 0 aut
 .vote button.on{background:var(--pr-pink-text);border-color:var(--pr-pink-text);color:#fff}
 .tally{font-size:11.5px;color:var(--pr-text-2);margin-top:4px}
 /* claim sheet (a modal — flat, no blur, no shadow) */
-#sheet{position:fixed;inset:0;z-index:30;background:rgba(36,30,44,.55);display:none;align-items:flex-end;justify-content:center}
+#sheet{position:fixed;inset:0;z-index:30;background:var(--pr-ink);display:none;align-items:flex-end;justify-content:center}
 #sheet.open{display:flex}
 #sheet .pane{background:var(--pr-paper);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:14px 16px calc(env(safe-area-inset-bottom) + 18px);border-top:1px solid var(--pr-border)}
 .opt{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--pr-hairline);cursor:pointer}

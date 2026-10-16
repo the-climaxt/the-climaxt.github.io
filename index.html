@@ -17,6 +17,11 @@
 :root{
 --pr-paper:#FAF3D7;--pr-cream:#FBF6EC;--pr-card:#FFFCF2;--pr-ink:#241E2C;--pr-text-2:#5C5462;--pr-text-muted:#736A7B;
 --pr-border:#EDE0B4;--pr-hairline:#F3EDD6;
+--pr-on-ink-2:#CFC8D6;      /* secondary text on ink */
+--pr-on-ink-muted:#8F8697;  /* muted text and chip borders on ink (4.6:1) */
+--pr-on-ink-line:#3A3346;   /* hairlines on ink */
+--pr-rail:#E3D9C8;          /* neutral itinerary rail */
+--pr-muted-bg:#F1EBE0;      /* muted pill / chip background */
 --pr-pink:#FF4D9D;--pr-teal:#1FC9B7;--pr-purple:#8A4DEB;--pr-yellow:#FFC53D;--pr-orange:#FF8A3C;--pr-blue:#35B5E8;--pr-lime:#B8E332;
 --pr-pink-text:#C4116B;--pr-teal-text:#0B6E66;--pr-purple-text:#5E2CA5;--pr-yellow-text:#7A5200;--pr-orange-text:#9C4A00;--pr-blue-text:#0E6285;--pr-lime-text:#4E6B00;
 --pr-pink-tint:#FCEEF4;--pr-teal-tint:#E9F5F1;--pr-purple-tint:#F2EDFA;--pr-yellow-tint:#FBF3DA;--pr-orange-tint:#FCEFE4;--pr-blue-tint:#EAF4FB;--pr-lime-tint:#F2F7E2;
@@ -49,14 +54,14 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .card h2{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin-bottom:10px}
 .between{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--pr-pink-tint);color:var(--pr-pink-text)}
-.pill.warn{background:var(--pr-warn-bg);color:var(--pr-warn-text)}.pill.ok{background:var(--pr-ok-bg);color:var(--pr-ok-text)}.pill.muted{background:#F1EBE0;color:var(--pr-text-2)}
+.pill.warn{background:var(--pr-warn-bg);color:var(--pr-warn-text)}.pill.ok{background:var(--pr-ok-bg);color:var(--pr-ok-text)}.pill.muted{background:var(--pr-muted-bg);color:var(--pr-text-2)}
 .big{font-family:var(--pr-font-app-display);font-size:46px;font-weight:400;letter-spacing:1px;line-height:1;text-shadow:3px 3px 0 var(--pr-pink)}
 .muted{color:var(--pr-text-muted)}.sm{font-size:13px}.xs{font-size:11.5px}
 .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:9px 13px;border-radius:10px;border:1px solid var(--pr-border);background:var(--pr-card);color:var(--pr-ink);cursor:pointer}
 .btn.pri{background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)}
 .lk{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border:1px solid var(--pr-border);border-radius:11px;margin-bottom:8px;background:var(--pr-card);font-size:14px;font-weight:600}
 .lk small{display:block;font-weight:400;color:var(--pr-text-muted);font-size:11.5px;margin-top:1px}
-.day{border-left:3px solid #E3D9C8;padding:2px 0 2px 12px;margin-bottom:14px}
+.day{border-left:3px solid var(--pr-rail);padding:2px 0 2px 12px;margin-bottom:14px}
 .day.today{border-color:var(--pr-pink)}
 .day .dt{font-size:11px;font-weight:700;color:var(--pr-text-muted);text-transform:uppercase;letter-spacing:.5px}
 .day.today .dt{color:var(--pr-pink-text)}
@@ -75,12 +80,12 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .card.snow .muted,.card.todo .muted,.card.money .muted,.card.stash .muted,.card.meeting .muted,.card.terrain .muted,.card.tint .muted{color:var(--pr-text-2)}.card.tint{background:var(--t-bg);border-color:rgba(0,0,0,.07)}.card.tint h2{color:var(--t-fg)}
 .card.alertcard{background:var(--pr-danger-bg);border:var(--pr-card-alert-border)}
 .stripe{height:5px;border-radius:3px;margin-top:12px;background:linear-gradient(90deg,var(--pr-pink) 0 25%,var(--pr-yellow) 25% 50%,var(--pr-teal) 50% 75%,var(--pr-purple) 75% 100%)}
-.tbann{background:var(--pr-warn-bg);border:1px solid #EFD9A0;color:var(--pr-warn-text);border-radius:12px;padding:9px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tbann{background:var(--pr-warn-bg);border:1px solid #EFD9A0;color:var(--pr-warn-text);border-radius:11px;padding:9px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .soon{text-align:center;color:var(--pr-text-muted);padding:38px 16px}
 .soon .ic{font-size:30px}.soon .t{font-weight:700;color:var(--pr-text-2);margin-top:8px}
 .bnav{position:fixed;bottom:0;left:0;right:0;background:var(--pr-card);border-top:1px solid var(--pr-border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 7px;border:none;background:none;cursor:pointer;color:var(--pr-nav-idle)}
-.nb .ic{height:19px;line-height:1;display:flex;align-items:center}.nb span{font-size:11px;margin-top:3px;font-weight:600}
+.nb .ic{height:19px;line-height:1;display:flex;align-items:center}.nb span{font-size:9.5px;margin-top:3px;font-weight:600}
 .nb.on{color:var(--pr-nav-selected)}.nb.on span{font-weight:700}
 .nb.gone{display:none} /* the Get-ready tab once the trip is under way — see readyLive() */
 .toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:var(--pr-ink);color:#fff;font-size:13px;padding:9px 15px;border-radius:10px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none}
@@ -112,9 +117,9 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 @media (hover:hover) and (pointer:fine){ #zbtns.on{display:flex} }
 #zstage img{width:100%;height:100%;object-fit:contain;display:block}
 .zhow{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px;background:var(--pr-cream);color:var(--pr-text-2);border:1px solid var(--pr-border)}
-.zhow.partway{color:#0F5A85} .zhow.traverse{color:#7A5A00} .zhow.hike{color:#B5175F}
+.zhow.partway{color:var(--pr-blue-text)} .zhow.traverse{color:var(--pr-yellow-text)} .zhow.hike{color:var(--pr-pink-text)}
 .zfrom{font-size:11px;color:var(--pr-text-2);margin-top:3px}
-#zfromlift{font:600 12.5px var(--pr-font-app,inherit);padding:4px 8px;border-radius:8px;border:1px solid var(--pr-border);background:var(--pr-cream);color:var(--pr-ink);max-width:60%}
+#zfromlift{font:600 12.5px var(--pr-font-app,inherit);padding:4px 8px;border-radius:10px;border:1px solid var(--pr-border);background:var(--pr-cream);color:var(--pr-ink);max-width:60%}
 /* the 3D map (Sep 2026): for Revelstoke + Sunshine the stage shows 3d.html in a frame instead of the painted panel.
    The frame is the picture; the app's chips and run list drive it. The painted panel stays one tap away (Map). */
 #z3d{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:var(--pr-ink)}
@@ -224,7 +229,7 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .zrk{flex:0 0 auto;min-width:21px;height:21px;border-radius:999px;background:var(--pr-ink);
  color:var(--pr-cream);font-size:11px;font-weight:700;display:flex;align-items:center;
  justify-content:center;padding:0 5px;margin-top:1px}
-.znum{flex:0 0 auto;min-width:23px;height:19px;border-radius:5px;border:1px solid var(--pr-ink);
+.znum{flex:0 0 auto;min-width:23px;height:19px;border-radius:3px;border:1px solid var(--pr-ink);
  background:var(--pr-card);color:var(--pr-ink);font-size:11px;font-weight:700;
  display:flex;align-items:center;justify-content:center;padding:0 4px;margin-top:1px}
 .zchip{font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
@@ -234,7 +239,7 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .zchip.air{background:var(--pr-danger-bg);color:var(--pr-danger-text)}
 .zchip.hike{background:var(--pr-purple-tint);color:var(--pr-purple-text)}
 .zchip.obsc{background:var(--pr-teal-tint);color:var(--pr-teal-text)}
-.zchip.flat{background:#F1EBE0;color:var(--pr-text-2)}
+.zchip.flat{background:var(--pr-muted-bg);color:var(--pr-text-2)}
 /* ---- access chips (v.69.29 shell; data shipped v.69.25) ----------------
    Zone drawer "Getting here" row + resort-card lift index. Chips are the
    summary; tap a lift chip for the lift sheet, tap a walk/bootpack/hike/cat
@@ -250,7 +255,7 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 button.achip{cursor:pointer}
 button.achip:active{opacity:.7}
 .achip.lift{background:var(--pr-blue-tint);color:var(--pr-blue-text)}
-.achip.walk{background:#F1EBE0;color:var(--pr-text-2)}
+.achip.walk{background:var(--pr-muted-bg);color:var(--pr-text-2)}
 .achip.bootpack{background:var(--pr-warn-bg);color:var(--pr-warn-text)}
 .achip.hike{background:var(--pr-danger-bg);color:var(--pr-danger-text)}
 .achip.cat{background:var(--pr-purple-tint);color:var(--pr-purple-text)}
@@ -411,17 +416,17 @@ button.achip:active{opacity:.7}
 @media (hover:hover) and (pointer:fine){ #sbtns.on{display:flex} }
 #snothere2{position:absolute;left:12px;right:12px;z-index:5;display:none}
 #sdrawer{position:absolute;left:0;right:0;bottom:0;height:var(--sdh);z-index:6;background:var(--pr-ink);
- border-top:1px solid #3A3346;border-radius:14px 14px 0 0;transition:height .28s ease;
+ border-top:1px solid var(--pr-on-ink-line);border-radius:14px 14px 0 0;transition:height .28s ease;
  overflow:hidden;display:flex;flex-direction:column;color:var(--pr-cream)}
 #sdrawer .zgrab{position:absolute;top:3px;left:50%;margin-left:-10px;width:20px;height:15px;
- line-height:15px;text-align:center;font-size:12px;color:#8f8697;
+ line-height:15px;text-align:center;font-size:12px;color:var(--pr-on-ink-muted);
  z-index:2;pointer-events:none;transition:transform .28s}
 #sdrawer.shut .zgrab{transform:rotate(180deg)}
 #sbar{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:17px 16px 10px;cursor:pointer}
 #sbar .zdt{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--pr-cream)}
 #sbody{flex:1;overflow-y:auto;padding:0 16px calc(14px + env(safe-area-inset-bottom));opacity:1;transition:opacity .16s}
 #sdrawer.shut #sbody{opacity:0;pointer-events:none;overflow:hidden}
-.slgh{font-family:var(--pr-font-app-display);font-size:11px;font-weight:700;letter-spacing:.14em;margin:13px 0 5px}
+.slgh{font-family:var(--pr-font-app);font-size:11px;font-weight:700;letter-spacing:.14em;margin:13px 0 5px}
 .slgi{display:flex;gap:7px;align-items:flex-start;padding:3px 0;cursor:pointer;break-inside:avoid}
 .slgi:active{opacity:.7}
 .slgn{flex:0 0 16px;text-align:right;font-weight:700;font-size:11px;line-height:1.5}
@@ -451,10 +456,9 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
  .bnav .brand{display:flex;align-items:center;gap:10px;margin-right:16px;flex:0 0 auto}
  .bnav .brand .bmk{width:34px;height:34px;border-radius:10px;background:var(--pr-ink);color:var(--pr-cream);
   display:flex;align-items:center;justify-content:center;flex:0 0 auto}
- .bnav .brand .bwm{font-family:var(--pr-font-app-display);font-size:15px;letter-spacing:.5px;
-  text-shadow:1.5px 1.5px 0 var(--pr-pink)}
+ .bnav .brand .bwm{font-family:var(--pr-font-app);font-size:15px;font-weight:700;letter-spacing:.5px}
  .bnav .tw{display:block;margin-left:auto;text-align:right;flex:0 0 auto;line-height:1.35}
- .nb{flex:0 0 auto;flex-direction:row;gap:7px;padding:8px 13px;border-radius:9px}
+ .nb{flex:0 0 auto;flex-direction:row;gap:7px;padding:8px 13px;border-radius:10px}
  .nb .ic{height:auto}
  .nb span{font-size:13.5px;margin-top:0;font-weight:600}
  .nb:hover{background:var(--pr-paper);color:var(--pr-ink)}
@@ -512,7 +516,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .milest .mi{flex:0 0 150px;width:150px;position:relative;padding:0 12px 0 0;color:var(--m-text)}
 .milest .mi::before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;background:var(--m-line)}
 .milest .mi:first-child::before{left:7px}.milest .mi:last-child::before{right:auto;width:7px}
-.milest .md{position:relative;z-index:1;width:16px;height:16px;border-radius:99px;background:var(--m-paper);border:2px solid var(--m-line);display:flex;align-items:center;justify-content:center;color:var(--pr-lime-text)}
+.milest .md{position:relative;z-index:1;width:16px;height:16px;border-radius:999px;background:var(--m-paper);border:2px solid var(--m-line);display:flex;align-items:center;justify-content:center;color:var(--pr-lime-text)}
 .milest .mi.past .md{background:var(--pr-lime-tint);border-color:var(--pr-lime-text)}
 .milest .mi.next .md{background:var(--pr-pink);border-color:var(--pr-pink-text)}
 .milest .mw{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;color:var(--m-text)}
@@ -527,7 +531,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .card.pow .powhd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 -15px 10px;padding:8px 15px;background:var(--pr-teal);color:var(--pr-ink)}
 .card.pow .powhd h2{margin:0;color:var(--pr-ink);display:flex;align-items:center;gap:6px}
 .card.pow .powhd .when{font-size:11px;font-weight:700;letter-spacing:.3px}
-.card.pow .prow{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid rgba(14,98,133,.14)}
+.card.pow .prow{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--pr-hairline)}
 .card.pow .prow:last-of-type{border-bottom:none}
 .card.pow .prow .pn{flex:1;min-width:0}
 .card.pow .prow .ph{font-weight:700;font-size:15px}
@@ -547,7 +551,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 /* quick-link chips on the Snow tab — same look as the Itinerary's */
 .chips{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 14px}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;color:var(--pr-text-2);background:var(--pr-card);border:1px solid var(--pr-border);border-radius:999px;padding:3px 9px 3px 6px;cursor:pointer}
-.chip span{width:9px;height:9px;border-radius:99px;display:inline-block}
+.chip span{width:9px;height:9px;border-radius:999px;display:inline-block}
 /* a hill card on the Snow tab: warm-white card, 3px rail and name in the hill's colour */
 .card.hill{border-left:3px solid var(--hn);padding-left:14px}
 .card.hill .hname{font-weight:700;font-size:15px;color:var(--ht)}
@@ -594,8 +598,8 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .fc>div.d small{display:block;font-weight:500;font-size:11px;color:var(--pr-text-2);margin-top:1px}
 .fc>div.v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:6px}
 .fc>div.v.sky{font-size:12px;color:var(--pr-text-2);font-weight:600}
-.fc>div.v.sn{font-family:var(--pr-font-app-display);font-size:16px;color:var(--ht);line-height:1}
-.fc>div.v.sn.z{font-family:var(--pr-font-app);font-size:13px;color:var(--pr-text-muted)}
+.fc>div.v.sn{font-family:var(--pr-font-app);font-weight:700;font-size:16px;color:var(--ht);line-height:1}
+.fc>div.v.sn.z{font-family:var(--pr-font-app);font-weight:400;font-size:13px;color:var(--pr-text-muted)}
 .fc>div:nth-last-child(-n+5){border-bottom:none}
 /* recent snow as a 7-day strip: dates across, summit / mid / base down */
 .rs{display:grid;grid-template-columns:62px repeat(7,minmax(0,1fr));font-size:12.5px;column-gap:2px}
@@ -612,16 +616,16 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .card.pow .pin small{display:block;font-family:var(--pr-font-app);font-size:11px;font-weight:700;color:var(--pr-text-2);text-shadow:none;margin-top:4px;letter-spacing:.2px;white-space:normal;max-width:150px;margin-left:auto;text-align:right}
 /* Home: today & tomorrow — a row per hill with a three-cell strip, no card title */
 .card.ttc{padding-top:9px}
-.tt{border-left:3px solid var(--hn);margin-left:-15px;padding:7px 0 7px 22px;border-bottom:1px solid rgba(14,98,133,.14);cursor:pointer}
+.tt{border-left:3px solid var(--hn);margin-left:-15px;padding:7px 0 7px 22px;border-bottom:1px solid var(--pr-hairline);cursor:pointer}
 .tt:last-child{border-bottom:none}
 .tt .t1{font-weight:700;font-size:15px;color:var(--ht)}
 .tt .t2{font-size:11.5px;color:var(--pr-text-2)}
-.strip{display:flex;margin-top:7px;border:1px solid rgba(14,98,133,.18);border-radius:11px;overflow:hidden;background:var(--pr-card)}
-.strip>div{flex:1;padding:6px 8px;text-align:center;border-right:1px solid rgba(14,98,133,.14);min-width:0}
+.strip{display:flex;margin-top:7px;border:1px solid var(--pr-hairline);border-radius:11px;overflow:hidden;background:var(--pr-card)}
+.strip>div{flex:1;padding:6px 8px;text-align:center;border-right:1px solid var(--pr-hairline);min-width:0}
 .strip>div:last-child{border-right:none}
 .strip>div:nth-child(2){flex:1.5}   /* room for a place name like Mackenzie Outpost */
 .strip .k{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.strip .v{font-family:var(--pr-font-app-display);font-size:18px;color:var(--ht);margin-top:2px;line-height:1}
+.strip .v{font-family:var(--pr-font-app);font-weight:700;font-size:18px;color:var(--ht);margin-top:2px;line-height:1}
 .strip .e{font-size:9.5px;font-weight:500;color:var(--pr-text-muted);font-variant-numeric:tabular-nums;margin-top:3px}
 .tt .fz{font-size:11.5px;font-weight:700;color:var(--pr-teal-text);margin-top:6px}
 .tt .fz:empty{display:none}
@@ -629,9 +633,9 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .board .br{display:grid;grid-template-columns:82px minmax(0,1fr) 78px;align-items:center;gap:8px;padding:5px 0;cursor:pointer}
 .board .br.hd{padding:0 0 2px;cursor:default}
 .board .bn{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.board .bt{position:relative;height:14px;background:rgba(14,98,133,.1);border-radius:7px;overflow:hidden}
-.board .bf{position:absolute;left:0;top:0;bottom:0;background:var(--hn);border-radius:7px}
-.board .b7{position:absolute;top:0;bottom:0;background:var(--ht);border-radius:0 7px 7px 0}
+.board .bt{position:relative;height:14px;background:var(--pr-hairline);border-radius:10px;overflow:hidden}
+.board .bf{position:absolute;left:0;top:0;bottom:0;background:var(--hn);border-radius:10px}
+.board .b7{position:absolute;top:0;bottom:0;background:var(--ht);border-radius:0 10px 10px 0}
 .board .bv{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:baseline;justify-content:flex-end;gap:5px}
 .board .bv b{font-weight:700;font-size:14px;color:var(--pr-ink)}
 .board .bv small{font-size:11px;font-weight:600;color:var(--pr-text-2)}
@@ -642,7 +646,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .plabel{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--pr-text-muted);margin:4px 4px 9px;display:flex;align-items:center;gap:5px}
 /* route strip: the 7 stops as a horizontal chain of chips (scrolls on a phone) */
 .rstrip{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 12px;padding:0 16px 6px;scrollbar-width:none}
-.rchip{flex:0 0 164px;background:var(--pr-card);border:1px solid var(--pr-border);border-left:4px solid #E3D9C8;border-radius:11px;padding:9px 10px 8px;cursor:pointer;display:flex;flex-direction:column;min-width:0}
+.rchip{flex:0 0 164px;background:var(--pr-card-terrain-bg);border:1px solid var(--pr-border);border-radius:11px;padding:9px 10px 8px;cursor:pointer;display:flex;flex-direction:column;min-width:0}
 .rchip .rt{font-weight:700;font-size:14px;line-height:1.2}
 .rchip .rd{font-size:11.5px;color:var(--pr-text-2);margin-top:2px}
 .rchip .rh{font-size:11.5px;margin-top:5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -682,12 +686,12 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
  #v-ready .wrap>.btn{width:auto;margin:0 0 18px} /* the "← Home" button stays a button, not a bar */
  /* stats strip under the countdown (inside the dark hero on desktop) */
  .hstats{display:flex;justify-content:flex-start;gap:34px;grid-column:1/-1;margin-top:30px;order:1;
-  border-top:1px solid rgba(251,246,236,.22);padding:18px 0 0;color:inherit}
+  border-top:1px solid var(--pr-on-ink-line);padding:18px 0 0;color:inherit}
  .hstats .v{font-family:var(--pr-font-app-display);font-size:23px;line-height:1}
  .hstats .l{font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;opacity:.65;margin-top:6px;color:inherit}
  /* milestones ride in the hero too, full width under the stats, cream on ink */
  .heroin .milest{grid-column:1/-1;order:2;margin:14px 0 0;padding:0;
-  --m-line:rgba(251,246,236,.28);--m-text:rgba(251,246,236,.72);--m-ink:var(--pr-hero-text);--m-paper:var(--pr-hero-bg)}
+  --m-line:var(--pr-on-ink-line);--m-text:var(--pr-on-ink-2);--m-ink:var(--pr-hero-text);--m-paper:var(--pr-hero-bg)}
  .heroin .milest .mrow{overflow:visible;margin:0;padding:0}
  .heroin .milest .mi{flex:1 1 0;width:auto}
  .heroin .milest .mi.past .md{background:var(--pr-lime);border-color:var(--pr-lime);color:var(--pr-ink)}
@@ -700,7 +704,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
  .linkrow{margin-bottom:0}
  .drow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--pr-hairline)}
  .drow:last-child{border-bottom:none;padding-bottom:0}
- .drail{border-left:3px solid #E3D9C8;padding-left:11px}
+ .drail{border-left:3px solid var(--pr-rail);padding-left:11px}
  .dpick{padding:7px 0;border-bottom:1px solid var(--pr-hairline)}
  .dpick:last-of-type{border-bottom:none}
  .dpick .n{font-size:13.5px;font-weight:700}
@@ -711,7 +715,7 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 /* the G.N.A.R. board on Home — same rows as gnar.html */
 .gnr{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--pr-hairline)}
 .gnrs .gnr:last-child{border-bottom:0}
-.gnr .rank{font-family:var(--pr-font-app-display);font-size:16px;color:var(--pr-text-muted);width:22px}
+.gnr .rank{font-family:var(--pr-font-app);font-weight:700;font-size:16px;color:var(--pr-text-muted);width:22px}
 .gnr .who{flex:1;min-width:0}
 .gnr .who .b{font-size:16px;font-weight:700}
 .gnr .who small{display:block;color:var(--pr-text-2);font-size:11.5px;margin-top:2px}
@@ -935,7 +939,7 @@ function covRow(cv){ CVN++; var did='cvd'+CVN;
 function emgFormWhere(){ return readyLive()?'on the Get ready tab':(CUR==='more'?'right below':'on the More tab'); }
 function hurtHtml(){
   var crew=D.crew||[]; if(!crew.length)return '';
-  var h='<div style="margin-top:10px;border-top:1px solid var(--pr-hairline);padding-top:9px"><div class="sm" style="font-weight:700">🚑 Someone\u2019s hurt — who?</div>';
+  var h='<div style="margin-top:10px;border-top:1px solid var(--pr-hairline);padding-top:9px"><div class="sm" style="font-weight:700">'+ic('alert',14)+' Someone\u2019s hurt — who?</div>';
   h+='<div class="xs muted" style="margin:4px 0 7px">Do NOT book transport yourself — use their CALL-FIRST lines. Save every receipt.</div>';
   h+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
   crew.forEach(function(c){ var on=(c.name===HURT_SEL); h+='<button class="btn" onclick="pickHurt(\''+jsq(c.name)+'\')" style="padding:5px 11px'+(on?';background:var(--pr-danger-text);color:#fff;border-color:var(--pr-danger-text)':'')+'">'+esc(c.name)+'</button>'; });
@@ -1214,7 +1218,7 @@ function openSharedDoc(id,name,type,iv){ crewGet(D.docsUrl+'?doc='+encodeURIComp
     var pt=await dkDecrypt(b64d(iv),b64d(dd.data)); var url=URL.createObjectURL(new Blob([pt],{type:type||'application/octet-stream'})); window.open(url,'_blank'); }).catch(function(){ toast('Couldn’t open — offline, or saved before a password change'); }); }
 function $(id){return document.getElementById(id);}
 /* ---- Powder Run icon set (design-system glyphs, currentColor) ---- */
-var IC={huck:'<path d="M3 21V10h5V3h4v18H3Z"/><path d="M16.5 4h3v8.8l2-2 1.5 1.6-5 5-5-5 1.5-1.6 2 2V4Z"/>',mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',calendar:'<path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/>',snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',checklist:'<path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/>',cheers:'<g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g>',more:'<circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/>',warning:'<path fill-rule="evenodd" d="M12 2.4a1.6 1.6 0 0 1 1.4.8l8.8 15.2a1.6 1.6 0 0 1-1.4 2.4H3.2a1.6 1.6 0 0 1-1.4-2.4L10.6 3.2A1.6 1.6 0 0 1 12 2.4Zm-1.1 6.2h2.2l-.4 5.6h-1.4l-.4-5.6ZM12 15.6a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',alert:'<path fill-rule="evenodd" d="M8.1 2.5h7.8l5.6 5.6v7.8l-5.6 5.6H8.1l-5.6-5.6V8.1l5.6-5.6ZM10.9 7h2.2l-.4 6h-1.4l-.4-6ZM12 15.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',closed:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.6a7.2 7.2 0 0 0-5.6 11.8L16.6 6.4A7.15 7.15 0 0 0 12 4.8Zm5.6 3L7.4 17.9A7.2 7.2 0 0 0 17.6 7.8Z"/>',check:'<path d="M9.55 15.15 19.1 5.6l1.9 1.9L9.55 19 3 12.45l1.9-1.9 4.65 4.6Z"/>',tip:'<path d="M12 6.2a4.8 4.8 0 0 1 2.7 8.8c-.4.3-.6.7-.7 1.2l-.1.6H10l-.1-.6c-.1-.5-.3-.9-.7-1.2A4.8 4.8 0 0 1 12 6.2Z"/><path d="M10 18.4h4v1a1.5 1.5 0 0 1-1.5 1.4h-1a1.5 1.5 0 0 1-1.5-1.4v-1Z"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 1.4v2.3M4.9 4.1l1.6 1.6M19.1 4.1l-1.6 1.6M2.4 10.8h2.3M19.3 10.8h2.3"/></g>',pin:'<path fill-rule="evenodd" d="M12 2.2a7.2 7.2 0 0 1 7.2 7.2c0 4.8-5.4 10.8-6.7 12.2a.7.7 0 0 1-1 0C10.2 20.2 4.8 14.2 4.8 9.4A7.2 7.2 0 0 1 12 2.2Zm0 4.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/>',map:'<path fill-rule="evenodd" d="M8.6 3 3.6 4.9a1 1 0 0 0-.6.9v14.4a.6.6 0 0 0 .8.6l4.8-1.9 6.8 2.1 5-1.9a1 1 0 0 0 .6-.9V3.8a.6.6 0 0 0-.8-.6l-4.8 1.9L8.6 3Zm.7 2.3 5.4 1.7v12.6L9.3 17.9V5.3Z"/>',ticket:'<path fill-rule="evenodd" d="M3 5.8h18a1 1 0 0 1 1 1v10.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.8a1 1 0 0 1 1-1ZM2 10.2a1.9 1.9 0 0 1 0 3.6v-3.6Zm20 0v3.6a1.9 1.9 0 0 1 0-3.6ZM7.9 10.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm3.5-3.4h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Z"/>',phone:'<path d="M6.6 3c.5 0 2.9 2.4 2.9 3s-1.5 1.9-1.5 2.6 1.2 2.3 2.7 3.8 3.1 2.7 3.8 2.7 2-1.5 2.6-1.5S21 16 21 16.5 19.6 21 17.5 21C12 21 3 12 3 6.5 3 4.4 6.1 3 6.6 3Z"/>',bed:'<path d="M2.4 5.4h2v8.2h7.2V7.9h6.2a3.8 3.8 0 0 1 3.8 3.8v6.9h-2v-2.2H4.4v2.2h-2V5.4Z"/><circle cx="7.5" cy="10.4" r="2"/>',compass:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.4A7.4 7.4 0 1 0 19.4 12 7.4 7.4 0 0 0 12 4.6Z"/><path d="M12 5.6 14.2 12 12 18.4 9.8 12 12 5.6Z"/>',trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',skier:'<circle cx="14.4" cy="3" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 5.2 10.7 9.4l2.2 3.3-.6 3.2M13 6.6l3.7 2.6"/></g><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M16.9 9.4l2.7 6.4"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.8 16.2h13.6c1.1 0 1.9-.4 2.5-1.3M4.6 18.8h13.6c1.1 0 1.9-.4 2.5-1.3"/></g>',snowboarder:'<circle cx="14.9" cy="3.4" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 5.8 11.8 9.9l-2.5 5.2M11.8 9.9l2.1 5.3M14.1 6.3l3.3 2.3"/></g><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.6 15.2c.5 1.3 1.4 2 2.8 2h11.2c1.4 0 2.3-.7 2.8-2"/>',gondola:'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 3.4h20"/><rect x="11.2" y="3.4" width="1.6" height="4.4"/><path fill-rule="evenodd" d="M6.8 7.4h10.4a2 2 0 0 1 2 2.2l-.8 8.4a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-.8-8.4a2 2 0 0 1 2-2.2Zm.6 3 .3 3.4h8.6l.3-3.4H7.4Z"/>',food:'<path d="M5.4 2.6h1.4v4.6h.8V2.6H9v4.6h.8V2.6h1.4v6a2.6 2.6 0 0 1-2 2.5v10.3H7.4V11.1a2.6 2.6 0 0 1-2-2.5v-6Z"/><path d="M15.4 2.6c2.4 1.6 3.4 5.4 3.4 8 0 1.6-1 2.6-2 3v7.8h-1.4V2.6Z"/>',meeting:'<path fill-rule="evenodd" d="M9.4 6.6A1.6 1.6 0 0 1 11 5h2a1.6 1.6 0 0 1 1.6 1.6v.8h3.8A1.6 1.6 0 0 1 20 9v9.6a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.6V9a1.6 1.6 0 0 1 1.6-1.6h3.8v-.8Zm1.7.2v.6h1.8v-.6h-1.8Zm-.5 5.6h2.8v2h-2.8v-2Z"/><circle cx="17.8" cy="3.6" r="1.2"/><circle cx="20.2" cy="1.9" r=".9"/><circle cx="15.9" cy="1.7" r=".7"/>',laundry:'<path fill-rule="evenodd" d="M5 2.5h14A1.5 1.5 0 0 1 20.5 4v16a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 20V4A1.5 1.5 0 0 1 5 2.5Zm1.2 2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Zm3.4 0a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2ZM12 8.2a5.6 5.6 0 1 0 0 11.2 5.6 5.6 0 0 0 0-11.2Zm0 2a3.6 3.6 0 0 1 3.43 2.5c-1.2.9-2.3.2-3.43-.35-1.05-.5-2.15-.9-3.4.1A3.6 3.6 0 0 1 12 10.2Z"/>',coffee:'<path fill-rule="evenodd" d="M4 7h13v2h2.2a2.3 2.3 0 0 1 0 4.6H17.6A6.5 6.5 0 0 1 4.4 13L4 7Zm13.4 4.6h1.6a.8.8 0 0 0 0-1.6h-1.5l-.1 1.6ZM5 19h13v2H5v-2Z"/>',pool:'<path fill-rule="evenodd" d="M2.5 17.2c1.6 0 1.6 1 3.2 1s1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1v2.2c-1.6 0-1.6 1-3.2 1s-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1v-2.2Zm6-12A2.7 2.7 0 0 1 11.2 8v6.1c-.6.2-1 .5-1.6.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Zm7 0A2.7 2.7 0 0 1 18.2 8v6.6c-.7-.1-1-.4-1.6-.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Z"/>',parking:'<path fill-rule="evenodd" d="M4.5 3h15v18h-15V3ZM9 6.5v11h2.4v-3.4h1.8a3.8 3.8 0 1 0 0-7.6H9Zm2.4 2.2h1.7a1.6 1.6 0 0 1 0 3.2h-1.7V8.7Z"/>',kitchen:'<path fill-rule="evenodd" d="M5.5 2.5h2v7.1a2.6 2.6 0 0 1-1 2v9.9h-2v-9.9a2.6 2.6 0 0 1-1-2V2.5h2Zm12 0c1.9.6 3 2.7 3 5.2 0 2.2-.9 4-2.3 4.8v9h-2v-9c-1.4-.8-2.3-2.6-2.3-4.8 0-2.5 1.1-4.6 3-5.2h.6Zm-6.9 0h1.8l.5 7.3a2.3 2.3 0 0 1-1.4 2.3v9.4h-2v-9.4a2.3 2.3 0 0 1-1.4-2.3l.5-7.3h2Z"/>',music:'<path fill-rule="evenodd" d="M19.6 2.6 8.4 5.1a1 1 0 0 0-.8 1v10.2a3.4 3.4 0 1 0 2 3.1V9.9l8-1.8v6.2a3.4 3.4 0 1 0 2 3.1V3.6a1 1 0 0 0-1.2-1Z"/>',chat:'<path fill-rule="evenodd" d="M4.6 3.4h14.8A2.6 2.6 0 0 1 22 6v9.2a2.6 2.6 0 0 1-2.6 2.6h-7.2l-4.9 3.7a.8.8 0 0 1-1.3-.6v-3.1H4.6A2.6 2.6 0 0 1 2 15.2V6a2.6 2.6 0 0 1 2.6-2.6Zm2.6 5.2v2h9.6v-2H7.2Zm0 3.6v2h6.4v-2H7.2Z"/>'};
+var IC={huck:'<path d="M3 21V10h5V3h4v18H3Z"/><path d="M16.5 4h3v8.8l2-2 1.5 1.6-5 5-5-5 1.5-1.6 2 2V4Z"/>',mountain:'<path fill-rule="evenodd" d="M8.7 3.6 13 10.6l2.3-3.6 7 12H1.7L8.7 3.6Zm0 3 1.9 3.1-1.1-.8-1.2 1.2-1.1-1.1-1 .8 2.5-3.2Z"/>',calendar:'<path fill-rule="evenodd" d="M7 2.4h2.2v1.8h5.6V2.4H17v1.8h3a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.2a1 1 0 0 1 1-1h3V2.4ZM5.2 9.6v9.2h13.6V9.6H5.2Z"/><rect x="7.2" y="11.6" width="3.2" height="3.2"/>',snowflake:'<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.8v18.4M4 7.4l16 9.2M20 7.4 4 16.6"/><path d="M12 6.4 9.9 4.3M12 6.4l2.1-2.1M12 17.6l-2.1 2.1M12 17.6l2.1 2.1M6.6 8.9l-2.9-.5M6.6 15.1l-2.9.5M17.4 8.9l2.9-.5M17.4 15.1l2.9.5"/></g>',car:'<path fill-rule="evenodd" d="M2.2 8.2a1.3 1.3 0 0 1 1.3-1.3h8.1a1.3 1.3 0 0 1 1.3 1.3v7.2H2.2V8.2Zm11.6.8h3.1a1.4 1.4 0 0 1 1.1.6l2.4 3.2a1.6 1.6 0 0 1 .3 1v1.6h-6.9V9Zm1.5 1.5v2.4h3.7l-1.8-2.4h-1.9Z"/><circle cx="6.2" cy="17.2" r="2.2"/><circle cx="16.9" cy="17.2" r="2.2"/><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="1.8" d="M12.6 3H4.1a2 2 0 0 1-1.9-1.3"/><path stroke-width="1.8" d="M12.6 5.6H3.3a2 2 0 0 1-1.9-1.3"/></g>',checklist:'<path fill-rule="evenodd" d="M9.2 2.2h5.6a1 1 0 0 1 1 1v.8H19a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.2v-.8a1 1 0 0 1 1-1ZM6 8v11.2h12V8H6Z"/><path d="M11.1 16.4 8.3 13.6l1.5-1.5 1.3 1.3 3.1-3.1 1.5 1.5-4.6 4.6Z"/>',cheers:'<g transform="translate(7 12.8) rotate(12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g transform="translate(17 12.8) rotate(-12)"><path d="M-3.1-5.4h6.2L2 5.4h-4L-3.1-5.4Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 1.6v2.2M9.2 2.4l1.1 1.7M14.8 2.4l-1.1 1.7"/></g>',more:'<circle cx="4.6" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.4" cy="12" r="2.1"/>',warning:'<path fill-rule="evenodd" d="M12 2.4a1.6 1.6 0 0 1 1.4.8l8.8 15.2a1.6 1.6 0 0 1-1.4 2.4H3.2a1.6 1.6 0 0 1-1.4-2.4L10.6 3.2A1.6 1.6 0 0 1 12 2.4Zm-1.1 6.2h2.2l-.4 5.6h-1.4l-.4-5.6ZM12 15.6a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',alert:'<path fill-rule="evenodd" d="M8.1 2.5h7.8l5.6 5.6v7.8l-5.6 5.6H8.1l-5.6-5.6V8.1l5.6-5.6ZM10.9 7h2.2l-.4 6h-1.4l-.4-6ZM12 15.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/>',closed:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.6a7.2 7.2 0 0 0-5.6 11.8L16.6 6.4A7.15 7.15 0 0 0 12 4.8Zm5.6 3L7.4 17.9A7.2 7.2 0 0 0 17.6 7.8Z"/>',check:'<path d="M9.55 15.15 19.1 5.6l1.9 1.9L9.55 19 3 12.45l1.9-1.9 4.65 4.6Z"/>',tip:'<path d="M12 6.2a4.8 4.8 0 0 1 2.7 8.8c-.4.3-.6.7-.7 1.2l-.1.6H10l-.1-.6c-.1-.5-.3-.9-.7-1.2A4.8 4.8 0 0 1 12 6.2Z"/><path d="M10 18.4h4v1a1.5 1.5 0 0 1-1.5 1.4h-1a1.5 1.5 0 0 1-1.5-1.4v-1Z"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 1.4v2.3M4.9 4.1l1.6 1.6M19.1 4.1l-1.6 1.6M2.4 10.8h2.3M19.3 10.8h2.3"/></g>',pin:'<path fill-rule="evenodd" d="M12 2.2a7.2 7.2 0 0 1 7.2 7.2c0 4.8-5.4 10.8-6.7 12.2a.7.7 0 0 1-1 0C10.2 20.2 4.8 14.2 4.8 9.4A7.2 7.2 0 0 1 12 2.2Zm0 4.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/>',map:'<path fill-rule="evenodd" d="M8.6 3 3.6 4.9a1 1 0 0 0-.6.9v14.4a.6.6 0 0 0 .8.6l4.8-1.9 6.8 2.1 5-1.9a1 1 0 0 0 .6-.9V3.8a.6.6 0 0 0-.8-.6l-4.8 1.9L8.6 3Zm.7 2.3 5.4 1.7v12.6L9.3 17.9V5.3Z"/>',ticket:'<path fill-rule="evenodd" d="M3 5.8h18a1 1 0 0 1 1 1v10.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.8a1 1 0 0 1 1-1ZM2 10.2a1.9 1.9 0 0 1 0 3.6v-3.6Zm20 0v3.6a1.9 1.9 0 0 1 0-3.6ZM7.9 10.6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm3.5-3.4h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Zm0 3.8h1.2v2h-1.2v-2Z"/>',phone:'<path d="M6.6 3c.5 0 2.9 2.4 2.9 3s-1.5 1.9-1.5 2.6 1.2 2.3 2.7 3.8 3.1 2.7 3.8 2.7 2-1.5 2.6-1.5S21 16 21 16.5 19.6 21 17.5 21C12 21 3 12 3 6.5 3 4.4 6.1 3 6.6 3Z"/>',bed:'<path d="M2.4 5.4h2v8.2h7.2V7.9h6.2a3.8 3.8 0 0 1 3.8 3.8v6.9h-2v-2.2H4.4v2.2h-2V5.4Z"/><circle cx="7.5" cy="10.4" r="2"/>',compass:'<path fill-rule="evenodd" d="M12 2.2A9.8 9.8 0 1 1 2.2 12 9.8 9.8 0 0 1 12 2.2Zm0 2.4A7.4 7.4 0 1 0 19.4 12 7.4 7.4 0 0 0 12 4.6Z"/><path d="M12 5.6 14.2 12 12 18.4 9.8 12 12 5.6Z"/>',trees:'<path d="M8.4 3.2 12.4 9.6H4.4L8.4 3.2Z"/><path d="M8.4 7.2 13.2 14.8H3.6L8.4 7.2Z"/><rect x="7.4" y="14.8" width="2" height="3.2"/><path d="M17 8.4 20.2 13.6h-6.4L17 8.4Z"/><path d="M17 11.2 20.8 17.2h-7.6L17 11.2Z"/><rect x="16" y="17.2" width="2" height="2.6"/>',skier:'<circle cx="14.4" cy="3" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 5.2 10.7 9.4l2.2 3.3-.6 3.2M13 6.6l3.7 2.6"/></g><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M16.9 9.4l2.7 6.4"/><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.8 16.2h13.6c1.1 0 1.9-.4 2.5-1.3M4.6 18.8h13.6c1.1 0 1.9-.4 2.5-1.3"/></g>',snowboarder:'<circle cx="14.9" cy="3.4" r="2.1"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 5.8 11.8 9.9l-2.5 5.2M11.8 9.9l2.1 5.3M14.1 6.3l3.3 2.3"/></g><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.6 15.2c.5 1.3 1.4 2 2.8 2h11.2c1.4 0 2.3-.7 2.8-2"/>',gondola:'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 3.4h20"/><rect x="11.2" y="3.4" width="1.6" height="4.4"/><path fill-rule="evenodd" d="M6.8 7.4h10.4a2 2 0 0 1 2 2.2l-.8 8.4a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-.8-8.4a2 2 0 0 1 2-2.2Zm.6 3 .3 3.4h8.6l.3-3.4H7.4Z"/>',food:'<path d="M5.4 2.6h1.4v4.6h.8V2.6H9v4.6h.8V2.6h1.4v6a2.6 2.6 0 0 1-2 2.5v10.3H7.4V11.1a2.6 2.6 0 0 1-2-2.5v-6Z"/><path d="M15.4 2.6c2.4 1.6 3.4 5.4 3.4 8 0 1.6-1 2.6-2 3v7.8h-1.4V2.6Z"/>',meeting:'<path fill-rule="evenodd" d="M9.4 6.6A1.6 1.6 0 0 1 11 5h2a1.6 1.6 0 0 1 1.6 1.6v.8h3.8A1.6 1.6 0 0 1 20 9v9.6a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.6V9a1.6 1.6 0 0 1 1.6-1.6h3.8v-.8Zm1.7.2v.6h1.8v-.6h-1.8Zm-.5 5.6h2.8v2h-2.8v-2Z"/><circle cx="17.8" cy="3.6" r="1.2"/><circle cx="20.2" cy="1.9" r=".9"/><circle cx="15.9" cy="1.7" r=".7"/>',laundry:'<path fill-rule="evenodd" d="M5 2.5h14A1.5 1.5 0 0 1 20.5 4v16a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 20V4A1.5 1.5 0 0 1 5 2.5Zm1.2 2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Zm3.4 0a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2ZM12 8.2a5.6 5.6 0 1 0 0 11.2 5.6 5.6 0 0 0 0-11.2Zm0 2a3.6 3.6 0 0 1 3.43 2.5c-1.2.9-2.3.2-3.43-.35-1.05-.5-2.15-.9-3.4.1A3.6 3.6 0 0 1 12 10.2Z"/>',coffee:'<path fill-rule="evenodd" d="M4 7h13v2h2.2a2.3 2.3 0 0 1 0 4.6H17.6A6.5 6.5 0 0 1 4.4 13L4 7Zm13.4 4.6h1.6a.8.8 0 0 0 0-1.6h-1.5l-.1 1.6ZM5 19h13v2H5v-2Z"/>',pool:'<path fill-rule="evenodd" d="M2.5 17.2c1.6 0 1.6 1 3.2 1s1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1 1.6 1 3.2 1 1.6-1 3.2-1v2.2c-1.6 0-1.6 1-3.2 1s-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1-1.6 1-3.2 1-1.6-1-3.2-1v-2.2Zm6-12A2.7 2.7 0 0 1 11.2 8v6.1c-.6.2-1 .5-1.6.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Zm7 0A2.7 2.7 0 0 1 18.2 8v6.6c-.7-.1-1-.4-1.6-.5V8a1.1 1.1 0 0 0-2.2 0h-1.6a2.7 2.7 0 0 1 2.7-2.8Z"/>',parking:'<path fill-rule="evenodd" d="M4.5 3h15v18h-15V3ZM9 6.5v11h2.4v-3.4h1.8a3.8 3.8 0 1 0 0-7.6H9Zm2.4 2.2h1.7a1.6 1.6 0 0 1 0 3.2h-1.7V8.7Z"/>',kitchen:'<path fill-rule="evenodd" d="M5.5 2.5h2v7.1a2.6 2.6 0 0 1-1 2v9.9h-2v-9.9a2.6 2.6 0 0 1-1-2V2.5h2Zm12 0c1.9.6 3 2.7 3 5.2 0 2.2-.9 4-2.3 4.8v9h-2v-9c-1.4-.8-2.3-2.6-2.3-4.8 0-2.5 1.1-4.6 3-5.2h.6Zm-6.9 0h1.8l.5 7.3a2.3 2.3 0 0 1-1.4 2.3v9.4h-2v-9.4a2.3 2.3 0 0 1-1.4-2.3l.5-7.3h2Z"/>',music:'<path fill-rule="evenodd" d="M19.6 2.6 8.4 5.1a1 1 0 0 0-.8 1v10.2a3.4 3.4 0 1 0 2 3.1V9.9l8-1.8v6.2a3.4 3.4 0 1 0 2 3.1V3.6a1 1 0 0 0-1.2-1Z"/>',chat:'<path fill-rule="evenodd" d="M4.6 3.4h14.8A2.6 2.6 0 0 1 22 6v9.2a2.6 2.6 0 0 1-2.6 2.6h-7.2l-4.9 3.7a.8.8 0 0 1-1.3-.6v-3.1H4.6A2.6 2.6 0 0 1 2 15.2V6a2.6 2.6 0 0 1 2.6-2.6Zm2.6 5.2v2h9.6v-2H7.2Zm0 3.6v2h6.4v-2H7.2Z"/>',lock:'<path d="M7 11.5V8.3a5 5 0 0 1 10 0v3.2h-2.2V8.3a2.8 2.8 0 0 0-5.6 0v3.2H7Z"/><path fill-rule="evenodd" d="M5.5 10h13a1.6 1.6 0 0 1 1.6 1.6v8.3a1.6 1.6 0 0 1-1.6 1.6h-13a1.6 1.6 0 0 1-1.6-1.6v-8.3A1.6 1.6 0 0 1 5.5 10Zm6.5 3.1a1.7 1.7 0 0 0-.8 3.2v2.2h1.6v-2.2a1.7 1.7 0 0 0-.8-3.2Z"/>'};
 function ic(n,s){s=s||14;var g=IC[n];if(!g)return '';return '<svg class="pri" viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="currentColor" aria-hidden="true">'+g+'</svg>';}
 /* esc(s) — text made safe to put in HTML, attribute values included (quotes too since audit m6) */
 function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -1912,7 +1916,7 @@ window.addEventListener('resize',sfSizeDrawer);
 function sfAccChip(label,acc,on){
   var b=document.createElement('button');
   if(acc&&on){ b.className='on'; b.style.background=acc[0]; b.style.color='var(--pr-ink)'; b.style.border='1px solid var(--pr-ink)'; b.style.fontWeight='700'; b.textContent=label; }
-  else if(acc){ b.innerHTML='<span style="display:inline-block;width:9px;height:9px;border-radius:99px;background:'+acc[0]+';margin-right:5px;vertical-align:0"></span>'+label; }
+  else if(acc){ b.innerHTML='<span style="display:inline-block;width:9px;height:9px;border-radius:999px;background:'+acc[0]+';margin-right:5px;vertical-align:0"></span>'+label; }
   else { if(on)b.className='on'; b.textContent=label; }
   return b; }
 function sfChips(){ var box=$('schips'); if(!box)return; box.innerHTML='';
@@ -1930,12 +1934,12 @@ function sfChips(){ var box=$('schips'); if(!box)return; box.innerHTML='';
       box.appendChild(b); });
   }
   try{ var on=box.querySelector('.on'); if(on)on.scrollIntoView({inline:'center',block:'nearest'}); }catch(e){} }
-function sfWalkIc(){ return '<svg viewBox="0 0 24 24" width="11" height="11" fill="#8f8697" style="flex:0 0 auto;margin-top:2px"><circle cx="13.2" cy="3.9" r="2.1"/><path d="M12.4 7.1 8.7 9.2l-1.6 4.2 1.9.7 1.3-3.4 1.5-.8-1 5.1-3.4 6.1 2 1.1 3.2-5.7 2.6 5.5 1.9-.9-2.7-5.8-.7-3.5 1.9 1.6 3.1 1.4.8-1.8-2.9-1.4-2.1-2.7z"/></svg>'; }
-function sfTruckIc(){ return '<svg viewBox="0 0 24 24" width="12" height="12" fill="#8f8697" style="flex:0 0 auto;margin-top:2px"><path d="M2 6.2h11.2v9H2z"/><path d="M14.4 9.2h3.9l3.2 3.1v2.9h-7.1z"/><circle cx="6.1" cy="17.7" r="2"/><circle cx="17.4" cy="17.7" r="2"/></svg>'; }
+function sfWalkIc(){ return '<svg viewBox="0 0 24 24" width="11" height="11" style="fill:var(--pr-on-ink-muted);flex:0 0 auto;margin-top:2px"><circle cx="13.2" cy="3.9" r="2.1"/><path d="M12.4 7.1 8.7 9.2l-1.6 4.2 1.9.7 1.3-3.4 1.5-.8-1 5.1-3.4 6.1 2 1.1 3.2-5.7 2.6 5.5 1.9-.9-2.7-5.8-.7-3.5 1.9 1.6 3.1 1.4.8-1.8-2.9-1.4-2.1-2.7z"/></svg>'; }
+function sfTruckIc(){ return '<svg viewBox="0 0 24 24" width="12" height="12" style="fill:var(--pr-on-ink-muted);flex:0 0 auto;margin-top:2px"><path d="M2 6.2h11.2v9H2z"/><path d="M14.4 9.2h3.9l3.2 3.1v2.9h-7.1z"/><circle cx="6.1" cy="17.7" r="2"/><circle cx="17.4" cy="17.7" r="2"/></svg>'; }
 function sfLegendHtml(t){
   var sc=(D.scene||{})[t], g=guideFor(t)||{}, h=sideToggleHtml(t,true);
-  var lodge='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:4px;background:#FBF6EC;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path fill-rule="evenodd" d="M12 2.2 22.5 21H1.5L12 2.2Zm0 7.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM9.9 21v-5.6h4.2V21H9.9Z"/></svg></span>';
-  var van='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:4px;background:#35B5E8;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span>';
+  var lodge='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:3px;background:#FBF6EC;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path fill-rule="evenodd" d="M12 2.2 22.5 21H1.5L12 2.2Zm0 7.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM9.9 21v-5.6h4.2V21H9.9Z"/></svg></span>';
+  var van='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:3px;background:#35B5E8;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span>';
   if(!sc.combo) h+='<div class="slgi" style="padding-top:12px;align-items:center" onclick="sfPulse(\''+t+'\',\'shut\')">'+van+'<span style="font-size:11px;font-weight:700;color:#35B5E8;letter-spacing:.08em">'+esc(sc.shut).toUpperCase()+'</span></div>';
   h+='<div class="slgi" style="align-items:center'+(sc.combo?';padding-top:12px':'')+'" onclick="sfPulse(\''+t+'\',\'hq\')">'+lodge+'<span style="font-size:11px;font-weight:700;color:#FBF6EC;letter-spacing:.08em">OUR HOTEL'+(sc.combo?' + SHUTTLE':'')+' \u2014 '+esc(sc.hotel).toUpperCase()+'</span></div>';
   h+='<div style="column-count:2;column-gap:16px;margin-top:2px">';
@@ -1947,8 +1951,8 @@ function sfLegendHtml(t){
   h+='</div>';
   var wt=[]; SFCAT.forEach(function(cat){ (g[cat[0]]||[]).forEach(function(x){ if(!x.n&&x.tm)wt.push([x,cat[2]]); }); });
   if(wt.length){
-    h+='<div class="slgh" style="color:#8f8697;border-top:1px solid #3A3346;padding-top:12px;margin-top:12px">WORTH THE TRIP</div>';
-    wt.forEach(function(p){ h+='<div class="slgi" style="cursor:default;align-items:center"><span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:'+p[1]+'"></span><span class="slgt" style="flex:1">'+esc(p[0].name)+'</span>'+(p[0].tm==='w'?sfWalkIc():sfTruckIc())+'<span style="font-size:11px;color:#8f8697;white-space:nowrap">'+p[0].tmin+' min</span></div>'; });
+    h+='<div class="slgh" style="color:var(--pr-on-ink-muted);border-top:1px solid var(--pr-on-ink-line);padding-top:12px;margin-top:12px">WORTH THE TRIP</div>';
+    wt.forEach(function(p){ h+='<div class="slgi" style="cursor:default;align-items:center"><span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:'+p[1]+'"></span><span class="slgt" style="flex:1">'+esc(p[0].name)+'</span>'+(p[0].tm==='w'?sfWalkIc():sfTruckIc())+'<span style="font-size:11px;color:var(--pr-on-ink-muted);white-space:nowrap">'+p[0].tmin+' min</span></div>'; });
   }
   return h; }
 function sfShell(){ if(SOPEN)return;
@@ -1966,7 +1970,7 @@ function sfShell(){ if(SOPEN)return;
 var SCSIDE={};
 function sceneSide(t){ var sc=(D.scene||{})[t]; if(!(sc&&sc.baseRid&&(D.base||{})[sc.baseRid]))return 'town'; return SCSIDE[t]||'village'; }
 function sideToggleHtml(t,dark){ var sc=(D.scene||{})[t]; if(!(sc&&sc.baseRid))return ''; var sd=sceneSide(t), rn=shortName(sc.baseRid), tn=(stopById(t)||{}).name||t, tw=t==='invermere'?'Invermere':tn;
-  function b(v,lab){ var on=(sd===v); return '<button class="btn" onclick="setSceneSide(\''+t+'\',\''+v+'\')" style="flex:1;justify-content:center;min-height:40px;font-size:12px;'+(on?(dark?'background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-weight:700':'background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg);font-weight:700'):(dark?'background:transparent;color:#FBF6EC;border-color:#5B5368':''))+'">'+lab+'</button>'; }
+  function b(v,lab){ var on=(sd===v); return '<button class="btn" onclick="setSceneSide(\''+t+'\',\''+v+'\')" style="flex:1;justify-content:center;min-height:40px;font-size:12px;'+(on?(dark?'background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-weight:700':'background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg);font-weight:700'):(dark?'background:transparent;color:#FBF6EC;border-color:var(--pr-on-ink-muted)':''))+'">'+lab+'</button>'; }
   return '<div style="display:flex;gap:6px;margin:'+(dark?'10px 0 2px':'2px 0 10px')+'">'+b('village',ic('mountain',13)+' '+esc(rn)+' village')+b('town',ic('map',13)+' Town \u2014 '+esc(tw))+'</div>'; }
 function setSceneSide(t,v){ SCSIDE[t]=v; if(SOPEN&&SMODE==='town')sfSetTown(t); if(CUR==='scene')rScene(); }
 /* sfSetVillage(t) — the full-screen map on the VILLAGE side: the base-area map + its legend */
@@ -1994,7 +1998,7 @@ function scBaseDay(rid){ var days=D.days||[], i=tripDayIdx(), t=-1;
   if(t>=0)dsOpen(t); }
 /* ---- DAY SHEETS (same overlay, 'day' mode): base panel + beta + tonight.
    Date chips in the top bar = the date browser (any day, any time). ---- */
-var DSBADGE='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:4px;background:#35B5E8;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span>';
+var DSBADGE='<span style="flex:0 0 auto;width:16px;height:16px;border-radius:3px;background:#35B5E8;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span>';
 function dsOpen(i){ sfShell(); dsSetDay(i); }
 function dsToday(){ var i=tripDayIdx(); if(i===-1)i=0; else if(i===-2)i=(D.days||[]).length-1; dsOpen(i); }
 /* dsRid(i) — the mountain a day sheet shows. A pick day (R39) with the pick still open shows the option
@@ -2022,25 +2026,25 @@ function baseLegendHtml(rid,hideOff){ var b=(D.base||{})[rid]; if(!b)return ''; 
     ['apres','fuel','tickets','patrol','parking','tune'].forEach(function(c){
       var rows=(b.rows||[]).filter(function(x){return x.cat===c&&!(hideOff&&x.scene===false);}); if(!rows.length)return;
       h+='<div class="slgsec"><div class="slgh" style="color:'+CATL[c][1]+'">'+CATL[c][0]+'</div>';
-      rows.forEach(function(x){ h+='<div class="slgi" onclick="sfPulse(\''+K+'\',\''+x.n+'\')"><span class="slgn" style="color:'+CATL[c][1]+'">'+x.n+'</span><span class="slgt">'+esc(x.name)+(x.note?'<div style="font-size:11px;font-weight:400;color:#8f8697;line-height:1.4;margin-top:1px">'+esc(x.note)+'</div>':'')+'</span></div>'; });
+      rows.forEach(function(x){ h+='<div class="slgi" onclick="sfPulse(\''+K+'\',\''+x.n+'\')"><span class="slgn" style="color:'+CATL[c][1]+'">'+x.n+'</span><span class="slgt">'+esc(x.name)+(x.note?'<div style="font-size:11px;font-weight:400;color:var(--pr-on-ink-muted);line-height:1.4;margin-top:1px">'+esc(x.note)+'</div>':'')+'</span></div>'; });
       h+='</div>'; });
     h+='</div>';
     if(b.far&&b.far.length){
-      h+='<div class="slgh" style="color:#8f8697">UP THE HILL / NEARBY</div>';
-      b.far.forEach(function(f){ h+='<div class="slgi" style="cursor:default"><span style="flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#5B5368;margin-top:4px"></span><span class="slgt">'+esc(f.name)+(f.note?'<div style="font-size:11px;font-weight:400;color:#8f8697;line-height:1.4;margin-top:1px">'+esc(f.note)+'</div>':'')+'</span></div>'; });
+      h+='<div class="slgh" style="color:var(--pr-on-ink-muted)">UP THE HILL / NEARBY</div>';
+      b.far.forEach(function(f){ h+='<div class="slgi" style="cursor:default"><span style="flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--pr-on-ink-muted);margin-top:4px"></span><span class="slgt">'+esc(f.name)+(f.note?'<div style="font-size:11px;font-weight:400;color:var(--pr-on-ink-muted);line-height:1.4;margin-top:1px">'+esc(f.note)+'</div>':'')+'</span></div>'; });
     }
   return h; }
 function dsHtml(i){
   var day=D.days[i], rid=dsRid(i), r=rid?(D.resorts||{})[rid]:null, st=stopById(day.stop), b=(rid&&(D.base||{})[rid])||null;
   var acc=dayAccent(day), ac=acc?acc[0]:'var(--pr-pink)';
   var h='<div style="display:flex;gap:8px;align-items:center;padding-top:10px">'
-   +'<button class="btn" onclick="dsSetDay('+(i-1)+')"'+(i<=0?' disabled':'')+' style="padding:4px 11px;background:transparent;color:var(--pr-cream);border-color:#3A3346;font-size:15px">\u2039</button>'
-   +'<div style="flex:1;text-align:center;min-width:0"><div><span style="font-family:var(--pr-font-app-display);font-size:19px;color:#FBF6EC">'+day.wd.toUpperCase()+' '+fmtShort(day.dt).toUpperCase()+'</span> <span style="font-size:11.5px;font-weight:700;color:'+ac+'">\u00b7 '+esc((r?r.name:(st?st.name:day.stop))).toUpperCase()+'</span></div>'+(day.title&&day.title!==(r?r.name:'')&&day.title!==(st?st.name:'')?'<div style="font-size:12.5px;font-weight:600;color:#CFC8D6;margin-top:2px">'+esc(day.title)+'</div>':'')+'</div>'
-   +'<button class="btn" onclick="dsSetDay('+(i+1)+')"'+(i>=D.days.length-1?' disabled':'')+' style="padding:4px 11px;background:transparent;color:var(--pr-cream);border-color:#3A3346;font-size:15px">\u203a</button></div>';
-  if(day.drive)h+='<div style="text-align:center;font-size:11px;color:#8f8697;margin-top:4px">'+ic('car',11)+' '+esc(day.drive)+'</div>';
-  if(day.note)h+='<div style="font-size:11px;color:#BFB7C6;line-height:1.5;margin-top:9px;border:1px solid #3A3346;border-radius:9px;padding:8px 10px">'+esc(day.note)+'</div>';
-  if(day.opts&&!day.rid){ h+='<div style="margin-top:9px"><div style="font-size:11px;color:#CFC8D6;margin-bottom:5px">'+esc(choiceLine(day))+' — both day sheets:</div><div style="display:flex;gap:6px">';
-    day.opts.forEach(function(o){ var on=(o===rid); h+='<button class="btn" onclick="dsPickOpt('+i+',\''+o+'\')" style="flex:1;justify-content:center;min-height:40px;font-size:12px;'+(on?'background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-weight:700':'background:transparent;color:#FBF6EC;border-color:#5B5368')+'">'+esc(shortName(o))+'</button>'; });
+   +'<button class="btn" onclick="dsSetDay('+(i-1)+')"'+(i<=0?' disabled':'')+' style="padding:4px 11px;background:transparent;color:var(--pr-cream);border-color:var(--pr-on-ink-line);font-size:15px">\u2039</button>'
+   +'<div style="flex:1;text-align:center;min-width:0"><div><span style="font-family:var(--pr-font-app-display);font-size:20px;color:#FBF6EC">'+day.wd.toUpperCase()+' '+fmtShort(day.dt).toUpperCase()+'</span> <span style="font-size:11.5px;font-weight:700;color:'+ac+'">\u00b7 '+esc((r?r.name:(st?st.name:day.stop))).toUpperCase()+'</span></div>'+(day.title&&day.title!==(r?r.name:'')&&day.title!==(st?st.name:'')?'<div style="font-size:12.5px;font-weight:600;color:var(--pr-on-ink-2);margin-top:2px">'+esc(day.title)+'</div>':'')+'</div>'
+   +'<button class="btn" onclick="dsSetDay('+(i+1)+')"'+(i>=D.days.length-1?' disabled':'')+' style="padding:4px 11px;background:transparent;color:var(--pr-cream);border-color:var(--pr-on-ink-line);font-size:15px">\u203a</button></div>';
+  if(day.drive)h+='<div style="text-align:center;font-size:11px;color:var(--pr-on-ink-muted);margin-top:4px">'+ic('car',11)+' '+esc(day.drive)+'</div>';
+  if(day.note)h+='<div style="font-size:11px;color:var(--pr-on-ink-2);line-height:1.5;margin-top:9px;border:1px solid var(--pr-on-ink-line);border-radius:10px;padding:8px 10px">'+esc(day.note)+'</div>';
+  if(day.opts&&!day.rid){ h+='<div style="margin-top:9px"><div style="font-size:11px;color:var(--pr-on-ink-2);margin-bottom:5px">'+esc(choiceLine(day))+' — both day sheets:</div><div style="display:flex;gap:6px">';
+    day.opts.forEach(function(o){ var on=(o===rid); h+='<button class="btn" onclick="dsPickOpt('+i+',\''+o+'\')" style="flex:1;justify-content:center;min-height:40px;font-size:12px;'+(on?'background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-weight:700':'background:transparent;color:#FBF6EC;border-color:var(--pr-on-ink-muted)')+'">'+esc(shortName(o))+'</button>'; });
     h+='</div></div>'; }
   var gn=gatedNote(i); if(!gn&&day.opts&&!day.rid&&rid==='sunshine'){ var cs=choiceSrc(day); gn=(cs&&cs.sunshineLast)?'If it\u2019s Sunshine: '+cs.sunshineLast:''; }
   if(gn&&(rid==='sunshine'))h+='<div style="font-size:11px;color:#FFC53D;font-weight:700;line-height:1.5;margin-top:8px">'+ic('warning',12)+' '+esc(gn)+'</div>';
@@ -2049,8 +2053,8 @@ function dsHtml(i){
   } else if(SKEY){
   }
   var g=guideFor(day.stop);
-  h+='<div class="slgh" style="color:#8f8697;border-top:1px solid #3A3346;padding-top:12px;margin-top:12px">TONIGHT IN '+esc(st?st.name:day.stop).toUpperCase()+'</div>';
-  if(g&&g.tonight)h+='<div style="font-size:11.5px;color:#CFC8D6;line-height:1.55">'+esc(g.tonight)+'</div>';
+  h+='<div class="slgh" style="color:var(--pr-on-ink-muted);border-top:1px solid var(--pr-on-ink-line);padding-top:12px;margin-top:12px">TONIGHT IN '+esc(st?st.name:day.stop).toUpperCase()+'</div>';
+  if(g&&g.tonight)h+='<div style="font-size:11.5px;color:var(--pr-on-ink-2);line-height:1.55">'+esc(g.tonight)+'</div>';
   h+='<div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">'
    +'<button class="btn" onclick="sfSetTown(\''+day.stop+'\')" style="background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('map',13)+' '+esc(st?st.name:day.stop)+' town map</button>'
    +'<button class="btn" onclick="sfWhere()" style="background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg);font-size:12px;padding:6px 11px">'+ic('compass',13)+' Where am I?</button></div>';
@@ -2075,7 +2079,7 @@ function sfPulse(t,key){
 /* ---- test mode: getNow() drives all date logic ---- */
 function getNow(){var t=localStorage.getItem('testNow'); return t? new Date(t): new Date();}
 function inTest(){return !!localStorage.getItem('testNow');}
-function testBanner(){ if(!inTest())return ''; return '<div class="tbann"><span>🧪 Test mode — pretending it’s '+getNow().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span><button class="btn" style="padding:5px 9px" onclick="clearTest()">Reset</button></div>'; }
+function testBanner(){ if(!inTest())return ''; return '<div class="tbann"><span>'+ic('warning',14)+' Test mode — pretending it’s '+getNow().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span><button class="btn" style="padding:5px 9px" onclick="clearTest()">Reset</button></div>'; }
 function setTest(){var v=$('testInput').value; if(!v){return;} localStorage.setItem('testNow', new Date(v).toISOString()); toast('Test time set'); render(CUR);}
 function clearTest(){localStorage.removeItem('testNow'); toast('Back to real time'); render(CUR);}
 
@@ -2160,12 +2164,12 @@ function groupRid(day){ return day.rid||((day.opts&&day.opts[0])||null); }
 function skiSwitchOn(day){ try{ return localStorage.getItem('skiSwitch-'+day.dt)==='yes'; }catch(e){ return false; } }
 function setSkiSwitch(dt,yes){ try{ localStorage.setItem('skiSwitch-'+dt,yes?'yes':'no'); }catch(e){} render(CUR); if(SOPEN&&SMODE==='day')dsSetDay(SDAY); }
 function skiSwitchHtml(day,dark){ var s=day&&day.skiSwitch; if(!s)return ''; var y=skiSwitchOn(day);
-  var on='background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg);font-weight:700', off=dark?'background:transparent;color:#FBF6EC;border-color:#5B5368':'';
-  return '<div style="margin-top:9px;border:1px solid '+(dark?'#3A3346':'var(--pr-hairline)')+';border-radius:11px;padding:9px 10px">'
+  var on='background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg);font-weight:700', off=dark?'background:transparent;color:#FBF6EC;border-color:var(--pr-on-ink-muted)':'';
+  return '<div style="margin-top:9px;border:1px solid '+(dark?'var(--pr-on-ink-line)':'var(--pr-hairline)')+';border-radius:11px;padding:9px 10px">'
     +'<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><span style="font-weight:700;font-size:13px;flex:1;min-width:120px'+(dark?';color:#FBF6EC':'')+'">'+esc(s.q||'Ski this morning?')+'</span>'
     +'<button class="btn" style="min-height:40px;padding:6px 14px;'+(y?on:off)+'" onclick="setSkiSwitch(\''+day.dt+'\',true)">Yes</button>'
     +'<button class="btn" style="min-height:40px;padding:6px 14px;'+(!y?on:off)+'" onclick="setSkiSwitch(\''+day.dt+'\',false)">No</button></div>'
-    +'<div class="sm" style="margin-top:6px'+(dark?';color:#CFC8D6':'')+'">'+esc(y?s.yes:s.no)+'</div>'
+    +'<div class="sm" style="margin-top:6px'+(dark?';color:var(--pr-on-ink-2)':'')+'">'+esc(y?s.yes:s.no)+'</div>'
     +'</div>'; }
 
 /* ---- m2 (Sep 24 2026): free-cancel deadlines are stored with the hotel's own clock, e.g.
@@ -2568,7 +2572,7 @@ function rHome(){
   h+=milestones();   /* pre-trip only; rides in the hero with the stats */
   h+=deskStats();    /* the 4-number stats strip — now on phones too */
   h+=powSlot();      /* powder alert: fills itself in (or stays empty) */
-  var sname=(idx>=0)?firstResortDayName(idx):''; if(sname)h+='<div class="card" style="background:var(--pr-purple-tint);border-color:#DCC9F4"><div class="sm" style="font-weight:700;color:var(--pr-purple-text)">🏷️ First day at '+esc(sname)+' — '+esc(D.meta.sticker||'grab a trip sticker!')+'</div></div>';
+  var sname=(idx>=0)?firstResortDayName(idx):''; if(sname)h+='<div class="card" style="background:var(--pr-purple-tint);border-color:#DCC9F4"><div class="sm" style="font-weight:700;color:var(--pr-purple-text)">'+ic('ticket',14)+' First day at '+esc(sname)+' — '+esc(D.meta.sticker||'grab a trip sticker!')+'</div></div>';
   if(readyLive())h+=sec('What needs doing')+readyCard();
   if(idx>=0){ h+=sec('Today')+homeSnowCard(); var tday=D.days[idx], trid=tday.rid, tstop=stopById(tday.stop);
     if(trid&&stashFor(trid)){ h+='<div class="card stash"><h2>🤫 Today’s secret stash · '+esc((D.resorts[trid]||{}).name||'')+'</h2><div class="sm">'+esc(stashFor(trid))+'</div></div>'; }
@@ -2643,7 +2647,7 @@ function setView(id,h){
 function rDays(){
   var idx=tripDayIdx(), h=testBanner()+'<div class="hh"><h1>Itinerary</h1><div class="sub">Color = where we\u2019re riding</div></div>';
   var seenAcc=[]; D.days.forEach(function(d){ var gr=groupRid(d), g=gr?GROUPACC[gr]:STOPACC[d.stop]; if(g&&seenAcc.indexOf(g)<0)seenAcc.push(g); });
-  if(seenAcc.length){ h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">'; seenAcc.forEach(function(g){ h+='<button onclick="jumpGroup(\''+g+'\')" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;color:var(--pr-text-2);background:var(--pr-card);border:1px solid var(--pr-border);border-radius:999px;padding:3px 9px 3px 6px;cursor:pointer"><span style="width:9px;height:9px;border-radius:99px;background:'+ACCENTS[g][0]+'"></span>'+ACCLABEL[g]+'</button>'; }); h+='</div>'; }
+  if(seenAcc.length){ h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">'; seenAcc.forEach(function(g){ h+='<button onclick="jumpGroup(\''+g+'\')" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;color:var(--pr-text-2);background:var(--pr-card);border:1px solid var(--pr-border);border-radius:999px;padding:3px 9px 3px 6px;cursor:pointer"><span style="width:9px;height:9px;border-radius:999px;background:'+ACCENTS[g][0]+'"></span>'+ACCLABEL[g]+'</button>'; }); h+='</div>'; }
   var seenFirst={};
   D.days.forEach(function(day,i){ var r=resortOfDay(day), st=stopById(day.stop), today=(i===idx), checkin=(st&&st.in===day.dt);
     var acc=dayAccent(day), gr=groupRid(day), g=gr?GROUPACC[gr]:STOPACC[day.stop], anchor=(g&&!seenFirst[g])?' id="dayg-'+g+'"':''; if(g)seenFirst[g]=true;
@@ -3465,7 +3469,7 @@ function terrainHtml(t,mode,k){ if(!t)return ''; mode=mode||'all';
     if((t.cruisers||[]).length){ h+='<div class="tsec"><div class="tsl" style="color:var(--pr-card-terrain-fg)">'+ic('snowboarder',12)+' Carve &amp; cruise — wide, mellow &amp; scenic</div>'; t.cruisers.forEach(function(c){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(c.name)+'</b>'+(c.level?' <span class="t2">('+esc(c.level)+')</span>':'')+(c.where?' <span class="t2">· '+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
     if((t.cabins||[]).length){ h+='<div class="tsec"><div class="tsl">'+ic('food',12)+' On-mountain food &amp; huts</div>'; t.cabins.forEach(function(c){ h+='<div class="xs" style="margin-top:4px"><b>'+esc(c.name)+'</b>'+(c.where?' <span class="t2">'+esc(c.where)+'</span>':'')+(c.note?' — '+esc(c.note):'')+'</div>'; }); h+='</div>'; }
     if((t.woods||[]).length){ h+='<div class="tsec"><div class="tsl" style="color:var(--pr-card-terrain-fg)">'+ic('trees',12)+' In the trees — hidden spots</div>'; t.woods.forEach(function(w){ h+='<div class="xs" style="margin-top:5px"><b>'+esc(w.name)+'</b>'+(w.type?' <span class="t2">('+esc(w.type)+')</span>':'')+(/^(rumor|unverified)$/.test(w.conf||'')?' <span class="pill muted" style="font-size:11px;padding:1px 6px">'+esc(w.conf)+'</span>':'')+(w.find?'<div class="t2" style="margin-top:1px">'+ic('pin',11)+' '+esc(w.find)+'</div>':'')+(w.note?'<div style="margin-top:2px">'+esc(w.note)+'</div>':'')+'</div>'; }); h+='</div>'; }
-    if(t.mellow)h+='<div class="xs" style="margin-top:11px;background:var(--pr-ok-bg);border-radius:9px;padding:7px 9px"><b>Mellow:</b> '+esc(t.mellow)+'</div>';
+    if(t.mellow)h+='<div class="xs" style="margin-top:11px;background:var(--pr-ok-bg);border-radius:10px;padding:7px 9px"><b>Mellow:</b> '+esc(t.mellow)+'</div>';
   }
   return h+'</div>';
 }
@@ -3529,12 +3533,12 @@ function toggleTerrain(k){ var el=$('terr-'+k), c=$('terrcar-'+k); if(!el)return
    buttons that open inside the card; then everything the card always carried (links, stash, search, Meet up,
    Suggested runs, lift sheet, Terrain). All nine cards fill from the one shared weather call. */
 function rSnow(){
-  var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1><div class="sub">'+(isDemo()?'🧪 Example storm conditions — set the test date off Jul 4 to exit':'Color = the hill')+'</div></div>';
+  var h=testBanner()+'<div class="hh"><h1>Snow &amp; mountains</h1><div class="sub">'+(isDemo()?ic('warning',14)+' Example storm conditions — set the test date off Jul 4 to exit':'Color = the hill')+'</div></div>';
   h+='<div class="chips">'+hillOrder().map(function(k){ return '<button class="chip" onclick="scrollHill(\''+k+'\')"><span style="background:'+hillAcc(k)[0]+'"></span>'+esc(shortName(k))+'</button>'; }).join('')+'</div>';
   h+='<button class="btn" style="margin:0 0 12px" onclick="saveMapsOffline()">'+ic('map',14)+' Save all maps offline</button> '+s3dButton()+'<div id="mapstat"></div><div id="snowwrap"></div>';
   setView('v-snow',h); var w=$('snowwrap');
   hillOrder().forEach(function(k){ var r=D.resorts[k];
-    w.insertAdjacentHTML('beforeend','<div class="card hill" id="sn-'+k+'"'+accStyle(k)+'><div class="hname">'+esc(r.name)+'</div><div id="snb-'+k+'" class="sm" style="margin-top:9px"><div class="xs muted">…</div></div><div class="xrow"><button class="btn" id="xb-'+k+'-rec" onclick="toggleWx(\''+k+'\',\'rec\')">Recent snow ▾</button><button class="btn" id="xb-'+k+'-fc" onclick="toggleWx(\''+k+'\',\'fc\')">7-day forecast ▾</button></div><div id="snx-'+k+'"></div>'+'<div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(BUNDLES3D[k]?'<a class="btn" href="3d.html?m='+encodeURIComponent(k)+z3dV(k)+z3dWx(k)+'">'+ic('mountain',14)+' 3D map</a>':'')+(r.map?'<a class="btn" href="'+mapV(r.map)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+mapV(r.map2)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+mapV(r.map3)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+mapV(r.basemap)+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+(r.cams?'<a class="btn" href="'+r.cams+'" target="_blank">'+ic('mountain',14)+' '+esc(r.camsLabel||'Webcams')+'</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:9px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?(srBoxHtml(k)+wkBtnHtml(k)):'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleSuggested(\''+k+'\')"><span>'+ic('mountain',15)+' Suggested runs — the ranked picks</span><span id="sgcar-'+k+'">▾</span></div><div id="sg-'+k+'" style="display:none"></div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
+    w.insertAdjacentHTML('beforeend','<div class="card hill" id="sn-'+k+'"'+accStyle(k)+'><div class="hname">'+esc(r.name)+'</div><div id="snb-'+k+'" class="sm" style="margin-top:9px"><div class="xs muted">…</div></div><div class="xrow"><button class="btn" id="xb-'+k+'-rec" onclick="toggleWx(\''+k+'\',\'rec\')">Recent snow ▾</button><button class="btn" id="xb-'+k+'-fc" onclick="toggleWx(\''+k+'\',\'fc\')">7-day forecast ▾</button></div><div id="snx-'+k+'"></div>'+'<div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+(r.snow?'<a class="btn" href="'+r.snow+'" target="_blank">'+ic('snowflake',14)+' Snow report</a>':'')+(BUNDLES3D[k]?'<a class="btn" href="3d.html?m='+encodeURIComponent(k)+z3dV(k)+z3dWx(k)+'">'+ic('mountain',14)+' 3D map</a>':'')+(r.map?'<a class="btn" href="'+mapV(r.map)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.mapLabel||'Trail map')+'</a>':'')+'<button class="btn" onclick="toggleLinks(\''+k+'\')">More maps &amp; links <span id="lkcar-'+k+'">▾</span></button></div>'+'<div id="lks-'+k+'" style="display:none;margin-top:6px;gap:6px;flex-wrap:wrap">'+(r.map2?'<a class="btn" href="'+mapV(r.map2)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map2Label||'Back bowls')+'</a>':'')+(r.map3?'<a class="btn" href="'+mapV(r.map3)+'" download target="_blank" rel="noopener">'+ic('map',14)+' '+esc(r.map3Label||'More terrain')+'</a>':'')+(r.basemap?'<a class="btn" href="'+mapV(r.basemap)+'" download target="_blank" rel="noopener">'+ic('pin',14)+' '+esc(r.basemapLabel||'Village map')+'</a>':'')+(r.interactive?'<a class="btn" href="'+r.interactive+'" target="_blank">'+ic('compass',14)+' Interactive</a>':'')+(r.cams?'<a class="btn" href="'+r.cams+'" target="_blank">'+ic('mountain',14)+' '+esc(r.camsLabel||'Webcams')+'</a>':'')+'<a class="btn" href="'+r.site+'" target="_blank">Site ↗</a></div>'+(stashFor(k)?'<div class="xs" style="margin-top:9px;background:var(--pr-card-stash-bg);border-radius:10px;padding:7px 9px"><b style="color:var(--pr-card-stash-fg)">🤫 Stash:</b> '+esc(stashFor(k))+'</div>':'')+((D.terrain&&D.terrain[k])?(srBoxHtml(k)+wkBtnHtml(k)):'')+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleSuggested(\''+k+'\')"><span>'+ic('mountain',15)+' Suggested runs — the ranked picks</span><span id="sgcar-'+k+'">▾</span></div><div id="sg-'+k+'" style="display:none"></div>':'')+liftRowHtml(k)+((D.terrain&&D.terrain[k])?'<div class="lk" style="margin-top:9px" onclick="toggleTerrain(\''+k+'\')"><span>'+ic('mountain',15)+' Terrain — zones, stashes &amp; closures</span><span id="terrcar-'+k+'">▾</span></div><div id="terr-'+k+'" style="display:none"></div>':'')+'</div>');
   });
   fillSnowTab();
 }
@@ -3682,7 +3686,7 @@ function scYou(){ var t=SCENE_TOWN, sc=(D.scene||{})[t];
     else { var xy=scT(sc.tf,GEOPOS[0],GEOPOS[1]);
       if(xy[0]>=0&&xy[0]<=sc.tf.W&&xy[1]>=0&&xy[1]<=sc.tf.H){ if(you){ you.setAttribute('transform','translate('+xy[0].toFixed(1)+','+xy[1].toFixed(1)+')'); you.style.display=''; } if(strip)strip.innerHTML=''; }
       else { if(you)you.style.display='none';
-        if(strip){ var st=stopById(t); strip.innerHTML='<div style="border:1.5px solid var(--pr-border);border-radius:11px;padding:8px 12px;margin:0 0 10px"><div style="font-family:var(--pr-font-app-display);font-size:14px">You aren\u2019t here.</div><div class="xs muted" style="margin-top:2px">This is the '+esc(st?st.name:t)+' map.</div></div>'; } } } }
+        if(strip){ var st=stopById(t); strip.innerHTML='<div style="border:1.5px solid var(--pr-border);border-radius:11px;padding:8px 12px;margin:0 0 10px"><div style="font-family:var(--pr-font-app);font-weight:700;font-size:14px">You aren\u2019t here.</div><div class="xs muted" style="margin-top:2px">This is the '+esc(st?st.name:t)+' map.</div></div>'; } } } }
   sfYou(); }
 function sfYou(){ var fs=$('snothere2');
   if(!SOPEN||!STF||!SKEY){ if(fs){fs.style.display='none';fs.innerHTML='';} return; }
@@ -3732,7 +3736,7 @@ function rScene(){
   var h=testBanner()+'<div class="hh"><h1>Scene &amp; town guide</h1></div>';
   h+='<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px">';
   stops.forEach(function(s){ var on=(s.id===SCENE_TOWN), ga=STOPACC[s.id], a=ga?ACCENTS[ga]:null;
-    h+='<button class="btn" onclick="setSceneTown(\''+s.id+'\')" style="flex:0 0 auto'+(on?(a?';background:'+a[0]+';color:var(--pr-ink);border-color:var(--pr-ink);font-weight:700':';background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)'):'')+'">'+((a&&!on)?'<span style="width:9px;height:9px;border-radius:99px;background:'+a[0]+'"></span>':'')+esc(s.name)+'</button>'; });
+    h+='<button class="btn" onclick="setSceneTown(\''+s.id+'\')" style="flex:0 0 auto'+(on?(a?';background:'+a[0]+';color:var(--pr-ink);border-color:var(--pr-ink);font-weight:700':';background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg)'):'')+'">'+((a&&!on)?'<span style="width:9px;height:9px;border-radius:999px;background:'+a[0]+'"></span>':'')+esc(s.name)+'</button>'; });
   h+='</div>';
   var sc=(D.scene||{})[SCENE_TOWN];
   /* village base-area block (v.69.35): when the stop sleeps AT a resort base,
@@ -3747,8 +3751,8 @@ function rScene(){
     (bs.rows||[]).forEach(function(r){ if(r.scene===false)vsvg=vsvg.replace('<g id="scb_'+sc.baseRid+'-'+r.n+'"','<g style="display:none" id="scb_'+sc.baseRid+'-'+r.n+'"'); });
     h+='<div class="card" style="background:#241E2C;border-color:#241E2C;padding:10px 8px">'
       +'<div style="cursor:pointer;line-height:0" onclick="sfOpen()">'+vsvg+'</div>'
-      +'<div style="display:flex;gap:6px;margin-top:8px"><button class="btn" onclick="sfOpen()" style="flex:1;justify-content:center;gap:7px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('map',12)+'FULL SCREEN MAP</button><button class="btn" onclick="scBaseDay(\''+sc.baseRid+'\')" style="justify-content:center;gap:7px;background:transparent;color:#FBF6EC;border-color:#5B5368;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('calendar',12)+'DAY SHEET</button></div>'
-      +'<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #3A3346;margin-top:8px;padding:8px 4px 2px">';
+      +'<div style="display:flex;gap:6px;margin-top:8px"><button class="btn" onclick="sfOpen()" style="flex:1;justify-content:center;gap:7px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('map',12)+'FULL SCREEN MAP</button><button class="btn" onclick="scBaseDay(\''+sc.baseRid+'\')" style="justify-content:center;gap:7px;background:transparent;color:#FBF6EC;border-color:var(--pr-on-ink-muted);font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px">'+ic('calendar',12)+'DAY SHEET</button></div>'
+      +'<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--pr-on-ink-line);margin-top:8px;padding:8px 4px 2px">';
     if(bs.shut)h+='<div style="font-size:11px;font-weight:700;color:#35B5E8;letter-spacing:.06em">'+esc(bs.shut).toUpperCase()+'</div>';
     h+='</div></div>';
   }
@@ -3758,9 +3762,9 @@ function rScene(){
     h+='<div class="card" id="scmapcard" style="background:#241E2C;border-color:#241E2C;padding:10px 8px">'
      +'<div style="cursor:pointer;line-height:0" onclick="sfOpen()">'+sc.svg+'</div>'
      +'<button class="btn" onclick="sfOpen()" style="width:100%;justify-content:center;gap:7px;margin-top:8px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 11px"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M4 4h6v2.2H6.2V10H4V4Zm10 0h6v6h-2.2V6.2H14V4ZM4 14h2.2v3.8H10V20H4v-6Zm13.8 0H20v6h-6v-2.2h3.8V14Z"/></svg>FULL SCREEN MAP</button>';
-    h+='<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #3A3346;margin-top:8px;padding:8px 4px 2px">';
-    h+='<div style="display:flex;gap:6px;align-items:center;cursor:pointer" onclick="scPulse(\''+SCENE_TOWN+'\',\'hq\')"><span style="width:15px;height:15px;border-radius:4px;background:#FBF6EC;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path fill-rule="evenodd" d="M12 2.2 22.5 21H1.5L12 2.2Zm0 7.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM9.9 21v-5.6h4.2V21H9.9Z"/></svg></span><span style="font-size:11px;font-weight:700;color:#FBF6EC;letter-spacing:.08em">OUR HOTEL'+(sc.combo?' + SHUTTLE':'')+' \u2014 '+esc(sc.hotel).toUpperCase()+'</span></div>';
-    if(!sc.combo) h+='<div style="display:flex;gap:6px;align-items:center;cursor:pointer" onclick="scPulse(\''+SCENE_TOWN+'\',\'shut\')"><span style="width:15px;height:15px;border-radius:4px;background:#35B5E8;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span><span style="font-size:11px;font-weight:700;color:#35B5E8;letter-spacing:.08em">'+esc(sc.shut).toUpperCase()+'</span></div>';
+    h+='<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--pr-on-ink-line);margin-top:8px;padding:8px 4px 2px">';
+    h+='<div style="display:flex;gap:6px;align-items:center;cursor:pointer" onclick="scPulse(\''+SCENE_TOWN+'\',\'hq\')"><span style="width:15px;height:15px;border-radius:3px;background:#FBF6EC;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path fill-rule="evenodd" d="M12 2.2 22.5 21H1.5L12 2.2Zm0 7.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM9.9 21v-5.6h4.2V21H9.9Z"/></svg></span><span style="font-size:11px;font-weight:700;color:#FBF6EC;letter-spacing:.08em">OUR HOTEL'+(sc.combo?' + SHUTTLE':'')+' \u2014 '+esc(sc.hotel).toUpperCase()+'</span></div>';
+    if(!sc.combo) h+='<div style="display:flex;gap:6px;align-items:center;cursor:pointer" onclick="scPulse(\''+SCENE_TOWN+'\',\'shut\')"><span style="width:15px;height:15px;border-radius:3px;background:#35B5E8;display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="11" height="11" fill="#241E2C"><path d="M5 3.9c-1.1 0-1.8.5-1.8 1.1 0 .5.6.9 1.5.9h14.5a1 1 0 0 0 0-2H5Z"/><path fill-rule="evenodd" d="M6 9.4a3 3 0 0 0-3 3v6.2h2.1a2.3 2.3 0 0 1 4.6 0h4.6a2.3 2.3 0 0 1 4.6 0H21v-6.2a3 3 0 0 0-3-3H6Z"/><circle cx="7.4" cy="19" r="1.5"/><circle cx="16.6" cy="19" r="1.5"/></svg></span><span style="font-size:11px;font-weight:700;color:#35B5E8;letter-spacing:.08em">'+esc(sc.shut).toUpperCase()+'</span></div>';
     h+='</div></div>';
   }
   var g=guideFor(SCENE_TOWN);
@@ -3768,7 +3772,7 @@ function rScene(){
   if(g.heads_up)h+='<div class="tbann">'+ic('warning',14)+' '+esc(g.heads_up)+'</div>';
   if(g.tonight)h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Tonight’s agenda</div><div class="sm" style="margin-top:5px;opacity:.95">'+esc(g.tonight)+'</div>'+(sc?'<div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap"><button class="btn" onclick="dsToday()" style="background:var(--pr-btn-primary-bg);color:#fff;border-color:var(--pr-btn-primary-bg);font-size:12px;padding:6px 11px">'+ic('calendar',12)+' Tonight\u2019s plan</button><button class="btn" onclick="scAroundMe()" style="background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('pin',12)+' What\u2019s around me</button></div>':'')+'</div>';
   [[ic('meeting',13)+' Business meetings',g.drink,null,'orange'],[ic('food',13)+' Eat',g.eat,null,'teal'],[ic('snowboarder',13)+' Stupid fun',g.do,null,'yellow'],[ic('map',13)+' See &amp; planner stuff',g.see,null,'purple'],[ic('skier',13)+' Tune your gear',g.tune,g.tune_note,'pink'],[ic('compass',13)+' Weird',g.weird,null,'lime']].forEach(function(pair,pi){ var arr=pair[1]; if(!arr||!arr.length)return; var hue=pair[3]||'pink'; h+='<div class="card tint" style="--t-bg:var(--pr-'+hue+'-tint);--t-fg:var(--pr-'+hue+'-text)"><h2>'+pair[0]+'</h2>'+(pair[2]?'<div class="xs muted" style="margin:-3px 0 3px">'+esc(pair[2])+'</div>':''); var ccol='var(--pr-'+hue+')';
-    arr.forEach(function(x){ var num=(x.n?'<span onclick="scPulse(\''+SCENE_TOWN+'\','+x.n+')" style="cursor:pointer;box-sizing:border-box;flex:0 0 auto;min-width:20px;height:20px;border-radius:99px;background:'+ccol+';border:1px solid var(--pr-ink);color:var(--pr-ink);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px">'+x.n+'</span>':(x.tm?'<span style="flex:0 0 auto;font-size:11px;color:var(--pr-text-2);margin-top:3px;white-space:nowrap">'+(x.tm==='w'?'walk':'drive')+' '+x.tmin+'m</span>':''));
+    arr.forEach(function(x){ var num=(x.n?'<span onclick="scPulse(\''+SCENE_TOWN+'\','+x.n+')" style="cursor:pointer;box-sizing:border-box;flex:0 0 auto;min-width:20px;height:20px;border-radius:999px;background:'+ccol+';border:1px solid var(--pr-ink);color:var(--pr-ink);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px">'+x.n+'</span>':(x.tm?'<span style="flex:0 0 auto;font-size:11px;color:var(--pr-text-2);margin-top:3px;white-space:nowrap">'+(x.tm==='w'?'walk':'drive')+' '+x.tmin+'m</span>':''));
       h+='<div style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">'+esc(x.name)+'</div>'+(x.note?'<div class="xs muted" style="margin-top:1px">'+esc(x.note)+'</div>':'')+(x.special?'<div class="xs" style="margin-top:3px;color:var(--pr-ok-text);font-weight:700">'+ic('cheers',12)+' '+esc(x.special)+'</div>':'')+'</div>'+num+(x.tel?'<a href="tel:'+esc(x.tel)+'" style="flex:0 0 auto;font-size:11px;font-weight:600;white-space:nowrap;margin-top:2px">'+ic('phone',11)+' call</a>':'')+(x.g?'<a href="'+x.g+'" target="_blank" style="flex:0 0 auto;font-size:11px;font-weight:600;white-space:nowrap;margin-top:2px">'+ic('pin',11)+' pin \u2197</a>':'')+'</div></div>'; }); h+='</div>'; });
   if(g.facts&&g.facts.length){ h+='<div class="card"><h2>'+ic('tip',13)+' Fun facts</h2>'; g.facts.forEach(function(t){ h+='<div class="sm" style="padding:5px 0;border-bottom:1px solid var(--pr-hairline)">• '+esc(t)+'</div>'; }); h+='</div>'; }
   h+=crewPicksHtml();
@@ -3819,15 +3823,15 @@ function rMore(){
      Invermere and Trail). m10: every call link is a ≥44 px tap target for gloved hands. */
   h+='<div class="card"><h2>Safety &amp; emergency</h2>'; (D.safety||[]).concat((D.hospitals||[]).map(function(x){ return {name:x.name,v:x.v}; })).forEach(function(s){ h+='<div class="between" style="padding:5px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm">'+esc(s.name)+'</div>'+(s.url?'<a href="'+s.url+'" target="_blank" class="sm tap44">open ↗</a>':'<a href="tel:'+esc(s.v)+'" class="sm tap44" style="font-weight:700">'+esc(s.v)+'</a>')+'</div>'; }); h+='</div>';
   if(!readyLive())h+=packingCard();
-  h+='<div class="card"><h2>App</h2><div class="lk" onclick="lockApp()"><div style="flex:1">Lock this phone<small>sign out — trip name &amp; password needed again</small></div><span>🔒</span></div><div class="lk" onclick="hardRefresh()"><div style="flex:1">Refresh app &amp; data<small>clear the offline cache, reload the latest now</small></div><span>⟳</span></div></div>';
+  h+='<div class="card"><h2>App</h2><div class="lk" onclick="lockApp()"><div style="flex:1">Lock this phone<small>sign out — trip name &amp; password needed again</small></div><span>'+ic('lock',14)+'</span></div><div class="lk" onclick="hardRefresh()"><div style="flex:1">Refresh app &amp; data<small>clear the offline cache, reload the latest now</small></div><span>⟳</span></div></div>';
   if(adminOn()){
-    h+='<div class="card"><h2>🧪 Test mode (admin)</h2><div class="xs muted" style="margin-bottom:8px">Pretend it’s a different date/time. Set it to <b>Jul 4</b> to preview example storm/ski conditions on the Snow tab.</div><input class="inp" type="datetime-local" id="testInput"><div style="margin-top:8px"><button class="btn pri" onclick="setTest()">Set test time</button> <button class="btn" onclick="clearTest()">Reset to now</button></div></div>';
+    h+='<div class="card"><h2>'+ic('warning',14)+' Test mode (admin)</h2><div class="xs muted" style="margin-bottom:8px">Pretend it’s a different date/time. Set it to <b>Jul 4</b> to preview example storm/ski conditions on the Snow tab.</div><input class="inp" type="datetime-local" id="testInput"><div style="margin-top:8px"><button class="btn pri" onclick="setTest()">Set test time</button> <button class="btn" onclick="clearTest()">Reset to now</button></div></div>';
     h+=tripAccessCard();   /* M19: the card lives next to adminReEncrypt() */
     h+='<div class="card"><h2>Trip data (admin)</h2>'
      +'<label class="lk" style="cursor:pointer"><div style="flex:1">Import updated data<small>load a new trip-data.json</small></div><span>＋</span><input type="file" hidden accept="application/json,.json" onchange="importData(this)"></label>'
      +'<div class="lk" onclick="exportData()"><div style="flex:1">Export decrypted data<small>plain-JSON backup of everything (keep it private)</small></div><span>⬇</span></div>'
      +(localStorage.getItem('dataOverride')?'<div class="lk" onclick="resetData()"><div style="flex:1">Clear imported data<small>go back to the hosted file</small></div><span>↺</span></div>':'')
-     +'<div class="lk" onclick="lockAdmin()"><div style="flex:1">Lock admin<small>hide these controls again</small></div><span>🔒</span></div>'
+     +'<div class="lk" onclick="lockAdmin()"><div style="flex:1">Lock admin<small>hide these controls again</small></div><span>'+ic('lock',14)+'</span></div>'
      +'<div class="xs muted" style="margin-top:8px">Source: '+(localStorage.getItem('dataOverride')?'imported override':'hosted trip-data.json')+'</div></div>';
   }
   h+='<div class="xs muted" style="text-align:center;padding:6px 0 10px;cursor:pointer" onclick="bumpVer()">BC Powder Run · v'+esc((D.version||'?'))+(adminOn()?' · admin on':'')+'</div>';
