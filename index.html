@@ -930,6 +930,7 @@ function covRow(cv){ CVN++; var did='cvd'+CVN;
   if(cv.policy)h+='<div class="xs" style="margin-top:3px;font-weight:700">'+esc(cv.policy)+'</div>';
   if(cv.note)h+='<div class="xs muted" style="margin-top:3px">'+esc(cv.note)+'</div>';
   if(cv.docId)h+='<div style="margin-top:6px"><button class="btn" onclick="openEmbDoc(\''+esc(cv.docId)+'\')">'+ic('checklist',13)+' Open proof doc</button></div>';
+  if(cv.vaultDoc)h+='<div style="margin-top:6px"><button class="btn" onclick="openVaultDoc(\''+jsq(cv.vaultDoc.id)+'\',\''+jsq(cv.vaultDoc.name)+'\')">'+ic('checklist',13)+' '+esc(cv.vaultDoc.label||'Proof doc')+' · crew files</button></div>';
   if(cv.details)h+='<div class="xs" style="margin-top:6px;cursor:pointer;font-weight:700;color:var(--pr-text-muted)" onclick="toggleCvd(\''+did+'\')">Claims &amp; fine print ▾</div><div id="'+did+'" class="xs muted" style="display:none;margin-top:3px">'+esc(cv.details)+'</div>';
   return h+'</div>';
 }
@@ -1211,6 +1212,17 @@ function addSharedDoc(inp){ var f=inp.files[0]; if(!f)return;
   var rd=new FileReader(); rd.onload=async function(){ try{ var iv=sdocIv(); var ctb=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},DATAKEY,rd.result);
     toast('Encrypting & uploading…');
     crewPost(D.docsUrl,{action:'putdoc',name:f.name,type:f.type,by:localStorage.getItem('me')||'',iv:b64e(iv.buffer),data:b64e(ctb)}).then(function(){ setTimeout(listSharedDocs,1800); toast('Shared with the crew'); }).catch(function(){ toast('Not shared — no signal. Try again with signal.'); }); }catch(e){ toast('Encrypt failed'); } }; rd.readAsArrayBuffer(f); inp.value=''; }
+/* openVaultDoc(id,name) — open a crew file from a card button (Oct 31 2026: the Moose certificate, the Airporter
+   confirmation, the AAC proof letter). Reads the vault list (needs signal), finds the file by its Drive id — or by
+   its name, for a file re-uploaded under the same name — then opens it exactly as the crew-files list does. */
+function openVaultDoc(id,name){ if(!D.docsUrl){ toast('Crew files aren’t switched on'); return; }
+  toast('Opening from crew files…');
+  crewGet(D.docsUrl+'?docs=1').then(function(a){ if(isLocked(a)){ toast(LOCKED_MSG); return; }
+    if(!Array.isArray(a)){ toast('Couldn’t read crew files — try again later'); return; }
+    var dd=null; a.forEach(function(x){ if(x.id===id)dd=x; });
+    if(!dd&&name){ var n=String(name).toLowerCase(); a.forEach(function(x){ if(!dd&&String(x.name||'').toLowerCase()===n)dd=x; }); }
+    if(!dd){ toast('Not in crew files — see More → crew files'); return; }
+    openSharedDoc(dd.id,dd.name,dd.type||'',dd.iv); }).catch(function(){ toast('Couldn’t reach crew files — offline?'); }); }
 /* open a crew file: fetched with the crew token, decrypted on the phone */
 function openSharedDoc(id,name,type,iv){ crewGet(D.docsUrl+'?doc='+encodeURIComponent(id)).then(async function(dd){
     if(isLocked(dd)){ toast(LOCKED_MSG); return; }
@@ -2129,9 +2141,9 @@ function sw(v){if(!D)return; if(v==='ready'&&!readyLive())v='more'; if(v!=='scen
 function render(v){ prepDays(); syncNav(); LASTDAY=nowMid().getTime(); if(v==='ready'&&!readyLive()){ sw('more'); return; } ({home:rHome,days:rDays,snow:rSnow,drive:rDrive,scene:rScene,more:rMore,ready:rReady})[v](); }
 
 /* ---- R39 (Sep 24 2026): the Banff "pick" days ----
-   Feb 9 is the girls' pick (Sunshine or Lake Louise) and Feb 10 is "the other one" for the guys.
+   Feb 9 is Kelly's pick (Sunshine or Lake Louise) and Feb 10 is "the other one" for the guys. (Oct 31 2026: Ashton is not coming, so it is Kelly's call alone.)
    In the data: the Feb 9 day has  choice:['sunshine','louise']  and  pick:null ; the Feb 10 day has
-   choiceOf:<index of Feb 9>. When the girls decide, ONE data change sets pick:'louise' (or 'sunshine')
+   choiceOf:<index of Feb 9>. When Kelly decides, ONE data change sets pick:'louise' (or 'sunshine')
    and both days follow for every phone. prepDays() runs before every draw and fills in, for both days:
      day.opts — the two options (so the app can show both day sheets while the pick is open)
      day.rid  — the resolved mountain, or nothing while the pick is open. */
@@ -2142,16 +2154,16 @@ function prepDays(){ var ds=(D&&D.days)||[];
       d.rid=(s.pick&&s.choice.indexOf(s.pick)>=0)?s.choice.filter(function(x){ return x!==s.pick; })[0]:undefined; } } }); }
 /* choiceSrc(day) — the Feb 9 day (it holds the pick and the notes) for either pick day, else null */
 function choiceSrc(day){ if(!day)return null; if(day.choice)return day; if(day.choiceOf!=null)return (D.days||[])[day.choiceOf]||null; return null; }
-/* choiceLine(day) — "Sunshine or Lake Louise — the girls pick Feb 9" while the pick is open, else '' */
+/* choiceLine(day) — "Sunshine or Lake Louise — Kelly picks Feb 9" while the pick is open, else '' */
 function choiceLine(day){ if(!day||!day.opts||day.rid)return ''; var s=choiceSrc(day);
-  return day.opts.map(shortName).join(' or ')+(day.choice?' — the girls pick':' — whichever the girls didn’t pick on '+(s?fmtShort(s.dt):'Feb 9')); }
+  return day.opts.map(shortName).join(' or ')+(day.choice?' — Kelly picks':' — whichever Kelly didn’t pick on '+(s?fmtShort(s.dt):'Feb 9')); }
 /* gatedNote(i) — the Delirium Dive / Wild West note belongs to the guys' LAST Sunshine day:
-   Feb 9 if the girls pick Sunshine, Feb 10 if they pick Louise; while the pick is open, both days show it
+   Feb 9 if Kelly picks Sunshine, Feb 10 if she picks Louise; while the pick is open, both days show it
    as "if this is the Sunshine day". */
 function gatedNote(i){ var day=(D.days||[])[i], s=choiceSrc(day); if(!s||!s.sunshineLast)return '';
   if(!s.pick)return 'If it’s Sunshine: '+s.sunshineLast;
   var si=D.days.indexOf(s), other=null; D.days.forEach(function(d){ if(d.choiceOf===si)other=d; });
-  var lastSun=(s.pick==='sunshine')?s:other;   /* girls pick Sunshine → everyone skis it Feb 9; else the guys ski it Feb 10 */
+  var lastSun=(s.pick==='sunshine')?s:other;   /* Kelly picks Sunshine → everyone skis it Feb 9; else the guys ski it Feb 10 */
   return (lastSun===day)?s.sunshineLast:''; }
 /* groupRid(day) — the resort that sets a day's colour and IKON pass group; a pick day counts as its
    first option (both options are SkiBig3) */
@@ -2589,7 +2601,8 @@ function rHome(){
   h+=sec('Deadlines &amp; money');
   var now=getNow(), nx=null;
   /* m1: stays on during the trip too — 5 of the 6 deadlines fall Feb 5–17 (the Regent chase, the Rossland decision) */
-  (D.stops||[]).forEach(function(s){ if(s.cancel){var c=new Date(s.cancel); if(c>now&&(!nx||c<nx.c))nx={c:c,s:s};} });
+  (D.stops||[]).forEach(function(s){ if(s.cancel){var c=new Date(s.cancel); if(c>now&&(!nx||c<nx.c))nx={c:c,s:s};}
+    if(s.also&&s.also.cancel){var c2=new Date(s.also.cancel); if(c2>now&&(!nx||c2<nx.c))nx={c:c2,s:{hotel:s.also.hotel+(s.also.who?' — '+s.also.who:''),name:s.name,cancel:s.also.cancel,id:s.id}};} });
   if(nx){ var dd=Math.ceil((nx.c-now)/864e5); h+='<div class="card money"><div class="between"><div><div class="xs" style="text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:var(--pr-card-money-fg)">Next free-cancel deadline</div><div style="font-weight:700;margin-top:3px">'+esc(nx.s.hotel)+'</div><div class="sm muted">'+esc(nx.s.name)+' · '+esc(fmtDeadline(nx.s.cancel,tzPlace(nx.s)))+'</div></div><span class="pill '+(dd<14?'warn':'ok')+'">'+dd+'d</span></div></div>'; }
   h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div></div>';
   var lr=linkRow(); if(lr)h+=sec('Crew links')+lr;
@@ -2683,6 +2696,22 @@ function lodgeBox(s){
   }
   var g=guideFor(s.id); if(g&&g.tonight)h+='<div class="sm" style="margin-top:9px;border-top:1px solid var(--pr-hairline);padding-top:8px">'+ic('cheers',13)+' '+esc(g.tonight)+'</div>'; if(g)h+='<div class="btn" style="margin-top:8px;width:100%;justify-content:center" onclick="openGuide(\''+s.id+'\')">'+ic('cheers',14)+' '+esc(s.name)+' nightlife &amp; eats</div>';
   if(s.note)h+='<div class="xs muted" style="margin-top:7px">'+esc(s.note)+'</div>';
+  h+='</div>';
+  if(s.also)h+=alsoBox(s.also,s);
+  return h;
+}
+/* alsoBox(a,s) — a stop's SECOND bed (Oct 31 2026: Banff — the Moose for Tanner + Kelly, next door to the crew's
+   Elk + Avenue room). The same flat box as the check-in card, one size down. Its extra buttons open crew files
+   (the Banff Lodging Co certificate, the Airporter confirmation) — the app holds no copy of its own. */
+function alsoBox(a,s){
+  var h='<div style="margin-top:8px;background:#F9F5EC;border:1px solid var(--pr-hairline);border-radius:11px;padding:11px">';
+  h+='<div class="between"><div style="font-weight:700;font-size:14px">'+ic('bed',14)+' Also · '+esc(a.hotel)+(a.who?' <span class="xs muted">— '+esc(a.who)+'</span>':'')+'</div><span class="xs muted">'+esc(a.cost||'')+'</span></div>';
+  h+='<div class="xs muted" style="margin-top:2px">'+fmtShort(a.in)+'–'+fmtShort(a.out)+' · Conf '+esc(a.conf)+'</div>';
+  if(a.cancel)h+='<div class="xs" style="margin-top:5px;color:var(--pr-warn-text);font-weight:600">'+ic('warning',13)+' Free cancel by '+esc(fmtDeadline(a.cancel,tzPlace(s)))+'</div>';
+  h+='<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><a class="btn" href="'+mapsUrl(a.hotel+' '+(a.addr||''))+'" target="_blank">'+ic('pin',14)+' Map</a>'+(a.phone?'<a class="btn" href="tel:'+esc(a.phone)+'">'+ic('phone',14)+' Call</a>':'');
+  (a.vaultDocs||[]).forEach(function(vd){ h+='<button class="btn" onclick="openVaultDoc(\''+jsq(vd.id)+'\',\''+jsq(vd.name)+'\')">'+ic('checklist',13)+' '+esc(vd.label||vd.name)+'</button>'; });
+  h+='</div>';
+  if(a.note)h+='<div class="xs muted" style="margin-top:7px">'+esc(a.note)+'</div>';
   return h+'</div>';
 }
 
