@@ -2684,7 +2684,10 @@ function lodgeBox(s){
   h+='<div class="between"><div style="font-weight:700;font-size:14px">'+ic('bed',14)+' Check in · '+esc(s.hotel)+'</div><span class="xs muted">'+esc(s.cost)+'</span></div>';
   h+='<div class="xs muted" style="margin-top:2px">'+fmtShort(s.in)+'–'+fmtShort(s.out)+' · Conf '+esc(s.conf)+'</div>';
   if(s.cancel)h+='<div class="xs" style="margin-top:5px;color:var(--pr-warn-text);font-weight:600">'+ic('warning',13)+' Free cancel by '+esc(fmtDeadline(s.cancel,tzPlace(s)))+'</div>';
-  h+='<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><a class="btn" href="'+mapsUrl(s.hotel+' '+s.addr)+'" target="_blank">'+ic('pin',14)+' Map</a><a class="btn" href="tel:'+esc(s.phone)+'">'+ic('phone',14)+' Call</a></div>';
+  h+='<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><a class="btn" href="'+mapsUrl(s.hotel+' '+s.addr)+'" target="_blank">'+ic('pin',14)+' Map</a><a class="btn" href="tel:'+esc(s.phone)+'">'+ic('phone',14)+' Call</a>';
+  /* Oct 31 2026: a stop's own crew files (its booking confirmation in the shared vault) — the same button the Moose card has. */
+  (s.vaultDocs||[]).forEach(function(vd){ h+='<button class="btn" onclick="openVaultDoc(\''+jsq(vd.id)+'\',\''+jsq(vd.name)+'\')">'+ic('checklist',13)+' '+esc(vd.label||vd.name)+'</button>'; });
+  h+='</div>';
   if(s.amen&&s.amen.length){
     var AMIC={laundry:'laundry',breakfast:'coffee',soak:'pool',parking:'parking',kitchen:'kitchen'};
     var ch='';
