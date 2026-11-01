@@ -2570,9 +2570,26 @@ function gnarCard(){ var g=gnarOn(); if(!g)return '';
    secret stash, tonight's guide, tonight's base, emergency) sit where they
    always did. sec() headers are invisible on phones; on desktop each one opens
    a grid (see setView). */
+/* tagLine() — the Home subtitle. Nov 1 2026, Tanner: "replace the kinda useless Calgary – the Powder Highway – Idaho
+   line with a VERY BASIC trip timeline, like 5–10 Banff, 10–12 Pano, 12–14 KH" — and "for each, an invisible link to the
+   itinerary card for that section". Built from stops[]: "Feb 5–10 Banff · 10–12 Pano · …" using each stop's short label
+   (stops[].short, his spellings: Banff, Pano, KH, Revy, WH₂O, RED, Schweitz). Each piece is a plain tap target — same grey
+   text, no underline — that opens the Itinerary at that stop (goStop). A piece never breaks mid-word; the line wraps at
+   the dots. If any stop lacks a short label, the old meta.tagline text shows instead, so the subtitle can never go blank. */
+function tagLine(){
+  var st=D.stops||[];
+  if(!st.length||!st.every(function(s){ return s.short&&s['in']&&s.out; })) return esc(D.meta.tagline||'');
+  var parts=[];
+  st.forEach(function(s,i){
+    var a=dObj(s['in']), b=dObj(s.out), mon=a.toLocaleDateString('en-US',{month:'short'});
+    var lab=(i===0?esc(mon)+' ':'')+a.getDate()+'\u2013'+b.getDate()+' '+esc(s.short);
+    parts.push('<span onclick="goStop(\''+jsq(s.id)+'\')" style="cursor:pointer;white-space:nowrap">'+lab+'</span>');
+  });
+  return parts.join(' \u00b7 ');
+}
 function rHome(){
   var idx=tripDayIdx(), h=testBanner();
-  h+='<div class="hh"><h1>'+esc(D.meta.title)+' '+esc(D.meta.year)+'</h1><div class="sub">'+esc(D.meta.tagline)+'</div></div>';
+  h+='<div class="hh"><h1>'+esc(D.meta.title)+' '+esc(D.meta.year)+'</h1><div class="sub">'+tagLine()+'</div></div>';
   if(idx===-1){ h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Countdown</div><div class="big" style="margin:6px 0 2px">'+daysUntilStart()+'</div><div class="sm" style="opacity:.85">days until Banff · first chair '+fmtShort(D.meta.firstChair||D.meta.start)+'</div><div class="stripe"></div></div>'; }
   else if(idx>=0){ var td=D.days[idx], r=resortOfDay(td); h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Today · '+td.wd+' '+fmtShort(td.dt)+'</div><div class="hero-ti" style="margin:6px 0 3px">'+esc(td.title)+'</div>'+(choiceLine(td)?'<div class="sm" style="opacity:.9">'+esc(choiceLine(td))+'</div>':'')+(passChip(idx)?'<div style="margin-top:5px">'+passChip(idx)+'</div>':'')+'<button class="btn" onclick="dsToday()" style="margin-top:9px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('map',12)+' Today\u2019s day sheet</button>'+skiSwitchHtml(td,true)+'<div class="stripe"></div></div>'; }
   else { h+='<div class="banner"><div class="hero-ti">That’s a wrap 🎿</div><div class="sm" style="opacity:.85;margin-top:4px">Hope it was deep. Drive safe home.</div><div class="stripe"></div></div>'; }
