@@ -541,6 +541,22 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .card.pow .prow.lead .pin{font-size:30px;text-shadow:2px 2px 0 var(--pr-teal)}
 .card.pow .prow .ptag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-blue-text);margin-left:6px}
 #powslot:empty{display:none}
+#stormslot:empty{display:none}
+/* storm coming — the powder alert's layout drawn as an outline: plain card, dashed glacier-blue border, a dashed
+   rule under the title where the alert has its filled teal band, no offset shadow on the numbers. Forecast snow
+   must not read as fallen snow (Tanner, Nov 16 2026: "use the same style but make sure it's distinct"). */
+.card.storm{border:1.5px dashed var(--pr-blue-text);background:var(--pr-card);overflow:hidden;padding-top:0}
+.card.storm .powhd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 -15px 10px;padding:8px 15px;border-bottom:1.5px dashed var(--pr-blue-text);color:var(--pr-blue-text)}
+.card.storm .powhd h2{margin:0;color:var(--pr-blue-text)}
+.card.storm .powhd .when{font-size:11px;font-weight:700;letter-spacing:.3px}
+.card.storm .prow{display:flex;align-items:baseline;gap:10px;padding:7px 0 7px 22px;border-bottom:1px solid var(--pr-hairline);border-left:3px solid var(--hn);margin-left:-15px;cursor:pointer}
+.card.storm .prow:last-of-type{border-bottom:none}
+.card.storm .prow .pn{flex:1;min-width:0}
+.card.storm .prow .ph{font-weight:700;font-size:15px}
+.card.storm .prow .ph .chev{font-weight:400;color:var(--ht);margin-left:5px}
+.card.storm .prow .pj{font-size:12.5px;color:var(--pr-text-2);margin-top:1px}
+.card.storm .prow .pin{font-family:var(--pr-font-app-display);font-size:22px;line-height:1;color:var(--pr-blue-text);white-space:nowrap;text-align:right}
+.card.storm .prow .pin small{display:block;font-family:var(--pr-font-app);font-size:11px;font-weight:700;color:var(--pr-text-2);margin-top:4px;letter-spacing:.2px}
 /* get-ready one-liner (pink to-do card, tappable) */
 .card.ready{cursor:pointer;padding:12px 15px}
 .card.ready .rnext{font-size:12.5px;color:var(--pr-text-2);margin-top:3px}
@@ -2287,36 +2303,61 @@ function hillOrder(){ var o=[],seen={}; (D.days||[]).forEach(function(d){ if(d.r
 /* fmtIn(n) — inches for display: 0″, 2.5″, 11″ */
 function fmtIn(n){ if(!(n>0.05))return '0″'; return (n<10?n.toFixed(1).replace(/\.0$/,''):String(Math.round(n)))+'″'; }
 
-/* ===================== LIVE SNOW + WEATHER (rebuilt Oct 14 2026) =====================
-   One call to open-meteo (a free weather-model service: no key, no server) for all nine hills at
-   three heights each: base, mid, summit. The heights come from resorts[].elev (metres, from each
-   resort's own site) and the mid label from resorts[].midName. The service downscales each point
-   to the height we give it, so a storm that rains at the base and snows up top shows as rain /
-   snow / more snow. Snowfall comes back in cm (÷2.54 for inches); temps °F; gusts mph; the
-   freezing level in metres (×3.281 for feet).
-   What the one call carries, per point:
+/* ===================== LIVE SNOW + WEATHER (rebuilt Oct 14 2026; model + hourly snow Nov 16 2026) =====================
+   Two calls to open-meteo (a free weather-model service: no key, no server) for all nine hills.
+   CALL 1, the weather: 27 points = nine hills at three heights each (base, mid, summit), from the CANADIAN model
+   (OM_MODEL, 2.5 km squares over our hills). Each height has its own map position (resorts[].pos, from the lift
+   ends) and its own height (resorts[].elev, metres, from each resort's own site); the mid label is
+   resorts[].midName. Until Nov 16 2026 the app named no model and gave every height one position per hill: the
+   service then used a coarse US model, which read far below the resorts' reports and had no data at Lake Louise.
+   Snowfall comes back in cm (÷2.54 for inches); temps °F; gusts mph.
+   What call 1 carries, per point:
      current  = temperature + wind gusts right now
-     hourly   = freezing level for the next 24 h (index 0 = this hour, 12 = in 12 h)
+     hourly   = snowfall for the last WX_PAST_H hours (the value at 10:00 is the snow from 9 to 10)
      daily    = snowfall, hi, lo, max gust, sky code — 14 days back + today + 7 ahead
-   Cached WX_TTL (60 min) in localStorage, the stale copy used offline. Home and the Snow tab read
-   the same cache, so one app open costs one request. The season total (since Oct 1) is a second,
-   six-hourly call to the service's archive of past forecasts (same models) — wxSeason(). */
+   CALL 2, the freezing level: the Canadian model does not carry it, so it comes from the service's default
+   model, for the nine mid points only: the next 24 h in metres (×3.281 for feet; index 0 = this hour, 12 = in 12 h).
+   Cached WX_TTL (60 min) in localStorage, the stale copy used offline. Home and the Snow tab read the same cache,
+   so one app open costs one pair of requests. The season total (since Oct 1) is a six-hourly call to the
+   service's archive of past forecasts (same model, same points) — wxSeason(). A copy saved from another model
+   (an older app version) is fetched again, never mixed in. */
 var WX_TTL=60*60*1000, WX_SEASON_TTL=6*60*60*1000, LVLS=['base','mid','summit'];
 var OM_URL='https://api.open-meteo.com/v1/forecast', OM_HIST='https://historical-forecast-api.open-meteo.com/v1/forecast';
-/* wxPoints() — the 27 points (hill × height) in itinerary order; a hill without elev data is skipped */
-function wxPoints(){ var out=[]; hillOrder().forEach(function(k){ var r=D.resorts[k]; if(!r||r.lat==null||r.lon==null||!r.elev)return; LVLS.forEach(function(l){ if(r.elev[l]!=null)out.push({rid:k,lvl:l,lat:r.lat,lon:r.lon,elev:r.elev[l]}); }); }); return out; }
-function wxUrl(P){ return OM_URL+'?latitude='+P.map(function(p){ return p.lat; }).join(',')+'&longitude='+P.map(function(p){ return p.lon; }).join(',')+'&elevation='+P.map(function(p){ return p.elev; }).join(',')+'&current=temperature_2m,wind_gusts_10m&hourly=freezing_level_height&forecast_hours=24&daily=snowfall_sum,temperature_2m_max,temperature_2m_min,wind_gusts_10m_max,weather_code&past_days=14&forecast_days=8&timezone=auto&temperature_unit=fahrenheit&wind_speed_unit=mph'; }
+var OM_MODEL='gem_seamless';   /* the Canadian model: 2.5 km squares over Canada and northern Idaho for the next 2 days, coarser after */
+var WX_PAST_H=36;              /* hours of hourly snow kept behind now: enough for "since 4 pm yesterday" at any time of day */
+/* wxPoints() — the 27 points (hill × height) in itinerary order; a hill without elev data is skipped. Each height
+   uses its own map position (resorts[].pos[height] = [lat, lon]); a hill without pos falls back to its one lat/lon. */
+function wxPoints(){ var out=[]; hillOrder().forEach(function(k){ var r=D.resorts[k]; if(!r||r.lat==null||r.lon==null||!r.elev)return; LVLS.forEach(function(l){ if(r.elev[l]==null)return; var q=(r.pos&&r.pos[l]&&r.pos[l].length===2)?r.pos[l]:[r.lat,r.lon]; out.push({rid:k,lvl:l,lat:q[0],lon:q[1],elev:r.elev[l]}); }); }); return out; }
+/* wxLL(points) — the "where" part of a request: the positions and heights, in our order */
+function wxLL(P){ return '?latitude='+P.map(function(p){ return p.lat; }).join(',')+'&longitude='+P.map(function(p){ return p.lon; }).join(',')+'&elevation='+P.map(function(p){ return p.elev; }).join(','); }
+function wxUrl(P){ return OM_URL+wxLL(P)+'&models='+OM_MODEL+'&current=temperature_2m,wind_gusts_10m&hourly=snowfall&past_hours='+WX_PAST_H+'&forecast_hours=1&daily=snowfall_sum,temperature_2m_max,temperature_2m_min,wind_gusts_10m_max,weather_code&past_days=14&forecast_days=8&timezone=auto&temperature_unit=fahrenheit&wind_speed_unit=mph'; }
+/* wxFlUrl(mid points) — the freezing level for the next 24 h, from the service's default model */
+function wxFlUrl(P){ return OM_URL+wxLL(P)+'&hourly=freezing_level_height&forecast_hours=24&timezone=auto'; }
 /* wxParse(json, points) — the service answers with one object per point, in our order. Folded into
-   {rid:{lvl:{t, g, fl:[24 metres], day0, d:{time, snow(cm), hi, lo, gust, code}}}}; day0 = today's index
-   in the daily arrays (found from the point's own local date, so a Pacific hill is right at 12:30 am Denver). */
+   {rid:{lvl:{t, g, fl:[24 metres], day0, on, sm, d:{time, snow(cm), hi, lo, gust, code}}}}; day0 = today's index
+   in the daily arrays (found from the point's own local date, so a Pacific hill is right at 12:30 am Denver).
+   on = cm of snow since 4 pm yesterday (the hill's own clock) and sm = cm since midnight, both added up from the
+   hourly values up to the hour now; null when the answer has no hourly snow. An hourly value belongs to the hour
+   that ENDS at its time, so "since 4 pm" starts with the 5 pm value. fl is filled by wxAddFl (mid points only). */
 function wxParse(j,P){ var arr=Array.isArray(j)?j:[j], out={}; P.forEach(function(p,i){ var o=arr[i]; if(!o||!o.daily||!o.daily.time)return; var cur=o.current||{}, today=(cur.time||'').slice(0,10), d0=o.daily.time.indexOf(today); if(d0<0)d0=14;
-  out[p.rid]=out[p.rid]||{}; out[p.rid][p.lvl]={t:cur.temperature_2m,g:cur.wind_gusts_10m,fl:(o.hourly&&o.hourly.freezing_level_height)||[],day0:d0,d:{time:o.daily.time,snow:o.daily.snowfall_sum||[],hi:o.daily.temperature_2m_max||[],lo:o.daily.temperature_2m_min||[],gust:o.daily.wind_gusts_10m_max||[],code:o.daily.weather_code||[]}}; }); return out; }
+  var on=null, sm=null, ht=(o.hourly&&o.hourly.time)||[], hv=(o.hourly&&o.hourly.snowfall)||[];
+  if(today&&ht.length&&hv.length){ var nowH=cur.time.slice(0,13)+':00', from=ymd(new Date(+today.slice(0,4),+today.slice(5,7)-1,+today.slice(8,10)-1,12))+'T16:00', mid0=today+'T00:00'; on=0; sm=0;
+    for(var q=0;q<ht.length;q++){ if(ht[q]>nowH)break; var v=hv[q]||0; if(ht[q]>from)on+=v; if(ht[q]>mid0)sm+=v; } }
+  out[p.rid]=out[p.rid]||{}; out[p.rid][p.lvl]={t:cur.temperature_2m,g:cur.wind_gusts_10m,fl:[],day0:d0,on:on,sm:sm,d:{time:o.daily.time,snow:o.daily.snowfall_sum||[],hi:o.daily.temperature_2m_max||[],lo:o.daily.temperature_2m_min||[],gust:o.daily.wind_gusts_10m_max||[],code:o.daily.weather_code||[]}}; }); return out; }
+/* wxAddFl(wx, json, mid points) — the freezing level (metres, the next 24 h) onto each hill's mid point */
+function wxAddFl(wx,j,P){ if(!j)return; var arr=Array.isArray(j)?j:[j]; P.forEach(function(p,i){ var o=arr[i], f=o&&o.hourly&&o.hourly.freezing_level_height; if(f&&wx[p.rid]&&wx[p.rid][p.lvl])wx[p.rid][p.lvl].fl=f; }); }
+/* wxOk(copy) — true when a saved copy came from the model we use now. Each copy carries the model's name in _m. */
+function wxOk(c){ return !!(c&&c._m===OM_MODEL); }
 var WX_PENDING=null;
-/* wxGet(cb) — hands the weather to cb(wx): from the cache, else from the network (one in-flight request shared by
-   every caller); offline, the stale copy; nothing at all → cb(null). On the Jul 4 test date, the demo storm. */
-function wxGet(cb){ if(isDemo()){ cb(wxDemo()); return; } var c=cacheGet('wxCache',WX_TTL); if(c){ cb(c); return; }
+/* wxGet(cb) — hands the weather to cb(wx): from the cache, else from the network (one in-flight pair of requests
+   shared by every caller); offline, the stale copy; nothing at all → cb(null). On the Jul 4 test date, the demo storm.
+   If the freezing-level request fails, the weather is still used (the freeze line just does not show). An answer
+   with no hills in it (the service returned an error) is never saved over a good copy. */
+function wxGet(cb){ if(isDemo()){ cb(wxDemo()); return; } var c=cacheGet('wxCache',WX_TTL); if(wxOk(c)){ cb(c); return; }
   var P=wxPoints(); if(!P.length){ cb(null); return; }
-  if(!WX_PENDING)WX_PENDING=fetch(wxUrl(P)).then(function(x){ return x.json(); }).then(function(j){ var wx=wxParse(j,P); cachePut('wxCache',wx); WX_PENDING=null; return wx; }).catch(function(){ WX_PENDING=null; return cacheStale('wxCache'); });
+  if(!WX_PENDING){ var Pm=P.filter(function(p){ return p.lvl==='mid'; });
+    var fl=fetch(wxFlUrl(Pm)).then(function(x){ return x.json(); }).catch(function(){ return null; });
+    WX_PENDING=fetch(wxUrl(P)).then(function(x){ return x.json(); }).then(function(j){ return fl.then(function(f){ var wx=wxParse(j,P); WX_PENDING=null; if(!Object.keys(wx).length)return cacheStale('wxCache'); wxAddFl(wx,f,Pm); wx._m=OM_MODEL; cachePut('wxCache',wx); return wx; }); }).catch(function(){ WX_PENDING=null; return cacheStale('wxCache'); }); }
   WX_PENDING.then(cb); }
 /* the season runs Oct 1 → the following spring; Jul–Sep there is no season to count */
 function ymd(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
@@ -2324,13 +2365,15 @@ function seasonStart(){ var n=getNow(), y=n.getMonth()>=9?n.getFullYear():n.getF
 function seasonOff(){ var m=getNow().getMonth(); return m>=6&&m<=8; }
 var WX_SEASON_PENDING=null;
 /* wxSeason(cb) — snow since Oct 1 at mid + summit of every hill, from the service's archive of past forecasts
-   (same models, same heights), summed up to 8 days ago; the card adds the live feed's last-7-days figure on top, so
+   (same model, same points), summed up to 8 days ago; the card adds the live feed's last-7-days figure on top, so
    the season total and the 7-day number always agree. One call, cached 6 h. cb({rid:{mid:inches, summit:inches}})
-   or null when there is nothing (offline with no copy, or no season yet). */
-function wxSeason(cb){ if(isDemo()){ cb(wxDemoSeason()); return; } if(seasonOff()){ cb(null); return; } var c=cacheGet('wxSeason',WX_SEASON_TTL); if(c){ cb(c); return; }
+   or null when there is nothing (offline with no copy, or no season yet). A copy from another model is not used:
+   the season would be one model's and the last 7 days another's. */
+function wxSeason(cb){ if(isDemo()){ cb(wxDemoSeason()); return; } if(seasonOff()){ cb(null); return; } var c=cacheGet('wxSeason',WX_SEASON_TTL); if(wxOk(c)){ cb(c); return; }
   var P=wxPoints().filter(function(p){ return p.lvl!=='base'; }), n=getNow(), today=ymd(n), cut=ymd(new Date(n.getFullYear(),n.getMonth(),n.getDate()-7,12)); if(!P.length){ cb(null); return; }
-  var url=OM_HIST+'?latitude='+P.map(function(p){ return p.lat; }).join(',')+'&longitude='+P.map(function(p){ return p.lon; }).join(',')+'&elevation='+P.map(function(p){ return p.elev; }).join(',')+'&daily=snowfall_sum&start_date='+seasonStart()+'&end_date='+today+'&timezone=auto';
-  if(!WX_SEASON_PENDING)WX_SEASON_PENDING=fetch(url).then(function(x){ return x.json(); }).then(function(j){ var arr=Array.isArray(j)?j:[j], out={}; P.forEach(function(p,i){ var o=arr[i]; if(!o||!o.daily||!o.daily.time)return; var t=o.daily.time, s=o.daily.snowfall_sum||[], sum=0; for(var q=0;q<t.length;q++){ if(t[q]>=cut)break; sum+=(s[q]||0); } out[p.rid]=out[p.rid]||{}; out[p.rid][p.lvl]=sum/2.54; }); cachePut('wxSeason',out); WX_SEASON_PENDING=null; return out; }).catch(function(){ WX_SEASON_PENDING=null; return cacheStale('wxSeason'); });
+  var url=OM_HIST+wxLL(P)+'&models='+OM_MODEL+'&daily=snowfall_sum&start_date='+seasonStart()+'&end_date='+today+'&timezone=auto';
+  var old=function(){ var st=cacheStale('wxSeason'); return wxOk(st)?st:null; };
+  if(!WX_SEASON_PENDING)WX_SEASON_PENDING=fetch(url).then(function(x){ return x.json(); }).then(function(j){ var arr=Array.isArray(j)?j:[j], out={}; P.forEach(function(p,i){ var o=arr[i]; if(!o||!o.daily||!o.daily.time)return; var t=o.daily.time, s=o.daily.snowfall_sum||[], sum=0; for(var q=0;q<t.length;q++){ if(t[q]>=cut)break; sum+=(s[q]||0); } out[p.rid]=out[p.rid]||{}; out[p.rid][p.lvl]=sum/2.54; }); WX_SEASON_PENDING=null; if(!Object.keys(out).length)return old(); out._m=OM_MODEL; cachePut('wxSeason',out); return out; }).catch(function(){ WX_SEASON_PENDING=null; return old(); });
   WX_SEASON_PENDING.then(cb); }
 /* ---- small helpers the snow cards share ---- */
 function toIn(cm){ return (cm||0)/2.54; }
@@ -2344,9 +2387,10 @@ function accStyle(k){ var a=hillAcc(k); return ' style="--hn:'+a[0]+';--ht:'+a[1
 /* dayVal(point, field, offset) — a daily value by offset from today: -1 yesterday, 0 today, 1 tomorrow */
 function dayVal(p,f,off){ var i=p.day0+off; return (i>=0&&i<p.d[f].length)?p.d[f][i]:null; }
 function snowIn(p,off){ if(!p)return null; var v=dayVal(p,'snow',off); return v==null?null:toIn(v); }
-/* stormOf(point) — the running storm: count back from yesterday adding snowfall while each day had 1″ or more;
-   the first day under 1″ ends it. {total inches, days} */
-function stormOf(p){ var t=0,n=0; for(var off=-1;off>=-14;off--){ var v=snowIn(p,off); if(v==null||v<1)break; t+=v; n++; } return {total:t,days:n}; }
+/* stormOf(point) — the running storm: today's snow so far (since midnight, from the hourly values) plus the days
+   before it, counting back from yesterday while each day had 1″ or more; the first day under 1″ ends it.
+   {total inches, days}; a day (today included) counts toward "days" when it had 1″ or more. */
+function stormOf(p){ var t=0,n=0, td=(p&&p.sm!=null)?toIn(p.sm):0; if(td>0){ t+=td; if(td>=1)n++; } for(var off=-1;off>=-14;off--){ var v=snowIn(p,off); if(v==null||v<1)break; t+=v; n++; } return {total:t,days:n}; }
 /* the depth ladder — real heights on a six-foot rider: ankle 4″ · shin 10″ · knee 20″ · nuts 32″ · waist 40″ · tits 50″ · head 72″ */
 function depthWord(n){ return n<4?'a dusting':n<10?'ankle deep':n<20?'shin deep':n<32?'knee deep':n<40?'nuts deep':n<50?'waist deep':n<72?'tits deep':'over the head'; }
 /* skyWord(code) — the WMO weather code as one plain word */
@@ -2368,23 +2412,56 @@ function cachePut(key,data){ try{ localStorage.setItem(key,JSON.stringify({ts:Da
 
 /* ---- 1. Powder alert ----
    The one loud card on Home. Shows when a hill got POW_MID inches or more at mid, or POW_TOP or more at the
-   summit, YESTERDAY (the last complete day). One row per hill that qualifies: summit snow big, mid snow under it,
-   the depth word from the storm total ("knee deep · 26″ over 5 days"), "· refills" when 2″+ more is due at mid
-   today. Today's hill leads, then the deepest summit. Rows wear the hill's colour and tap through to its card on
-   the Snow tab. Nothing qualifies → no card. After the trip Home drops it (rHome). */
+   summit, SINCE 4 PM YESTERDAY (the hill's own clock, counted by the hour — so overnight snow shows the same
+   morning; until Nov 16 2026 it counted the last complete day and showed a day late). One row per hill that
+   qualifies: summit snow big, mid snow under it, the depth word from the storm total ("knee deep · 26″ over 5
+   days"), "· refills" when 2″+ more is still to come at mid today. Today's hill leads, then the deepest summit.
+   Rows wear the hill's colour and tap through to its card on the Snow tab. Nothing qualifies → no card. After the
+   trip Home drops it (rHome). A weather copy with no hourly snow (saved by an older app version) counts yesterday. */
 var POW_MID=3, POW_TOP=6;
-function powLine(wx,k){ var s=wxOf(wx,k,'summit'), m=wxOf(wx,k,'mid'); if(!s)return ''; var st=stormOf(s), w=depthWord(st.total); if(st.days>1)w+=' · '+fmtIn(st.total)+' over '+st.days+' days'; var td=snowIn(m,0); if(td!=null&&td>=2)w+=' · refills'; return w; }
+/* powIn(point) — inches since 4 pm yesterday; yesterday's whole day when the copy has no hourly snow */
+function powIn(p){ if(!p)return null; return p.on!=null?toIn(p.on):snowIn(p,-1); }
+function powLine(wx,k){ var s=wxOf(wx,k,'summit'), m=wxOf(wx,k,'mid'); if(!s)return ''; var st=stormOf(s), tot=Math.max(st.total,powIn(s)||0), w=depthWord(tot); if(st.days>1)w+=' · '+fmtIn(tot)+' over '+st.days+' days';
+  var td=snowIn(m,0); if(td!=null&&m&&m.sm!=null)td=Math.max(0,td-toIn(m.sm));   /* today's forecast minus what already fell = still to come */
+  if(td!=null&&td>=2)w+=' · refills'; return w; }
 function powCardHtml(wx){ if(!wx)return ''; var idx=tripDayIdx(), today=(idx>=0&&D.days[idx])?D.days[idx].rid:null;
-  var rids=hillOrder().filter(function(k){ var ym=snowIn(wxOf(wx,k,'mid'),-1), ys=snowIn(wxOf(wx,k,'summit'),-1); return (ym!=null&&ym>=POW_MID)||(ys!=null&&ys>=POW_TOP); });
+  var rids=hillOrder().filter(function(k){ var ym=powIn(wxOf(wx,k,'mid')), ys=powIn(wxOf(wx,k,'summit')); return (ym!=null&&ym>=POW_MID)||(ys!=null&&ys>=POW_TOP); });
   if(!rids.length)return '';
-  rids.sort(function(a,b){ var la=a===today?1:0, lb=b===today?1:0; return (lb-la)||((snowIn(wxOf(wx,b,'summit'),-1)||0)-(snowIn(wxOf(wx,a,'summit'),-1)||0)); });
-  var h='<div class="card pow"><div class="powhd"><h2>'+ic('snowflake',14)+' Powder alert</h2><span class="when">yesterday</span></div>';
-  rids.forEach(function(k,i){ var r=D.resorts[k]||{}, ys=snowIn(wxOf(wx,k,'summit'),-1), ym=snowIn(wxOf(wx,k,'mid'),-1);
+  rids.sort(function(a,b){ var la=a===today?1:0, lb=b===today?1:0; return (lb-la)||((powIn(wxOf(wx,b,'summit'))||0)-(powIn(wxOf(wx,a,'summit'))||0)); });
+  var hourly=rids.some(function(k){ var p=wxOf(wx,k,'summit'); return !!(p&&p.on!=null); });
+  var h='<div class="card pow"><div class="powhd"><h2>'+ic('snowflake',14)+' Powder alert</h2><span class="when">'+(hourly?'since 4 pm yesterday':'yesterday')+'</span></div>';
+  rids.forEach(function(k,i){ var r=D.resorts[k]||{}, ys=powIn(wxOf(wx,k,'summit')), ym=powIn(wxOf(wx,k,'mid'));
     h+='<div class="prow'+(i===0?' lead':'')+'"'+accStyle(k)+' onclick="goHill(\''+k+'\')"><div class="pn"><div class="ph">'+esc(shortName(k))+'<span class="chev">›</span>'+(k===today?'<span class="ptag">today</span>':'')+'</div><div class="pj">'+esc(powLine(wx,k))+'</div></div><div class="pin">'+(ys==null?'—':fmtIn(ys))+(ym!=null?'<small>'+fmtIn(ym)+' at '+esc(midShort(r))+'</small>':'')+'</div></div>'; });
   return h+'</div>'; }
 /* powSlot() is the placeholder rHome() prints; fillPow() fills it (or leaves it empty = no card). */
 function powSlot(){ return '<div id="powslot"></div>'; }
 function fillPow(){ if(!$('powslot'))return; wxGet(function(wx){ var el=$('powslot'); if(el)el.innerHTML=powCardHtml(wx); }); }
+
+/* ---- 1b. Storm coming (Nov 16 2026) ----
+   The powder alert's quiet partner: FORECAST snow, not fallen snow, so it is drawn as an outline (dashed border,
+   no filled band) and cannot be read as snow on the ground. A hill shows when any single day of the next
+   STORM_DAYS days (tomorrow onward) has STORM_IN inches or more in the forecast at any of its three heights.
+   One row per hill: the day ("Wed Nov 18"), or each day with its inches when more than one qualifies
+   ("Wed 8″ · Thu 12″"); at the right the biggest day's inches and the height it is forecast at. Biggest first.
+   Rows wear the hill's colour and tap through to its card on the Snow tab. Nothing qualifies → no card. It sits
+   directly under the powder alert. */
+var STORM_IN=6, STORM_DAYS=3, WDAY=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+/* stormRows(wx) — [{k: hill, r: resort, days: [{v: inches, l: height, dt: 'YYYY-MM-DD'}], top: the biggest day}].
+   Each day takes the height with the most snow; when two heights tie, the higher one is named. */
+function stormRows(wx){ var rows=[]; hillOrder().forEach(function(k){ var days=[], top=null;
+    for(var off=1;off<=STORM_DAYS;off++){ var best=null; LVLS.forEach(function(l){ var p=wxOf(wx,k,l), v=snowIn(p,off); if(v!=null&&(!best||v>=best.v))best={v:v,l:l,dt:p.d.time[p.day0+off]}; });
+      if(best&&best.dt&&best.v>=STORM_IN){ days.push(best); if(!top||best.v>top.v)top=best; } }
+    if(top)rows.push({k:k,r:D.resorts[k]||{},days:days,top:top}); });
+  rows.sort(function(a,b){ return b.top.v-a.top.v; }); return rows; }
+function stormCardHtml(wx){ if(!wx)return ''; var rows=stormRows(wx); if(!rows.length)return '';
+  var h='<div class="card storm"><div class="powhd"><h2>Storm coming</h2><span class="when">forecast · next '+STORM_DAYS+' days</span></div>';
+  rows.forEach(function(x){ var line=x.days.length===1?(WDAY[dObj(x.top.dt).getDay()]+' '+fmtShort(x.top.dt)):x.days.map(function(d){ return WDAY[dObj(d.dt).getDay()]+' '+fmtIn(d.v); }).join(' · ');
+    var where=x.top.l==='summit'?'summit':x.top.l==='base'?'base':midShort(x.r);
+    h+='<div class="prow"'+accStyle(x.k)+' onclick="goHill(\''+x.k+'\')"><div class="pn"><div class="ph">'+esc(shortName(x.k))+'<span class="chev">›</span></div><div class="pj">'+esc(line)+'</div></div><div class="pin">'+fmtIn(x.top.v)+'<small>'+esc(where)+'</small></div></div>'; });
+  return h+'</div>'; }
+/* stormSlot() / fillStorm() — the same placeholder pattern as the powder alert */
+function stormSlot(){ return '<div id="stormslot"></div>'; }
+function fillStorm(){ if(!$('stormslot'))return; wxGet(function(wx){ var el=$('stormslot'); if(el)el.innerHTML=stormCardHtml(wx); }); }
 
 /* ---- 2. Get-ready one-liner ----
    Replaces the full checklist on Home: "Get ready · 3 of 10 done · next: RCR
@@ -2601,6 +2678,7 @@ function rHome(){
   h+=milestones();   /* pre-trip only; rides in the hero with the stats */
   h+=deskStats();    /* the 4-number stats strip — now on phones too */
   h+=powSlot();      /* powder alert: fills itself in (or stays empty) */
+  h+=stormSlot();    /* storm coming: forecast snow, fills itself in (or stays empty) */
   var sname=(idx>=0)?firstResortDayName(idx):''; if(sname)h+='<div class="card" style="background:var(--pr-purple-tint);border-color:#DCC9F4"><div class="sm" style="font-weight:700;color:var(--pr-purple-text)">'+ic('ticket',14)+' First day at '+esc(sname)+' — '+esc(D.meta.sticker||'grab a trip sticker!')+'</div></div>';
   if(readyLive())h+=sec('What needs doing')+readyCard();
   if(idx>=0){ h+=sec('Today')+homeSnowCard(); var tday=D.days[idx], trid=tday.rid, tstop=stopById(tday.stop);
@@ -2624,7 +2702,7 @@ function rHome(){
   h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div></div>';
   var lr=linkRow(); if(lr)h+=sec('Crew links')+lr;
   h+='<div class="btn pri" style="width:100%;justify-content:center" onclick="sw(\'days\')">'+ic('calendar',14)+' Full itinerary</div>';
-  setView('v-home',h); initFx(); fillPow(); fillTodaySnow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
+  setView('v-home',h); initFx(); fillPow(); fillStorm(); fillTodaySnow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
   /* widths shift a few px once the webfonts land — re-run the two strip scrolls then (both are no-ops once correct) */
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){ if(CUR==='home'){ scrollMilestones(); scrollRoute(); } });
 }
@@ -2742,11 +2820,11 @@ function isDemo(){ var n=getNow(); return n.getMonth()===6 && n.getDate()===4; }
 function passLabel(r){ return (r&&r.ticket)?ic('ticket',12)+' Tickets required':''; }
 function roadLink(t){ var rs=D.roads||[], us=/border|Sandpoint|Idaho|US/i.test(t||''), key=us?'511':'drivebc'; for(var i=0;i<rs.length;i++){ if((rs[i].url||'').toLowerCase().indexOf(key)>=0) return rs[i].url; } return us?'https://511.idaho.gov':'https://www.drivebc.ca'; }
 /* ---- the Jul 4 demo — a made-up storm so every snow card renders with no network (set the test date to Jul 4) ---- */
-var DPAT=[0,0,2,5,0,0,1,3,0,8,12,3,0,11,6,2,0,0,4,7,1,0];   /* inches at the summit, 14 days back → today (index 14) → 7 ahead */
+var DPAT=[0,0,2,5,0,0,1,3,0,8,12,3,0,11,6,2,7,0,4,7,1,0];   /* inches at the summit, 14 days back → today (index 14) → 7 ahead */
 function wxDemo(){ var wx={}, n=getNow(), times=[]; for(var i=-14;i<=7;i++)times.push(ymd(new Date(n.getFullYear(),n.getMonth(),n.getDate()+i,12)));
   var HS={revelstoke:1.3,whitewater:1.2,kickinghorse:1,schweitzer:0.9,red:0.8,panorama:0.7,louise:0.7,sunshine:0.7,norquay:0.5}, LS={base:0.3,mid:0.75,summit:1}, T={base:30,mid:22,summit:14}, G={base:10,mid:16,summit:26};
   hillOrder().forEach(function(k){ var r=D.resorts[k]; if(!r||!r.elev)return; wx[k]={}; LVLS.forEach(function(l){ var s=(HS[k]||0.8)*LS[l], fl=[]; for(var q=0;q<24;q++)fl.push(r.elev.base+(r.elev.mid-r.elev.base)*0.6+q*8);
-    wx[k][l]={t:T[l],g:G[l],fl:fl,day0:14,d:{time:times,snow:DPAT.map(function(v){ return +(v*s*2.54).toFixed(2); }),hi:DPAT.map(function(){ return T[l]+2; }),lo:DPAT.map(function(){ return T[l]-10; }),gust:DPAT.map(function(v){ return v?22:9; }),code:DPAT.map(function(v){ return v>=3?73:v>0?71:3; })}}; }); });
+    wx[k][l]={t:T[l],g:G[l],fl:fl,day0:14,on:+((DPAT[13]*0.45+DPAT[14]*0.4)*s*2.54).toFixed(2),sm:+(DPAT[14]*0.4*s*2.54).toFixed(2),d:{time:times,snow:DPAT.map(function(v){ return +(v*s*2.54).toFixed(2); }),hi:DPAT.map(function(){ return T[l]+2; }),lo:DPAT.map(function(){ return T[l]-10; }),gust:DPAT.map(function(v){ return v?22:9; }),code:DPAT.map(function(v){ return v>=3?73:v>0?71:3; })}}; }); });
   return wx; }
 function wxDemoSeason(){ var out={}, HS={revelstoke:1.3,whitewater:1.2,kickinghorse:1,schweitzer:0.9,red:0.8,panorama:0.7,louise:0.7,sunshine:0.7,norquay:0.5}; hillOrder().forEach(function(k){ var s=HS[k]||0.8; out[k]={mid:Math.round(180*s),summit:Math.round(230*s)}; }); return out; }
 
