@@ -541,6 +541,14 @@ background:repeating-linear-gradient(115deg,var(--pr-pink) 0 15px,transparent 15
 .card.pow .prow.lead .pin{font-size:30px;text-shadow:2px 2px 0 var(--pr-teal)}
 .card.pow .prow .ptag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--pr-blue-text);margin-left:6px}
 #powslot:empty{display:none}
+/* "est." (Nov 17 2026) = a number from the weather model, not from the resort's own report. Small plain text
+   beside the number: body font, no offset shadow. .pnote = the one key line under the powder alert's rows.
+   On Snow so far the mark sits on its own short line under the row's two numbers (the column is 78px wide). */
+.card.pow .pin .est{font-family:var(--pr-font-app);font-size:10px;font-weight:700;font-style:normal;letter-spacing:.3px;color:var(--pr-text-2);text-shadow:none;margin-left:4px}
+.card.pow .pnote{font-size:11px;color:var(--pr-text-2);padding-top:7px}
+.board .bv{flex-wrap:wrap}
+.board .br.hd .bv{flex-wrap:nowrap}
+.board .bv .est{flex-basis:100%;text-align:right;font-size:9.5px;font-weight:700;font-style:normal;letter-spacing:.3px;color:var(--pr-text-2);line-height:1.1}
 #stormslot:empty{display:none}
 /* storm coming — the powder alert's layout drawn as an outline: plain card, dashed glacier-blue border, a dashed
    rule under the title where the alert has its filled teal band, no offset shadow on the numbers. Forecast snow
@@ -2410,6 +2418,36 @@ function cacheGet(key,ttl){ try{ var c=JSON.parse(localStorage.getItem(key)||'nu
 function cacheStale(key){ try{ var c=JSON.parse(localStorage.getItem(key)||'null'); return c?c.data:null; }catch(e){ return null; } }
 function cachePut(key,data){ try{ localStorage.setItem(key,JSON.stringify({ts:Date.now(),data:data})); }catch(e){} }
 
+/* ---- 0. Resort reports (Nov 17 2026) ----
+   Each resort posts its own snow report. A phone cannot read most of those pages, so the crew's Google script
+   reads all nine on a timer (04-app-build/powder-run-apps-script.gs, "Resort snow reports") and the app asks it
+   for one small answer: GET runsUrl?snow=1 (+ the crew token) →
+   {ok, hills:{hill:{st, d, t, at, nd, p:{summit|mid|base:{on, h24, h48, d7, base, season}}}}} — centimetres.
+   d = the report's date at the hill; nd = the page carries no date (d is then the day its numbers last changed);
+   at = when the script last read it; on = overnight. A number sits at the height where the resort measures it.
+   THE RULE: a resort number when there is one, else the weather model's number MARKED "est.".
+   · Powder alert: a report dated TODAY (the hill's own date) decides the alert and gives the numbers.
+   · Snow so far: a report from the last 2 days gives the 7-day and the season numbers.
+   Kept 15 min in localStorage (repCache). repGet(cb) calls cb at once with the copy it has (null when it has
+   none) and a second time when a newer answer arrives, so a card never waits for the script. No answer
+   (offline, the script not updated yet, a wrong token) = null = every number is "est.". The Jul 4 demo: null. */
+var REP_TTL=15*60*1000, REP_PENDING=null;
+function repGood(j){ return !!(j&&j.ok&&j.hills&&typeof j.hills==='object'); }
+function repGet(cb){ if(isDemo()||!D.runsUrl){ cb(null); return; } var c=cacheGet('repCache',REP_TTL); if(repGood(c)){ cb(c); return; }
+  var old=cacheStale('repCache'); if(!repGood(old))old=null; cb(old);
+  if(!REP_PENDING){ try{ REP_PENDING=crewGet(D.runsUrl+'?snow=1').then(function(j){ REP_PENDING=null; if(!repGood(j))return null; cachePut('repCache',j); return j; }).catch(function(){ REP_PENDING=null; return null; }); }catch(e){ REP_PENDING=null; return; } }   /* crewGet needs gnar-score.js: if that file did not load there is no report, and Home must still draw */
+  REP_PENDING.then(function(j){ if(j)cb(j); }); }
+/* hillDay(wx, hill, offset) — the date at the hill as "2027-02-13", offset days from today (the hill's own clock) */
+function hillDay(wx,k,off){ var p=wxOf(wx,k,'mid')||wxOf(wx,k,'summit')||wxOf(wx,k,'base'); return (p&&p.d&&p.d.time)?(dayVal(p,'time',off||0)||null):null; }
+/* repHill — that hill's report when it carries numbers · repToday — only when it is dated today at the hill ·
+   repRecent — when it is at most 2 days old (a page with no date counts by when the script last read it) */
+function repHill(rep,k){ var h=rep&&rep.hills&&rep.hills[k]; return (h&&h.p)?h:null; }
+function repToday(rep,wx,k){ var h=repHill(rep,k), t=hillDay(wx,k,0); return (h&&h.d&&t&&h.d===t)?h:null; }
+function repRecent(rep,wx,k){ var h=repHill(rep,k); if(!h)return null; if(h.nd)return (h.at&&(Date.now()-h.at)<2*864e5)?h:null; var t=hillDay(wx,k,-2); return (h.d&&t&&h.d>=t)?h:null; }
+/* repIn(report, height, field) — one resort number in inches; null when the resort does not give it */
+function repIn(h,l,f){ var q=h&&h.p&&h.p[l]; return (q&&q[f]!=null)?toIn(q[f]):null; }
+var EST='<i class="est">est.</i>';   /* the mark beside a number that came from the weather model */
+
 /* ---- 1. Powder alert ----
    The one loud card on Home. Shows when a hill got POW_MID inches or more at mid, or POW_TOP or more at the
    summit, SINCE 4 PM YESTERDAY (the hill's own clock, counted by the hour — so overnight snow shows the same
@@ -2418,24 +2456,39 @@ function cachePut(key,data){ try{ localStorage.setItem(key,JSON.stringify({ts:Da
    days"), "· refills" when 2″+ more is still to come at mid today. Today's hill leads, then the deepest summit.
    Rows wear the hill's colour and tap through to its card on the Snow tab. Nothing qualifies → no card. After the
    trip Home drops it (rHome). A weather copy with no hourly snow (saved by an older app version) counts yesterday. */
+/* Nov 17 2026 — the resort's own report first. When a hill's report is dated today, its overnight numbers decide
+   the alert (the same 3″ at mid / 6″ at the summit, each at the height where the resort measures) and are the
+   numbers shown; the model only fills a height the resort does not report. With no report from today the model
+   decides, as above. Every model number carries "est."; one key line under the rows says what "est." means. */
 var POW_MID=3, POW_TOP=6;
 /* powIn(point) — inches since 4 pm yesterday; yesterday's whole day when the copy has no hourly snow */
 function powIn(p){ if(!p)return null; return p.on!=null?toIn(p.on):snowIn(p,-1); }
-function powLine(wx,k){ var s=wxOf(wx,k,'summit'), m=wxOf(wx,k,'mid'); if(!s)return ''; var st=stormOf(s), tot=Math.max(st.total,powIn(s)||0), w=depthWord(tot); if(st.days>1)w+=' · '+fmtIn(tot)+' over '+st.days+' days';
+/* powNums(wx, rep, hill) — the row's numbers: s = summit, m = mid, each {v inches, est}. rep:true = a report
+   dated today decides (hit). top = the big number: the summit's, or the resort's own number when it measures at
+   mid only (then the model's summit number is not shown). */
+function powNums(wx,rep,k){ var h=repToday(rep,wx,k), rs=repIn(h,'summit','on'), rm=repIn(h,'mid','on'), ms=powIn(wxOf(wx,k,'summit')), mm=powIn(wxOf(wx,k,'mid')), has=(rs!=null||rm!=null);
+  var n={rep:has,s:{v:rs!=null?rs:ms,est:rs==null},m:{v:rm!=null?rm:mm,est:rm==null}};
+  n.hit=has?((rm!=null&&rm>=POW_MID)||(rs!=null&&rs>=POW_TOP)):((mm!=null&&mm>=POW_MID)||(ms!=null&&ms>=POW_TOP));
+  n.top=(has&&rs==null)?n.m:n.s; return n; }
+function powLine(wx,k,big){ var s=wxOf(wx,k,'summit'), m=wxOf(wx,k,'mid'); if(!s)return ''; var st=stormOf(s), tot=Math.max(st.total,powIn(s)||0,big||0), w=depthWord(tot); if(st.days>1)w+=' · '+fmtIn(tot)+' over '+st.days+' days';
   var td=snowIn(m,0); if(td!=null&&m&&m.sm!=null)td=Math.max(0,td-toIn(m.sm));   /* today's forecast minus what already fell = still to come */
   if(td!=null&&td>=2)w+=' · refills'; return w; }
-function powCardHtml(wx){ if(!wx)return ''; var idx=tripDayIdx(), today=(idx>=0&&D.days[idx])?D.days[idx].rid:null;
-  var rids=hillOrder().filter(function(k){ var ym=powIn(wxOf(wx,k,'mid')), ys=powIn(wxOf(wx,k,'summit')); return (ym!=null&&ym>=POW_MID)||(ys!=null&&ys>=POW_TOP); });
+function powCardHtml(wx,rep){ if(!wx)return ''; var idx=tripDayIdx(), today=(idx>=0&&D.days[idx])?D.days[idx].rid:null, N={};
+  var rids=hillOrder().filter(function(k){ N[k]=powNums(wx,rep,k); return N[k].hit; });
   if(!rids.length)return '';
-  rids.sort(function(a,b){ var la=a===today?1:0, lb=b===today?1:0; return (lb-la)||((powIn(wxOf(wx,b,'summit'))||0)-(powIn(wxOf(wx,a,'summit'))||0)); });
-  var hourly=rids.some(function(k){ var p=wxOf(wx,k,'summit'); return !!(p&&p.on!=null); });
+  rids.sort(function(a,b){ var la=a===today?1:0, lb=b===today?1:0; return (lb-la)||((N[b].top.v||0)-(N[a].top.v||0)); });
+  var hourly=rids.some(function(k){ var p=wxOf(wx,k,'summit'); return N[k].rep||!!(p&&p.on!=null); }), anyEst=false;
   var h='<div class="card pow"><div class="powhd"><h2>'+ic('snowflake',14)+' Powder alert</h2><span class="when">'+(hourly?'since 4 pm yesterday':'yesterday')+'</span></div>';
-  rids.forEach(function(k,i){ var r=D.resorts[k]||{}, ys=powIn(wxOf(wx,k,'summit')), ym=powIn(wxOf(wx,k,'mid'));
-    h+='<div class="prow'+(i===0?' lead':'')+'"'+accStyle(k)+' onclick="goHill(\''+k+'\')"><div class="pn"><div class="ph">'+esc(shortName(k))+'<span class="chev">›</span>'+(k===today?'<span class="ptag">today</span>':'')+'</div><div class="pj">'+esc(powLine(wx,k))+'</div></div><div class="pin">'+(ys==null?'—':fmtIn(ys))+(ym!=null?'<small>'+fmtIn(ym)+' at '+esc(midShort(r))+'</small>':'')+'</div></div>'; });
+  rids.forEach(function(k,i){ var r=D.resorts[k]||{}, n=N[k], big=n.top, sub='';
+    if(big===n.s){ if(n.m.v!=null){ sub=fmtIn(n.m.v)+(n.m.est?' est.':'')+' at '+esc(midShort(r)); if(n.m.est)anyEst=true; } }
+    else sub='at '+esc(midShort(r));
+    if(big.v!=null&&big.est)anyEst=true;
+    h+='<div class="prow'+(i===0?' lead':'')+'"'+accStyle(k)+' onclick="goHill(\''+k+'\')"><div class="pn"><div class="ph">'+esc(shortName(k))+'<span class="chev">›</span>'+(k===today?'<span class="ptag">today</span>':'')+'</div><div class="pj">'+esc(powLine(wx,k,big.v))+'</div></div><div class="pin">'+(big.v==null?'—':fmtIn(big.v)+(big.est?EST:''))+(sub?'<small>'+sub+'</small>':'')+'</div></div>'; });
+  if(anyEst)h+='<div class="pnote">est. = from the weather model, not from the resort’s report</div>';
   return h+'</div>'; }
 /* powSlot() is the placeholder rHome() prints; fillPow() fills it (or leaves it empty = no card). */
 function powSlot(){ return '<div id="powslot"></div>'; }
-function fillPow(){ if(!$('powslot'))return; wxGet(function(wx){ var el=$('powslot'); if(el)el.innerHTML=powCardHtml(wx); }); }
+function fillPow(){ if(!$('powslot'))return; wxGet(function(wx){ repGet(function(rep){ var el=$('powslot'); if(el)el.innerHTML=powCardHtml(wx,rep); }); }); }
 
 /* ---- 1b. Storm coming (Nov 16 2026) ----
    The powder alert's quiet partner: FORECAST snow, not fallen snow, so it is drawn as an outline (dashed border,
@@ -2499,6 +2552,10 @@ function rReady(){
    (remembered on this phone). The 7-day numbers come from the main weather call, the season from the archive call;
    either missing shows "—" (and with no season at all the bars show the 7 days instead). Jul–Sep: "season opens
    Oct 1" and no calls. A row taps through to the hill on the Snow tab. */
+/* Nov 17 2026 — the resort's own numbers first: a report from the last 2 days gives the 7-day and the season
+   number for the height the toggle shows, else the resort's number from its other height (most resorts measure
+   at one place), else the model's number. A model number gets "est." on a short line under the row
+   ("est." = both, "7 days est." or "season est." = that one). */
 function sfLvl(){ try{ return localStorage.getItem('sfLvl')==='mid'?'mid':'summit'; }catch(e){ return 'summit'; } }
 function setSfLvl(l){ try{ localStorage.setItem('sfLvl',l); }catch(e){} fillSnowSoFar(); }
 function snowSoFarCard(){ var off=seasonOff(), lvl=sfLvl();
@@ -2507,14 +2564,16 @@ function snowSoFarCard(){ var off=seasonOff(), lvl=sfLvl();
   return h+'<div id="sfrows">'+(off?'':'<div class="xs muted">…</div>')+'</div></div>'; }
 function fillSnowSoFar(){ var el=$('sfrows'); if(!el||seasonOff())return; var lvl=sfLvl();
   var segs=document.querySelectorAll('#sofar .seg div'); if(segs.length===2){ segs[0].className=lvl==='summit'?'on':''; segs[1].className=lvl==='mid'?'on':''; }
-  wxGet(function(wx){ wxSeason(function(se){ var e2=$('sfrows'); if(!e2)return;
-    var rows=hillOrder().map(function(k){ var p=wxOf(wx,k,lvl), d7=null; if(p){ d7=0; for(var o=-7;o<=-1;o++){ var v=snowIn(p,o); if(v!=null)d7+=v; } } var s=(se&&se[k]&&se[k][lvl]!=null&&d7!=null)?se[k][lvl]+d7:null; return {k:k,d7:d7,season:s}; });
+  wxGet(function(wx){ wxSeason(function(se){ repGet(function(rep){ var e2=$('sfrows'); if(!e2)return;
+    var rows=hillOrder().map(function(k){ var p=wxOf(wx,k,lvl), d7=null; if(p){ d7=0; for(var o=-7;o<=-1;o++){ var v=snowIn(p,o); if(v!=null)d7+=v; } } var s=(se&&se[k]&&se[k][lvl]!=null&&d7!=null)?se[k][lvl]+d7:null;
+      var rh=repRecent(rep,wx,k), oth=lvl==='summit'?'mid':'summit', r7=repIn(rh,lvl,'d7'), rs=repIn(rh,lvl,'season'); if(r7==null)r7=repIn(rh,oth,'d7'); if(rs==null)rs=repIn(rh,oth,'season');
+      return {k:k,d7:r7!=null?r7:d7,season:rs!=null?rs:s,e7:r7==null&&d7!=null,es:rs==null&&s!=null}; });
     var anySeason=rows.some(function(r){ return r.season!=null; });
     var max=Math.max.apply(null,rows.map(function(r){ return (anySeason?r.season:r.d7)||0; }).concat([1]));
     var h='<div class="br hd"><div></div><div></div><div class="bv"><b>7 days</b><small>season</small></div></div>';
     rows.forEach(function(r){ var w=((anySeason?r.season:r.d7)||0)/max*100, w7=anySeason?Math.min(w,(r.d7||0)/max*100):w;
-      h+='<div class="br"'+accStyle(r.k)+' onclick="goHill(\''+r.k+'\')"><div class="bn">'+esc(r.k==='kickinghorse'?'KH':shortName(r.k))+'</div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%"></div><div class="b7" style="left:'+(w-w7).toFixed(1)+'%;width:'+w7.toFixed(1)+'%"></div></div><div class="bv"><b>'+(r.d7==null?'—':fmtIn(r.d7))+'</b><small>'+(r.season==null?'—':fmtIn(r.season))+'</small></div></div>'; });
-    e2.innerHTML=h; }); }); }
+      h+='<div class="br"'+accStyle(r.k)+' onclick="goHill(\''+r.k+'\')"><div class="bn">'+esc(r.k==='kickinghorse'?'KH':shortName(r.k))+'</div><div class="bt"><div class="bf" style="width:'+w.toFixed(1)+'%"></div><div class="b7" style="left:'+(w-w7).toFixed(1)+'%;width:'+w7.toFixed(1)+'%"></div></div><div class="bv"><b>'+(r.d7==null?'—':fmtIn(r.d7))+'</b><small>'+(r.season==null?'—':fmtIn(r.season))+'</small>'+((r.e7||r.es)?'<i class="est">'+((r.e7&&r.es)?'est.':r.e7?'7 days est.':'season est.')+'</i>':'')+'</div></div>'; });
+    e2.innerHTML=h; }); }); }); }
 
 /* ---- 4. Route strip ----
    The 7 stops as a chain of chips: town, dates, nights, hotel, cost, free-cancel
