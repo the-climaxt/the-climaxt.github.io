@@ -90,6 +90,20 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .nb.gone{display:none} /* the Get-ready tab once the trip is under way — see readyLive() */
 .toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:var(--pr-ink);color:#fff;font-size:13px;padding:9px 15px;border-radius:10px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
+/* ---- unit converter (Nov 21 2026): the C/F line in the money card + the "Metric <-> Freedom" card ----
+   .cv = one converter line: metric box(es), the swap mark, Freedom box(es).  .cvpm = the +/- key (a phone's
+   number pad has no minus sign, and February is below zero).  .cvsplit = the thin divider above the C/F line.
+   .cvg = the eagle-and-crew boxes, three across.  .cvt = the tab row (the picked tab is pink, as all picks are). */
+.cv{display:flex;gap:7px;align-items:flex-end;margin-top:8px}
+.cv .cvsd{flex:1;min-width:0;display:flex;gap:5px;align-items:flex-end}
+.cv .cvf,.cvg .cvf{flex:1;min-width:0}
+.cv .inp,.cvg .inp{min-width:0;padding:11px 9px}
+.cv .cvsw{padding-bottom:11px;color:var(--pr-text-muted)}
+.cvpm{flex:0 0 auto;width:38px;height:42px;padding:0;border:1px solid var(--pr-border);border-radius:10px;background:var(--pr-card);color:var(--pr-pink-text);font:700 12px var(--pr-font-app);cursor:pointer}
+.cvpm:active{opacity:.7}
+.cvsplit{border-top:1px solid var(--pr-hairline);margin-top:14px;padding-top:12px}
+.cvg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 7px;margin-top:12px;padding-top:10px;border-top:1px solid var(--pr-hairline)}
+.seg.cvt div{padding:7px 6px}
 
 /* ===================== ZONE MAP OVERLAY =====================
    Opens from Snow -> Terrain (a zone header, or any run row). Full-screen,
@@ -2758,10 +2772,10 @@ function rHome(){
   (D.stops||[]).forEach(function(s){ if(s.cancel){var c=new Date(s.cancel); if(c>now&&(!nx||c<nx.c))nx={c:c,s:s};}
     if(s.also&&s.also.cancel){var c2=new Date(s.also.cancel); if(c2>now&&(!nx||c2<nx.c))nx={c:c2,s:{hotel:s.also.hotel+(s.also.who?' — '+s.also.who:''),name:s.name,cancel:s.also.cancel,id:s.id}};} });
   if(nx){ var dd=Math.ceil((nx.c-now)/864e5); h+='<div class="card money"><div class="between"><div><div class="xs" style="text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:var(--pr-card-money-fg)">Next free-cancel deadline</div><div style="font-weight:700;margin-top:3px">'+esc(nx.s.hotel)+'</div><div class="sm muted">'+esc(nx.s.name)+' · '+esc(fmtDeadline(nx.s.cancel,tzPlace(nx.s)))+'</div></div><span class="pill '+(dd<14?'warn':'ok')+'">'+dd+'d</span></div></div>'; }
-  h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div></div>';
+  h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div>'+tempRowHtml()+'</div>'+unitsCardHtml();
   var lr=linkRow(); if(lr)h+=sec('Crew links')+lr;
   h+='<div class="btn pri" style="width:100%;justify-content:center" onclick="sw(\'days\')">'+ic('calendar',14)+' Full itinerary</div>';
-  setView('v-home',h); initFx(); fillPow(); fillStorm(); fillTodaySnow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
+  setView('v-home',h); initFx(); initUnits(); fillPow(); fillStorm(); fillTodaySnow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
   /* widths shift a few px once the webfonts land — re-run the two strip scrolls then (both are no-ops once correct) */
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){ if(CUR==='home'){ scrollMilestones(); scrollRoute(); } });
 }
@@ -3985,7 +3999,89 @@ var RATE=null;
 function showRate(){ var el=$('fxrate'); if(el)el.textContent='CA$1 ≈ US$'+(RATE?RATE.toFixed(4):'—'); }
 function fromCad(){ var c=parseFloat(($('cad')||{}).value); if($('usd'))$('usd').value=isNaN(c)?'':(c*RATE).toFixed(2); }
 function fromUsd(){ var u=parseFloat(($('usd')||{}).value); if($('cad'))$('cad').value=isNaN(u)?'':(u/RATE).toFixed(2); }
-function initFx(){ try{ var p=JSON.parse(localStorage.getItem('fx')||'null'); if(p&&p.r)RATE=p.r; }catch(e){} if(!RATE)RATE=(D.currencyFallback||0.715); showRate(); fromCad(); fetch('https://open.er-api.com/v6/latest/CAD').then(function(x){return x.json();}).then(function(j){ if(j&&j.rates&&j.rates.USD){ RATE=j.rates.USD; localStorage.setItem('fx',JSON.stringify({r:RATE,ts:Date.now()})); showRate(); fromCad(); } }).catch(function(){}); }
+function initFx(){ try{ var p=JSON.parse(localStorage.getItem('fx')||'null'); if(p&&p.r)RATE=p.r; }catch(e){} if(!RATE)RATE=(D.currencyFallback||0.715); showRate(); fromCad(); fetch('https://open.er-api.com/v6/latest/CAD').then(function(x){return x.json();}).then(function(j){ if(j&&j.rates&&j.rates.USD){ RATE=j.rates.USD; localStorage.setItem('fx',JSON.stringify({r:RATE,ts:Date.now()})); showRate(); fromCad(); unitsRateChanged(); } }).catch(function(){}); }
+/* ---- UNIT CONVERTER (Nov 21 2026) ----
+   On Home, under "Deadlines & money". Two parts:
+   1. C <-> F sits inside the CAD <-> USD card, always on screen (tempRowHtml).
+   2. The "Metric <-> Freedom" card (unitsCardHtml) has four tabs: Distance, Weight, Volume, Gas.
+      Type in ANY box and every other box in that tab fills. Nothing is saved and nothing is sent anywhere.
+   How one conversion works: each unit has k = how many BASE units are in one of it. The base units are the
+   metre, the kilogram, the litre and (for gas) Canadian dollars per litre.
+      typed number x k = the base amount;   base amount / k = the number for each other box.
+   Bald eagles: the height is a standing eagle, 3 ft (Maryland DNR "nearly 3 feet tall", Iowa DNR "sit 3 to
+   3 1/2 feet tall"); the weight is 4.65 kg, the middle of Cornell Lab's 3,000-6,300 g.
+   The crew as units of height: crew[].heightIn (inches) in the trip data. A person with no heightIn gets no box.
+   Gas: Canadian pumps show cents per litre (159.9); the other box is US dollars per US gallon at the CAD rate
+   that the money converter uses (RATE).
+   Built from the approved mockup "unit-converter-mockups.html", Option A (Tanner, Nov 21 2026). */
+var CV_GAL=3.785411784;      /* litres in one US gallon (exact, by definition) */
+var CV_EAGLE_M=0.9144;       /* metres in one bald eagle (3 ft, standing) */
+var CV_EAGLE_KG=4.65;        /* kilograms in one bald eagle */
+var CV_TAB='dist';           /* the tab that is open; kept while the app is open */
+var CV_LIST=[];              /* every unit in the open tab */
+var CV_U={
+  km:{l:'km',k:1000}, m:{l:'m',k:1}, cm:{l:'cm',k:0.01},
+  mi:{l:'mi',k:1609.344}, ftin:{pair:true}, inch:{l:'in',k:0.0254},
+  kg:{l:'kg',k:1}, g:{l:'g',k:0.001}, lb:{l:'lb',k:0.45359237}, oz:{l:'oz',k:0.028349523125},
+  L:{l:'L',k:1}, mL:{l:'mL',k:0.001}, gal:{l:'US gal',k:CV_GAL}, floz:{l:'US fl oz',k:CV_GAL/128},
+  cpl:{l:'CA¢ per L',k:0.01,dp:1}, upg:{l:'US$ per gal',dp:2},
+  eagleL:{l:'bald eagles',k:CV_EAGLE_M}, eagleW:{l:'bald eagles',k:CV_EAGLE_KG}
+};
+/* the four tabs. rows = [metric unit, Freedom unit] lines. extra = boxes in the grid under the lines.
+   crew:true = also one box for each person with a heightIn. lead + start = the example number shown first. */
+var CV_T={
+  dist:{name:'Distance',rows:[['km','mi'],['m','ftin'],['cm','inch']],extra:['eagleL'],crew:true,lead:'m',start:3},
+  wt:{name:'Weight',rows:[['kg','lb'],['g','oz']],extra:['eagleW'],lead:'kg',start:23},
+  vol:{name:'Volume',rows:[['L','gal'],['mL','floz']],lead:'L',start:50},
+  gas:{name:'Gas',rows:[['cpl','upg']],lead:'cpl',start:159.9}
+};
+var CV_ORDER=['dist','wt','vol','gas'];
+/* read a typed number: accept a comma and a long minus sign */
+function cvNum(s){ return parseFloat(String(s).replace(/,/g,'').replace(/−/g,'-')); }
+/* show a number with a sensible count of decimals (62.1, 9.84, 0.0019) and no zeros at the end */
+function cvFmt(v){ if(!isFinite(v))return ''; var a=Math.abs(v), d=a>=1000?0:a>=10?1:a>=1?2:a>=0.01?3:4, s=v.toFixed(d); if(s.indexOf('.')>=0)s=s.replace(/0+$/,'').replace(/\.$/,''); return s==='-0'?'0':s; }
+/* k for one unit. US dollars per gallon depends on the CAD rate, so it is worked out each time. */
+function cvK(u){ return u==='upg'?1/(CV_GAL*(RATE||D.currencyFallback||0.715)):CV_U[u].k; }
+/* one height unit for each person with a heightIn: "Tanners", "Zacks" ... */
+function cvCrewUnits(){ var out=[]; (D.crew||[]).forEach(function(c,i){ var hin=parseFloat(c.heightIn); if(hin>0){ CV_U['crew'+i]={l:c.name+'s',k:hin*0.0254}; out.push('crew'+i); } }); return out; }
+function cvExtra(tk){ var t=CV_T[tk]; return (t.extra||[]).concat(t.crew?cvCrewUnits():[]); }
+/* one labelled box, or the feet + inches pair */
+function cvBox(u){ function b(id,label){ return '<div class="cvf"><div class="xs muted">'+esc(label)+'</div><input class="inp" id="cv_'+id+'" inputmode="decimal" oninput="cvIn(\''+u+'\')"></div>'; } return CV_U[u].pair?b('ft','ft')+b('in','in'):b(u,CV_U[u].l); }
+/* read one box and give the amount in base units (feet and inches add together) */
+function cvRead(u){ if(CV_U[u].pair){ var f=cvNum($('cv_ft').value), i=cvNum($('cv_in').value); if(isNaN(f)&&isNaN(i))return NaN; return ((isNaN(f)?0:f)*12+(isNaN(i)?0:i))*0.0254; } return cvNum($('cv_'+u).value)*cvK(u); }
+/* write a base amount into one box. Feet + inches: whole inches from 1 ft up, one decimal below; 11.6 in becomes the next foot. */
+function cvWrite(u,base){
+  if(CV_U[u].pair){ var fe=$('cv_ft'), ie=$('cv_in'); if(!fe||!ie)return; if(isNaN(base)){ fe.value=''; ie.value=''; return; }
+    var tot=base/0.0254, ft=Math.floor(tot/12), inch=tot-ft*12; inch=ft>=1?Math.round(inch):Math.round(inch*10)/10; if(inch>=12){ ft+=1; inch=0; } fe.value=ft; ie.value=inch; return; }
+  var el=$('cv_'+u); if(!el)return; if(isNaN(base)){ el.value=''; return; }
+  var v=base/cvK(u); el.value=(CV_U[u].dp!=null)?v.toFixed(CV_U[u].dp):cvFmt(v); }
+/* someone typed in a box: fill every other box in the tab */
+function cvIn(u){ var base=cvRead(u); CV_LIST.forEach(function(x){ if(x!==u)cvWrite(x,base); }); }
+function cvRate(){ var e=$('cvrate'); if(e)e.textContent='CA$1 ≈ US$'+(RATE?RATE.toFixed(4):'—'); }
+/* draw the open tab's boxes and put the example number in */
+function cvMount(){ var el=$('cvbody'); if(!el)return; var t=CV_T[CV_TAB], ex=cvExtra(CV_TAB), h='';
+  t.rows.forEach(function(r){ h+='<div class="cv"><div class="cvsd">'+cvBox(r[0])+'</div><div class="cvsw">⇄</div><div class="cvsd">'+cvBox(r[1])+'</div></div>'; });
+  if(ex.length)h+='<div class="cvg">'+ex.map(function(u){ return cvBox(u); }).join('')+'</div>';
+  if(CV_TAB==='gas')h+='<div class="xs muted" id="cvrate" style="margin-top:8px"></div>';
+  el.innerHTML=h; CV_LIST=[]; t.rows.forEach(function(r){ CV_LIST.push(r[0],r[1]); }); CV_LIST=CV_LIST.concat(ex); cvRate();
+  $('cv_'+t.lead).value=t.start; cvIn(t.lead); }
+function cvTab(tk){ CV_TAB=tk; CV_ORDER.forEach(function(k){ var e=$('cvtab_'+k); if(e)e.className=(k===tk)?'on':''; }); cvMount(); }
+/* temperature: one decimal; the +/- key flips the sign of one box and converts again */
+function tempT1(v){ return String(Math.round(v*10)/10).replace(/^-0$/,'0'); }
+function tempFromC(){ var c=cvNum(($('cvC')||{}).value); if($('cvF'))$('cvF').value=isNaN(c)?'':tempT1(c*9/5+32); }
+function tempFromF(){ var f=cvNum(($('cvF')||{}).value); if($('cvC'))$('cvC').value=isNaN(f)?'':tempT1((f-32)*5/9); }
+function tempFlip(id){ var el=$(id); if(!el)return; var s=el.value.trim(); el.value=(s.charAt(0)==='-')?s.slice(1):'-'+s; (id==='cvC'?tempFromC:tempFromF)(); }
+function tempRowHtml(){ return '<div class="cvsplit"><h2>°C ↔ °F</h2><div class="cv" style="margin-top:0">'
+  +'<div class="cvsd"><div class="cvf"><div class="xs muted">°C</div><input class="inp" id="cvC" inputmode="decimal" value="-10" oninput="tempFromC()"></div><button class="cvpm" onclick="tempFlip(\'cvC\')">+/−</button></div>'
+  +'<div class="cvsw">⇄</div>'
+  +'<div class="cvsd"><div class="cvf"><div class="xs muted">°F</div><input class="inp" id="cvF" inputmode="decimal" oninput="tempFromF()"></div><button class="cvpm" onclick="tempFlip(\'cvF\')">+/−</button></div></div></div>'; }
+function unitsCardHtml(){ return '<div class="card"><h2>Metric ↔ Freedom</h2><div class="seg cvt" style="--ht:var(--pr-pink-text)">'
+  +CV_ORDER.map(function(k){ return '<div id="cvtab_'+k+'"'+(k===CV_TAB?' class="on"':'')+' onclick="cvTab(\''+k+'\')">'+CV_T[k].name+'</div>'; }).join('')
+  +'</div><div id="cvbody"></div></div>'; }
+/* called once each time Home is drawn, after initFx() has set RATE */
+function initUnits(){ tempFromC(); cvMount(); }
+/* called when the live CAD rate arrives */
+function unitsRateChanged(){ cvRate(); if(CV_TAB==='gas'&&$('cv_cpl'))cvIn('cpl'); }
 var DB=null;
 function openDB(cb){ if(DB){cb();return;} try{ var rq=indexedDB.open('powderDocs',1); rq.onupgradeneeded=function(e){ e.target.result.createObjectStore('docs',{keyPath:'id'}); }; rq.onsuccess=function(e){ DB=e.target.result; cb(); }; rq.onerror=function(){ cb(); }; }catch(e){ cb(); } }
 function listDocs(){ openDB(function(){ var el=$('doclist'); if(!el)return; if(!DB){ el.textContent='Storage unavailable on this browser.'; return; } var tx=DB.transaction('docs').objectStore('docs').getAll(); tx.onsuccess=function(){ var a=tx.result||[]; if(!a.length){ el.innerHTML='<span class="muted">No files yet.</span>'; return; } var h=''; a.forEach(function(d){ h+='<div class="between" style="padding:6px 0;border-bottom:1px solid var(--pr-hairline)"><div class="sm" style="font-weight:600">'+esc(d.name)+'</div><div><button class="btn" onclick="viewDoc(\''+d.id+'\')">Open</button> <button class="btn" onclick="delDoc(\''+d.id+'\')">✕</button></div></div>'; }); el.innerHTML=h; }; }); }
