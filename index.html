@@ -4029,11 +4029,12 @@ var CV_U={
   eagleL:{l:'bald eagles',k:CV_EAGLE_M}, eagleW:{l:'bald eagles',k:CV_EAGLE_KG}
 };
 /* the four tabs. rows = [metric unit, Freedom unit] lines. extra = boxes in the grid under the lines.
-   crew:true = also one box for each person with a heightIn. lead + start = the example number shown first. */
+   crew:true = also one box for each person with a heightIn. lead + start = the number shown first: 1 of the
+   tab's first US unit (1 ft, 1 lb, 1 US gal; Tanner, Nov 21 2026). Gas still starts at a pump price. */
 var CV_T={
-  dist:{name:'Distance',rows:[['km','mi'],['m','ftin'],['cm','inch']],extra:['eagleL'],crew:true,lead:'m',start:3},
-  wt:{name:'Weight',rows:[['kg','lb'],['g','oz']],extra:['eagleW'],lead:'kg',start:23},
-  vol:{name:'Volume',rows:[['L','gal'],['mL','floz']],lead:'L',start:50},
+  dist:{name:'Distance',rows:[['km','mi'],['m','ftin'],['cm','inch']],extra:['eagleL'],crew:true,lead:'ftin',start:1},
+  wt:{name:'Weight',rows:[['kg','lb'],['g','oz']],extra:['eagleW'],lead:'lb',start:1},
+  vol:{name:'Volume',rows:[['L','gal'],['mL','floz']],lead:'gal',start:1},
   gas:{name:'Gas',rows:[['cpl','upg']],lead:'cpl',start:159.9}
 };
 var CV_ORDER=['dist','wt','vol','gas'];
@@ -4071,7 +4072,8 @@ function cvMount(){ var el=$('cvbody'); if(!el)return; var t=CV_T[CV_TAB], ex=cv
   if(ex.length)h+='<div class="cvg">'+ex.map(function(u){ return cvBox(u); }).join('')+'</div>';
   if(CV_TAB==='gas')h+='<div class="xs muted" id="cvrate" style="margin-top:8px"></div>';
   el.innerHTML=h; CV_LIST=[]; t.rows.forEach(function(r){ CV_LIST.push(r[0],r[1]); }); CV_LIST=CV_LIST.concat(ex); cvRate();
-  $('cv_'+t.lead).value=t.start; cvIn(t.lead); }
+  if(CV_U[t.lead].pair){ $('cv_ft').value=t.start; $('cv_in').value=0; } else $('cv_'+t.lead).value=t.start;
+  cvIn(t.lead); }
 function cvTab(tk){ CV_TAB=tk; CV_ORDER.forEach(function(k){ var e=$('cvtab_'+k); if(e)e.className=(k===tk)?'on':''; }); cvMount(); }
 /* temperature: one decimal; the +/- key flips the sign of one box and converts again */
 function tempT1(v){ return String(Math.round(v*10)/10).replace(/^-0$/,'0'); }
@@ -4079,14 +4081,14 @@ function tempFromC(){ var c=cvNum(($('cvC')||{}).value); if($('cvF'))$('cvF').va
 function tempFromF(){ var f=cvNum(($('cvF')||{}).value); if($('cvC'))$('cvC').value=isNaN(f)?'':tempT1((f-32)*5/9); }
 function tempFlip(id){ var el=$(id); if(!el)return; var s=el.value.trim(); el.value=(s.charAt(0)==='-')?s.slice(1):'-'+s; (id==='cvC'?tempFromC:tempFromF)(); }
 function tempRowHtml(){ return '<div class="cvsplit"><h2>°C ↔ °F</h2><div class="cv" style="margin-top:0">'
-  +'<div class="cvsd"><div class="cvf"><div class="xs muted">°C</div><input class="inp" id="cvC" inputmode="decimal" value="-10" oninput="tempFromC()"></div><button class="cvpm" onclick="tempFlip(\'cvC\')">+/−</button></div>'
+  +'<div class="cvsd"><div class="cvf"><div class="xs muted">°C</div><input class="inp" id="cvC" inputmode="decimal" oninput="tempFromC()"></div><button class="cvpm" onclick="tempFlip(\'cvC\')">+/−</button></div>'
   +'<div class="cvsw">⇄</div>'
-  +'<div class="cvsd"><div class="cvf"><div class="xs muted">°F</div><input class="inp" id="cvF" inputmode="decimal" oninput="tempFromF()"></div><button class="cvpm" onclick="tempFlip(\'cvF\')">+/−</button></div></div></div>'; }
+  +'<div class="cvsd"><div class="cvf"><div class="xs muted">°F</div><input class="inp" id="cvF" inputmode="decimal" value="32" oninput="tempFromF()"></div><button class="cvpm" onclick="tempFlip(\'cvF\')">+/−</button></div></div></div>'; }
 function unitsCardHtml(){ return '<div class="card"><h2>Metric ↔ Freedom</h2><div class="seg cvt" style="--ht:var(--pr-pink-text)">'
   +CV_ORDER.map(function(k){ return '<div id="cvtab_'+k+'"'+(k===CV_TAB?' class="on"':'')+' onclick="cvTab(\''+k+'\')">'+CV_T[k].name+'</div>'; }).join('')
   +'</div><div id="cvbody"></div></div>'; }
 /* called once each time Home is drawn, after initFx() has set RATE */
-function initUnits(){ tempFromC(); cvMount(); }
+function initUnits(){ tempFromF(); cvMount(); }
 /* called when the live CAD rate arrives */
 function unitsRateChanged(){ cvRate(); if(CV_TAB==='gas'&&$('cv_cpl'))cvIn('cpl'); }
 var DB=null;
