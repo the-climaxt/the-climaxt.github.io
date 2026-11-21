@@ -4011,6 +4011,7 @@ function initFx(){ try{ var p=JSON.parse(localStorage.getItem('fx')||'null'); if
    Bald eagles: the height is a standing eagle, 3 ft (Maryland DNR "nearly 3 feet tall", Iowa DNR "sit 3 to
    3 1/2 feet tall"); the weight is 4.65 kg, the middle of Cornell Lab's 3,000-6,300 g.
    The crew as units of height: crew[].heightIn (inches) in the trip data. A person with no heightIn gets no box.
+   A height can change by the day: cvHeightIn() (Nov 21 2026, the second change of that day).
    Gas: Canadian pumps show cents per litre (159.9); the other box is US dollars per US gallon at the CAD rate
    that the money converter uses (RATE).
    Built from the approved mockup "unit-converter-mockups.html", Option A (Tanner, Nov 21 2026). */
@@ -4043,7 +4044,13 @@ function cvFmt(v){ if(!isFinite(v))return ''; var a=Math.abs(v), d=a>=1000?0:a>=
 /* k for one unit. US dollars per gallon depends on the CAD rate, so it is worked out each time. */
 function cvK(u){ return u==='upg'?1/(CV_GAL*(RATE||D.currencyFallback||0.715)):CV_U[u].k; }
 /* one height unit for each person with a heightIn: "Tanners", "Zacks" ... */
-function cvCrewUnits(){ var out=[]; (D.crew||[]).forEach(function(c,i){ var hin=parseFloat(c.heightIn); if(hin>0){ CV_U['crew'+i]={l:c.name+'s',k:hin*0.0254}; out.push('crew'+i); } }); return out; }
+/* a person's height TODAY, in inches. Most people: heightIn, always. A person who also has shrinkInPerDay and
+   shrinkFrom (a date, the last day at full height) loses shrinkInPerDay inches at each midnight after that date.
+   "Today" is the phone's own date; the admin test clock counts too (nowMid). 0 or less = no box for that person. */
+function cvHeightIn(c){ var h=parseFloat(c.heightIn); if(!(h>0))return 0; var r=parseFloat(c.shrinkInPerDay);
+  if(r>0&&c.shrinkFrom){ var d=Math.round((nowMid()-dObj(c.shrinkFrom))/864e5); if(d>0)h-=r*d; }
+  return h>0?h:0; }
+function cvCrewUnits(){ var out=[]; (D.crew||[]).forEach(function(c,i){ var hin=cvHeightIn(c); if(hin>0){ CV_U['crew'+i]={l:c.name+'s',k:hin*0.0254}; out.push('crew'+i); } }); return out; }
 function cvExtra(tk){ var t=CV_T[tk]; return (t.extra||[]).concat(t.crew?cvCrewUnits():[]); }
 /* one labelled box, or the feet + inches pair */
 function cvBox(u){ function b(id,label){ return '<div class="cvf"><div class="xs muted">'+esc(label)+'</div><input class="inp" id="cv_'+id+'" inputmode="decimal" oninput="cvIn(\''+u+'\')"></div>'; } return CV_U[u].pair?b('ft','ft')+b('in','in'):b(u,CV_U[u].l); }
