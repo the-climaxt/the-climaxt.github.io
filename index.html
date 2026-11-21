@@ -4013,15 +4013,15 @@ function initFx(){ try{ var p=JSON.parse(localStorage.getItem('fx')||'null'); if
    How one conversion works: each unit has k = how many BASE units are in one of it. The base units are the
    metre, the kilogram, the litre and (for gas) Canadian dollars per litre.
       typed number x k = the base amount;   base amount / k = the number for each other box.
-   Bald eagles: the height is a standing eagle, 3 ft (Maryland DNR "nearly 3 feet tall", Iowa DNR "sit 3 to
-   3 1/2 feet tall"); the weight is 4.65 kg, the middle of Cornell Lab's 3,000-6,300 g.
+   Bald eagles: 1 mile = 1776 bald eagles (Tanner, Nov 21 2026). So one eagle is 35.68 in, a standing eagle
+   (Maryland DNR "nearly 3 feet tall", Niabi Zoo "Height: 31-37 inches"); the weight is 4.65 kg, the middle of Cornell Lab's 3,000-6,300 g.
    The crew as units of height: crew[].heightIn (inches) in the trip data. A person with no heightIn gets no box.
    A height can change by the day: cvHeightIn() (Nov 21 2026, the second change of that day).
    Gas: Canadian pumps show cents per litre (159.9); the other box is US dollars per US gallon at the CAD rate
    that the money converter uses (RATE).
    Built from the approved mockup "unit-converter-mockups.html", Option A (Tanner, Nov 21 2026). */
 var CV_GAL=3.785411784;      /* litres in one US gallon (exact, by definition) */
-var CV_EAGLE_M=0.9144;       /* metres in one bald eagle (3 ft, standing) */
+var CV_EAGLE_M=1609.344/1776; /* metres in one bald eagle: 1 mile = 1776 bald eagles (35.68 in, standing) */
 var CV_EAGLE_KG=4.65;        /* kilograms in one bald eagle */
 var CV_TAB='dist';           /* the tab that is open; kept while the app is open */
 var CV_LIST=[];              /* every unit in the open tab */
