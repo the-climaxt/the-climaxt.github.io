@@ -104,6 +104,11 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .cvsplit{border-top:1px solid var(--pr-hairline);margin-top:14px;padding-top:12px}
 .cvg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 7px;margin-top:12px;padding-top:10px;border-top:1px solid var(--pr-hairline)}
 .seg.cvt div{padding:7px 6px}
+/* the Gas tab's city buttons (Nov 21 2026): a tap puts that city's average price in the box; the picked one is pink */
+.cvchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cvchip{font:600 11.5px var(--pr-font-app);color:var(--pr-text-2);background:var(--pr-card);border:1px solid var(--pr-border);border-radius:999px;padding:7px 9px;cursor:pointer}
+.cvchip.on{color:var(--pr-pink-text);border-color:var(--pr-pink-text)}
+.cvchip:active{opacity:.7}
 
 /* ===================== ZONE MAP OVERLAY =====================
    Opens from Snow -> Terrain (a zone header, or any run row). Full-screen,
@@ -4026,7 +4031,9 @@ var CV_U={
   kg:{l:'kg',k:1}, g:{l:'g',k:0.001}, lb:{l:'lb',k:0.45359237}, oz:{l:'oz',k:0.028349523125},
   L:{l:'L',k:1}, mL:{l:'mL',k:0.001}, gal:{l:'US gal',k:CV_GAL}, floz:{l:'US fl oz',k:CV_GAL/128},
   cpl:{l:'CA¢ per L',k:0.01,dp:1}, upg:{l:'US$ per gal',dp:2},
-  eagleL:{l:'bald eagles',k:CV_EAGLE_M}, eagleW:{l:'bald eagles',k:CV_EAGLE_KG}
+  eagleL:{l:'bald eagles',k:CV_EAGLE_M}, eagleW:{l:'bald eagles',k:CV_EAGLE_KG},
+  /* pints: a US pint is 1/8 US gallon (473 mL). A Canadian pint is 568.26 mL = 20 imperial fl oz (Measurement Canada). */
+  ptUS:{l:'US pints',k:CV_GAL/8}, ptCA:{l:'CA pints',k:0.56826125}
 };
 /* the four tabs. rows = [metric unit, Freedom unit] lines. extra = boxes in the grid under the lines.
    crew:true = also one box for each person with a heightIn. lead + start = the number shown first: 1 of the
@@ -4034,7 +4041,7 @@ var CV_U={
 var CV_T={
   dist:{name:'Distance',rows:[['km','mi'],['m','ftin'],['cm','inch']],extra:['eagleL'],crew:true,lead:'ftin',start:1},
   wt:{name:'Weight',rows:[['kg','lb'],['g','oz']],extra:['eagleW'],lead:'lb',start:1},
-  vol:{name:'Volume',rows:[['L','gal'],['mL','floz']],lead:'gal',start:1},
+  vol:{name:'Volume',rows:[['L','gal'],['mL','floz']],extra:['ptUS','ptCA'],lead:'gal',start:1},
   gas:{name:'Gas',rows:[['cpl','upg']],lead:'cpl',start:159.9}
 };
 var CV_ORDER=['dist','wt','vol','gas'];
@@ -4054,7 +4061,7 @@ function cvHeightIn(c){ var h=parseFloat(c.heightIn); if(!(h>0))return 0; var r=
 function cvCrewUnits(){ var out=[]; (D.crew||[]).forEach(function(c,i){ var hin=cvHeightIn(c); if(hin>0){ CV_U['crew'+i]={l:c.name+'s',k:hin*0.0254}; out.push('crew'+i); } }); return out; }
 function cvExtra(tk){ var t=CV_T[tk]; return (t.extra||[]).concat(t.crew?cvCrewUnits():[]); }
 /* one labelled box, or the feet + inches pair */
-function cvBox(u){ function b(id,label){ return '<div class="cvf"><div class="xs muted">'+esc(label)+'</div><input class="inp" id="cv_'+id+'" inputmode="decimal" oninput="cvIn(\''+u+'\')"></div>'; } return CV_U[u].pair?b('ft','ft')+b('in','in'):b(u,CV_U[u].l); }
+function cvBox(u){ function b(id,label){ return '<div class="cvf"><div class="xs muted">'+esc(label)+'</div><input class="inp" id="cv_'+id+'" inputmode="decimal" oninput="cvTyped(\''+u+'\')"></div>'; } return CV_U[u].pair?b('ft','ft')+b('in','in'):b(u,CV_U[u].l); }
 /* read one box and give the amount in base units (feet and inches add together) */
 function cvRead(u){ if(CV_U[u].pair){ var f=cvNum($('cv_ft').value), i=cvNum($('cv_in').value); if(isNaN(f)&&isNaN(i))return NaN; return ((isNaN(f)?0:f)*12+(isNaN(i)?0:i))*0.0254; } return cvNum($('cv_'+u).value)*cvK(u); }
 /* write a base amount into one box. Feet + inches: whole inches from 1 ft up, one decimal below; 11.6 in becomes the next foot. */
@@ -4070,10 +4077,42 @@ function cvRate(){ var e=$('cvrate'); if(e)e.textContent='CA$1 ≈ US$'+(RATE?RA
 function cvMount(){ var el=$('cvbody'); if(!el)return; var t=CV_T[CV_TAB], ex=cvExtra(CV_TAB), h='';
   t.rows.forEach(function(r){ h+='<div class="cv"><div class="cvsd">'+cvBox(r[0])+'</div><div class="cvsw">⇄</div><div class="cvsd">'+cvBox(r[1])+'</div></div>'; });
   if(ex.length)h+='<div class="cvg">'+ex.map(function(u){ return cvBox(u); }).join('')+'</div>';
-  if(CV_TAB==='gas')h+='<div class="xs muted" id="cvrate" style="margin-top:8px"></div>';
+  if(CV_TAB==='gas')h+='<div id="cvgas"></div><div class="xs muted" id="cvrate" style="margin-top:8px"></div>';
   el.innerHTML=h; CV_LIST=[]; t.rows.forEach(function(r){ CV_LIST.push(r[0],r[1]); }); CV_LIST=CV_LIST.concat(ex); cvRate();
   if(CV_U[t.lead].pair){ $('cv_ft').value=t.start; $('cv_in').value=0; } else $('cv_'+t.lead).value=t.start;
-  cvIn(t.lead); }
+  cvIn(t.lead);
+  if(CV_TAB==='gas'){ CV_GASPICK=''; CV_GASSTART=$('cv_cpl').value; if(!gasPick(gasCityToday()))gasDraw(); gasAsk(); } }
+/* ---- the Gas tab's real prices (Nov 21 2026) ----
+   Natural Resources Canada posts the average pump price of regular gasoline for each city, one number for each
+   weekday, in cents per litre. A phone cannot read that page, so the crew's Google script reads it
+   (04-app-build/powder-run-apps-script.gs, "Gas prices") and sends the numbers inside the snow answer that
+   repGet() already asks for:  rep.gas = {at, d:{calgary:{d:'2026-11-20',p:122.2}, kamloops:{..}, kelowna:{..}}}.
+   What the tab does with them:
+   - it starts at the price of the city nearest today's stop (stops[].gasCity in the trip data; before the trip
+     that is the first stop's city);
+   - the three cities show as buttons under the boxes; a tap puts that city's price in the box;
+   - with no numbers (offline with nothing saved, the Google script not updated yet, numbers over 10 days old)
+     the tab starts at 159.9 and shows no buttons. Nothing waits for the answer.
+   A number that the crew typed is never replaced by a later answer. */
+var CV_GAS=null;        /* the newest gas numbers this phone has */
+var CV_GASPICK='';      /* the city whose price is in the box ('' = a typed number, or no city) */
+var CV_GASSTART='';     /* what the app itself last put in the cents box: a newer answer may replace only that */
+var GAS_NAMES={calgary:'Calgary',kamloops:'Kamloops',kelowna:'Kelowna'};
+var GAS_ORDER=['calgary','kamloops','kelowna'];
+/* the city for today: the stop of today's trip day, else (before the trip) the first stop */
+function gasCityToday(){ var idx=tripDayIdx(), s=(idx>=0&&D.days[idx])?stopById(D.days[idx].stop):(D.stops||[])[0]; return (s&&s.gasCity)||'calgary'; }
+/* put one city's price in the cents box (false = that city has no number) */
+function gasPick(k){ var c=CV_GAS&&CV_GAS.d&&CV_GAS.d[k]; if(!GAS_NAMES[k]||!c||!(c.p>0)||!$('cv_cpl'))return false;
+  CV_GASPICK=k; $('cv_cpl').value=Number(c.p).toFixed(1); cvIn('cpl'); CV_GASSTART=$('cv_cpl').value; gasDraw(); return true; }
+/* the three buttons and the day the prices are for */
+function gasDraw(){ var el=$('cvgas'); if(!el)return; var g=CV_GAS&&CV_GAS.d, h='', newest='';
+  if(g)GAS_ORDER.forEach(function(k){ var c=g[k]; if(c&&c.p>0){ h+='<button class="cvchip'+(k===CV_GASPICK?' on':'')+'" onclick="gasPick(\''+k+'\')">'+GAS_NAMES[k]+' '+Number(c.p).toFixed(1)+'</button>'; if(c.d&&String(c.d)>newest)newest=String(c.d); } });
+  el.innerHTML=h?('<div class="cvchips">'+h+'</div><div class="xs muted" style="margin-top:6px">Average pump prices'+(/^\d{4}-\d\d-\d\d$/.test(newest)?', '+fmtShort(newest):'')+'</div>'):''; }
+/* ask for the numbers: repGet() answers at once with the copy it has, and again when a newer answer arrives */
+function gasAsk(){ repGet(function(rep){ var g=rep&&rep.gas; if(!g||!g.d||typeof g.d!=='object')return; var was=JSON.stringify(CV_GAS); CV_GAS=g; if(JSON.stringify(g)===was)return;
+  if(CV_TAB!=='gas'||!$('cv_cpl'))return; if($('cv_cpl').value===CV_GASSTART)gasPick(CV_GASPICK||gasCityToday()); gasDraw(); }); }
+/* someone typed in a box (cvIn is also called by the app itself) */
+function cvTyped(u){ if(CV_TAB==='gas'&&CV_GASPICK){ CV_GASPICK=''; gasDraw(); } cvIn(u); }
 function cvTab(tk){ CV_TAB=tk; CV_ORDER.forEach(function(k){ var e=$('cvtab_'+k); if(e)e.className=(k===tk)?'on':''; }); cvMount(); }
 /* temperature: one decimal; the +/- key flips the sign of one box and converts again */
 function tempT1(v){ return String(Math.round(v*10)/10).replace(/^-0$/,'0'); }
