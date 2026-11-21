@@ -109,6 +109,26 @@ svg.pri{vertical-align:-0.18em;flex:0 0 auto}
 .cvchip{font:600 11.5px var(--pr-font-app);color:var(--pr-text-2);background:var(--pr-card);border:1px solid var(--pr-border);border-radius:999px;padding:7px 9px;cursor:pointer}
 .cvchip.on{color:var(--pr-pink-text);border-color:var(--pr-pink-text)}
 .cvchip:active{opacity:.7}
+/* --- route map on Home (Nov 21 2026): a fold-open picture inside the dark countdown card. The picture is in the trip data
+   (routeMap.svg, drawn by _work\data\route_map_nov21.py); these rules colour it and lay out the button, the band and the legend. --- */
+.rmbtn{margin-top:9px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px}
+.rmwrap{display:none;margin:12px -15px 0;background:#1F1838;border-top:1px solid #3A335A;border-bottom:1px solid #3A335A;text-align:left}
+.rmwrap.open{display:block}
+#rmap{display:block;width:100%;height:auto}
+#rmap .halo{paint-order:stroke;stroke:#1F1838;stroke-width:2.6px;stroke-linejoin:round}
+#rmap .stop .ring{stroke:var(--pr-yellow)}
+#rmap .stop .num{fill:#FBF6EC}
+#rmap .stop.today .ring{fill:var(--pr-yellow)}
+#rmap .stop.today .num{fill:#241E2C}
+#rmap .leg.ahead{stroke:#B43E79;stroke-dasharray:5 5}
+#rmap .tap{cursor:pointer}
+#rmap .tap:active text{opacity:.6}
+.rmleg{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;justify-content:center;margin:2px 10px 9px;padding:6px 9px;border:1px solid var(--pr-yellow);border-radius:3px;font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.rmleg .t{color:var(--pr-yellow)}.rmleg .m{color:var(--pr-teal)}
+.rmleg i{display:inline-block;width:8px;height:8px;border-radius:999px;border:2px solid var(--pr-yellow);vertical-align:-1px;margin-right:4px}
+.rmleg .now{display:none}.rmwrap.during .rmleg .now{display:inline}.rmleg .now i{background:var(--pr-yellow)}
+.rmhint{font-size:10.5px;color:#CFC8E6;text-align:center;margin:-3px 10px 9px}
+@media(min-width:900px){ .heroin>.banner .rmwrap{margin:14px 0 0 auto;width:358px;border:1px solid #3A335A;border-radius:10px;overflow:hidden} }
 
 /* ===================== ZONE MAP OVERLAY =====================
    Opens from Snow -> Terrain (a zone header, or any run row). Full-screen,
@@ -2742,11 +2762,34 @@ function tagLine(){
   });
   return parts.join(' \u00b7 ');
 }
+/* ===================== ROUTE MAP ON HOME (Nov 21 2026) =====================
+   A small "Route map" button under the countdown (before the trip) and next to "Today's day sheet" (during the
+   trip). It opens a picture of the whole route inside the dark card. After the trip there is no button.
+   The picture is one finished SVG in the trip data (D.routeMap.svg); _work/data/route_map_nov21.py draws it.
+   No picture in the data = no button. What happens here:
+     rmToggle()  opens / closes the map (it stays open or closed while the app is open)
+     rmMark()    during the trip: today's stop gets a full ring, and the drives still to come become a dashed line
+     rmTap()     a tap on a town name opens that town in Scene; a tap on a mountain name opens that hill in Snow */
+var RM_OPEN=false;
+function rmHas(){ return !!(D&&D.routeMap&&D.routeMap.svg); }
+function rmBtn(){ return rmHas()?'<button class="btn rmbtn" onclick="rmToggle()">'+ic('map',12)+' Route map <span id="rmarrow">'+(RM_OPEN?'▴':'▾')+'</span></button>':''; }
+function rmWrap(){ if(!rmHas())return '';
+  return '<div class="rmwrap'+(RM_OPEN?' open':'')+'" id="rmwrap" onclick="rmTap(event)">'+D.routeMap.svg+'<div class="rmleg"><span class="t"><i></i>Town = where we sleep</span><span class="m">▲ = where we ski</span><span class="t now"><i></i>= today</span></div><div class="rmhint">Tap a name to open it.</div></div>'; }
+function rmToggle(){ RM_OPEN=!RM_OPEN; var w=$('rmwrap'), a=$('rmarrow'); if(w)w.classList.toggle('open',RM_OPEN); if(a)a.textContent=RM_OPEN?'▴':'▾'; }
+/* the stop of today is days[today].stop; each stop in the picture carries data-stop (its id) and data-n (1 to 7);
+   drive number i (data-leg) ends at stop i+1, so a drive is still to come when its number is today's stop number or more */
+function rmMark(){ var m=$('rmap'), w=$('rmwrap'); if(!m||!w)return; var idx=tripDayIdx(), sid=(idx>=0&&D.days[idx])?D.days[idx].stop:'', cur=0;
+  [].forEach.call(m.querySelectorAll('.stop'),function(s){ var on=!!sid&&s.getAttribute('data-stop')===sid; if(on)cur=+s.getAttribute('data-n'); s.classList.toggle('today',on); });
+  [].forEach.call(m.querySelectorAll('.leg'),function(l){ l.classList.toggle('ahead',cur>0&&+l.getAttribute('data-leg')>=cur); });
+  w.classList.toggle('during',cur>0); }
+function rmTap(e){ var t=e.target, g=(t&&t.closest)?t.closest('.tap'):null; if(!g)return; var id=g.getAttribute('data-id');
+  if(g.getAttribute('data-kind')==='town'){ if(!(D.scene||{})[id])return; SCENE_TOWN=id; sw('scene'); window.scrollTo(0,0); }
+  else { if(!(D.resorts||{})[id])return; sw('snow'); setTimeout(function(){ scrollHill(id); },150); } }
 function rHome(){
   var idx=tripDayIdx(), h=testBanner();
   h+='<div class="hh"><h1>'+esc(D.meta.title)+' '+esc(D.meta.year)+'</h1><div class="sub">'+tagLine()+'</div></div>';
-  if(idx===-1){ h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Countdown</div><div class="big" style="margin:6px 0 2px">'+daysUntilStart()+'</div><div class="sm" style="opacity:.85">days until Banff · first chair '+fmtShort(D.meta.firstChair||D.meta.start)+'</div><div class="stripe"></div></div>'; }
-  else if(idx>=0){ var td=D.days[idx], r=resortOfDay(td); h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Today · '+td.wd+' '+fmtShort(td.dt)+'</div><div class="hero-ti" style="margin:6px 0 3px">'+esc(td.title)+'</div>'+(choiceLine(td)?'<div class="sm" style="opacity:.9">'+esc(choiceLine(td))+'</div>':'')+(passChip(idx)?'<div style="margin-top:5px">'+passChip(idx)+'</div>':'')+'<button class="btn" onclick="dsToday()" style="margin-top:9px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('map',12)+' Today\u2019s day sheet</button>'+skiSwitchHtml(td,true)+'<div class="stripe"></div></div>'; }
+  if(idx===-1){ h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Countdown</div><div class="big" style="margin:6px 0 2px">'+daysUntilStart()+'</div><div class="sm" style="opacity:.85">days until Banff · first chair '+fmtShort(D.meta.firstChair||D.meta.start)+'</div>'+rmBtn()+rmWrap()+'<div class="stripe"></div></div>'; }
+  else if(idx>=0){ var td=D.days[idx], r=resortOfDay(td); h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Today · '+td.wd+' '+fmtShort(td.dt)+'</div><div class="hero-ti" style="margin:6px 0 3px">'+esc(td.title)+'</div>'+(choiceLine(td)?'<div class="sm" style="opacity:.9">'+esc(choiceLine(td))+'</div>':'')+(passChip(idx)?'<div style="margin-top:5px">'+passChip(idx)+'</div>':'')+'<button class="btn" onclick="dsToday()" style="margin-top:9px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('map',12)+' Today\u2019s day sheet</button> '+rmBtn()+skiSwitchHtml(td,true)+rmWrap()+'<div class="stripe"></div></div>'; }
   else { h+='<div class="banner"><div class="hero-ti">That’s a wrap 🎿</div><div class="sm" style="opacity:.85;margin-top:4px">Hope it was deep. Drive safe home.</div><div class="stripe"></div></div>'; }
   if(idx===-2){   /* i16 (Sep 24 2026): after Feb 21 Home is a wrap-up — no powder alert, no deadlines, no countdowns */
     h+=deskStats()+gnarSlot()+sec('The town')+dykCard()+picksSlot();
@@ -2780,7 +2823,7 @@ function rHome(){
   h+='<div class="card"><h2>CAD ↔ USD</h2><div id="fxrate" class="xs muted" style="margin-bottom:8px">…</div><div style="display:flex;gap:7px;align-items:flex-end"><div style="flex:1"><div class="xs muted">CAD</div><input class="inp" id="cad" inputmode="decimal" value="100" oninput="fromCad()"></div><div style="padding-bottom:11px">⇄</div><div style="flex:1"><div class="xs muted">USD</div><input class="inp" id="usd" inputmode="decimal" oninput="fromUsd()"></div></div>'+tempRowHtml()+'</div>'+unitsCardHtml();
   var lr=linkRow(); if(lr)h+=sec('Crew links')+lr;
   h+='<div class="btn pri" style="width:100%;justify-content:center" onclick="sw(\'days\')">'+ic('calendar',14)+' Full itinerary</div>';
-  setView('v-home',h); initFx(); initUnits(); fillPow(); fillStorm(); fillTodaySnow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
+  setView('v-home',h); rmMark(); initFx(); initUnits(); fillPow(); fillStorm(); fillTodaySnow(); fillSnowSoFar(); fillPicks(); fillGnar(); scrollMilestones(); scrollRoute();
   /* widths shift a few px once the webfonts land — re-run the two strip scrolls then (both are no-ops once correct) */
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){ if(CUR==='home'){ scrollMilestones(); scrollRoute(); } });
 }
