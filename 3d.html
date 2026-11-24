@@ -454,9 +454,16 @@ function start(){
      (512 × pixel ratio)² pixels — 9 MB each on a 3× phone, ~200 MB for one tilted view — and when the phone's GPU
      runs out those tiles come back BLANK (the ground shade shows, the ribbons still draw). Capping the pixel ratio
      at 2 halves that; a smaller tile cache stops old zooms piling up. (Tanner, Sep 4: "still losing a bunch of stuff") */
+  /* THE STEEPEST TILT (Tanner, Nov 24 2026: "let's just go for 80"). Tilt = the camera's angle: 0 looks straight down,
+     90 looks level with the ground. The page sets the limit itself, one number for every mountain. Before this it read
+     camera.maxPitch from each mountain's map file (68); those files still say 68 and that number is not used any more
+     (a change there would need all nine maps sealed again and every phone to save them again). At a low angle you see
+     the edge of the map and the flat sky colour behind it: that is expected. To choose another angle change this one
+     number, then build both pages (build_viewer.py). Record: _work/data/max_tilt_80_nov24.py. */
+  var MAX_TILT=80;
   map=new maplibregl.Map({container:'map',style:style,center:v0.center,zoom:v0.zoom,pitch:v0.pitch,bearing:v0.bearing,
     pixelRatio:Math.min(window.devicePixelRatio||1,MAX_PIXEL_RATIO),maxTileCacheSize:TILE_CACHE,fadeDuration:0,
-    minZoom:MAN.camera.minZoom,maxZoom:MAN.camera.maxZoom,maxPitch:MAN.camera.maxPitch,attributionControl:false,
+    minZoom:MAN.camera.minZoom,maxZoom:MAN.camera.maxZoom,maxPitch:MAX_TILT,attributionControl:false,
     maxBounds:[[MAN.camera.maxBounds[0],MAN.camera.maxBounds[1]],[MAN.camera.maxBounds[2],MAN.camera.maxBounds[3]]]});
   map.setPadding({top:PAD_TOP_PX,bottom:PAD_BOTTOM_PX,left:0,right:0}); map.jumpTo({center:v0.center,zoom:v0.zoom,pitch:v0.pitch,bearing:v0.bearing});   /* the drawer's strip is out of the picture from the first view on */
   map.addControl(new maplibregl.AttributionControl({compact:true,customAttribution:'Terrain © NRCan · lines © OpenStreetMap contributors · imagery © Esri, Maxar, Earthstar Geographics'}));
