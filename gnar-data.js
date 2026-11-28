@@ -632,13 +632,11 @@ var ITEMS=[
 
 var RULES=[
  'Score every line you try, crash or not. First attempt only.',
- 'One line, once per day. The Kirkup cat scores every run. A set (three or more of something in a day) scores once, as the set.',
+ 'One line, once per day. A set (three or more of something in a day) scores once, as the set.',
  'Extras stack on a line. Penalties always count.',
  'Lines 7+ and extras 5+ need a crew witness on the claim.',
  'Points: you log your own. Penalties: anyone can log one on anyone — it shows who logged it.',
  'A ski day runs 3 am to 3 am. Votes for line and crash of the day close then.',
- 'Nothing out of bounds scores. Ever. Montana Bowl gate, the Chuting Project, Ymir sidecountry, Silver Sheep, Mt Roberts, Canyon Creek: zero.',
- 'Super Bowl Sunday has props. They show up on the Board that day. Picks lock when you confirm them.',
  'Last place buys. Decide what at the first business meeting.'
 ];
 
