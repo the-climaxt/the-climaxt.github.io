@@ -2786,12 +2786,16 @@ function rmTap(e){ var t=e.target, g=(t&&t.closest)?t.closest('.tap'):null; if(!
   if(g.getAttribute('data-kind')==='town'){ if(!(D.scene||{})[id])return; SCENE_TOWN=id; sw('scene'); window.scrollTo(0,0); }
   else { if(!(D.resorts||{})[id])return; sw('snow'); setTimeout(function(){ scrollHill(id); },150); } }
 /* ===================== 69-DAY CELEBRATION (Nov 27 2026) =====================
-   A one-day gag. On the day the Home countdown reads 69 (Nov 28 2026), the "Route map" button under the
-   countdown is replaced by a "Nice." button. Press it and a show of about 23 seconds plays over the whole app:
-   fireworks, a rude firework, explosions, four GIFs, then "69" and "NICE." written in sparks. It cannot be
-   skipped. Then Home comes back with the normal "Route map" button.
-   - One show per phone: the phone remembers it (localStorage 'n69seen'). After that the button is "Route map".
-   - A tap on the big 69 plays the show again, as often as they like, while the countdown reads 69.
+   A one-day gag. On the day the Home countdown reads 69 (Nov 28 2026), a phone that has not seen the show yet gets
+   a TAKEOVER: the whole app is covered and the screen shows only the countdown card, with a "Nice." button where
+   "Route map" usually is. No title, no other cards, no tab bar — the only way into the app is to press "Nice."
+   (Tanner, Nov 28: "not have any of the home page stuff except the countdown card people have to watch it").
+   The press plays a show of about 23 seconds over the whole app: fireworks, a rude firework, explosions, four GIFs,
+   then "69" and "NICE." written in sparks. It cannot be skipped. Then the normal app comes back.
+   - One show per phone: the phone remembers it (localStorage 'n69seen'). After that there is no takeover and the
+     button on Home is the normal "Route map".
+   - A tap on the big 69 on Home plays the show again, as often as they like, while the countdown reads 69.
+   - If the show ever hits an error it ends itself and uncovers the app, so a phone can never be locked out.
    - On every other day none of this shows: n69On() is false and Home is drawn exactly as before.
    - The GIFs are NOT in the app. Each one is a picture that loads straight from giphy.com, so it needs signal.
      With no signal the four frames stay black and the rest of the show still plays.
@@ -2812,8 +2816,9 @@ n69Fresh=function(){ if(!n69On())return false; try{ return localStorage.getItem(
 n69Btn=function(){ return '<button class="btn rmbtn" onclick="n69Start()">Nice.</button>'; };
 /* the big countdown number. On the day it can be tapped (that replays the show); on other days it is the plain number. */
 n69Big=function(){ var n=daysUntilStart();
-  if(!n69On())return '<div class="big" style="margin:6px 0 2px">'+n+'</div>';
-  warm(); return '<div class="big" style="margin:6px 0 2px;display:inline-block;cursor:pointer" onclick="n69Start()">'+n+'</div>'; };
+  if(!n69On()){ gateOff(); return '<div class="big" style="margin:6px 0 2px">'+n+'</div>'; }
+  warm(); if(n69Fresh())gateOn(); else gateOff();   /* Home is drawn first thing on every open, so this is where the takeover goes up */
+  return '<div class="big" style="margin:6px 0 2px;display:inline-block;cursor:pointer" onclick="n69Start()">'+n+'</div>'; };
 
 /* ---- colours: the four core brand colours plus cream, on solid ink ---- */
 var CREAM='#FBF6EC', PINK='#FF4D9D', YEL='#FFC53D', TEAL='#1FC9B7', PUR='#8A4DEB', INK='#241E2C';
@@ -2836,13 +2841,33 @@ function warm(){ if(warmed)return; warmed=true; try{ GIFS.forEach(function(g){ v
 var fx=null, wrap, cb, cf, b, f, gbox, GEL=[];
 var W=0,H=0,DPR=1, running=false, t0=0, last=0, raf=0;
 var P=[], RK=[], EM=[], RINGS=[], STARS=[], TILES=[], WORDS=[], Q=[], flash=0, shake=0;
-function build(){ if(fx)return;
+/* ---- the looks of the takeover card and of the show, added to the page the first time either is needed.
+   The card's numbers are copied from the real countdown card (phone size), so it looks the same on every screen. ---- */
+function css(){ if(document.getElementById('n69css'))return;
   var st=document.createElement('style'); st.id='n69css';
-  st.textContent='#n69fx{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9999;display:none;opacity:0;transition:opacity .3s;background:#241E2C;overflow:hidden;touch-action:none}'
+  st.textContent='#n69gate{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9000;display:none;align-items:center;justify-content:center;background:#FAF3D7;padding:16px;box-sizing:border-box;touch-action:none}'
+    +'#n69gate .c{position:relative;overflow:hidden;box-sizing:border-box;width:100%;max-width:420px;background:#241E2C;color:#FBF6EC;border-radius:14px;padding:14px 15px;font-family:var(--pr-font-app);text-align:left}'
+    +'#n69gate .c::before{content:"";position:absolute;left:0;top:0;right:0;bottom:0;opacity:.17;pointer-events:none;background:repeating-linear-gradient(115deg,#FF4D9D 0 15px,transparent 15px 45px,#FFC53D 45px 60px,transparent 60px 90px,#1FC9B7 90px 105px,transparent 105px 135px)}'
+    +'#n69gate .c>*{position:relative;z-index:1}'
+    +'#n69gate .l{font-size:11.5px;opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700}'
+    +'#n69gate .n{font-family:var(--pr-font-app-display);font-size:46px;font-weight:400;letter-spacing:1px;line-height:1;text-shadow:3px 3px 0 #FF4D9D;margin:6px 0 2px}'
+    +'#n69gate .s{font-size:13px;opacity:.85}'
+    +'#n69gate button{display:inline-flex;align-items:center;margin-top:9px;background:#FBF6EC;color:#241E2C;border:1px solid #FBF6EC;border-radius:10px;font:600 12px var(--pr-font-app);padding:6px 11px;cursor:pointer}'
+    +'#n69gate .st{height:5px;border-radius:3px;margin-top:12px;background:linear-gradient(90deg,#FF4D9D 0 25%,#FFC53D 25% 50%,#1FC9B7 50% 75%,#8A4DEB 75% 100%)}'
+    +'#n69fx{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9999;display:none;opacity:0;transition:opacity .3s;background:#241E2C;overflow:hidden;touch-action:none}'
     +'#n69fx .w,#n69fx .g{position:absolute;left:0;top:0;right:0;bottom:0}#n69fx canvas{position:absolute;left:0;top:0;pointer-events:none}'
     +'#n69fx .gif{position:absolute;left:0;top:0;border:3px solid #FBF6EC;border-radius:14px;overflow:hidden;background:#000;opacity:0;pointer-events:none;transform-origin:50% 50%}'
     +'#n69fx .gif img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;display:block}';
-  document.head.appendChild(st);
+  document.head.appendChild(st); }
+/* ---- the takeover: a page-coloured sheet over the whole app (tab bar included) with only the countdown card on it.
+   gateOn() puts it up, gateOff() takes it down. While a show is running only the show itself may take it down. ---- */
+var gate=null;
+function gateOn(){ if(running)return; css();
+  if(!gate){ gate=document.createElement('div'); gate.id='n69gate'; document.body.appendChild(gate); }
+  gate.innerHTML='<div class="c"><div class="l">Countdown</div><div class="n">'+daysUntilStart()+'</div><div class="s">days until Banff \u00b7 first chair '+fmtShort(D.meta.firstChair||D.meta.start)+'</div><button onclick="n69Start()">Nice.</button><div class="st"></div></div>';
+  gate.style.display='flex'; }
+function gateOff(force){ if(gate&&(force||!running))gate.style.display='none'; }
+function build(){ if(fx)return; css();
   fx=document.createElement('div'); fx.id='n69fx'; fx.innerHTML='<div class="w"><canvas></canvas><div class="g"></div><canvas></canvas></div>';
   document.body.appendChild(fx);
   wrap=fx.firstChild; cb=wrap.children[0]; gbox=wrap.children[1]; cf=wrap.children[2]; b=cb.getContext('2d'); f=cf.getContext('2d');
@@ -2958,18 +2983,23 @@ n69Start=function(){ if(running||!n69On())return; running=true;
   P=[];RK=[];EM=[];RINGS=[];STARS=[];TILES=[];WORDS=[];Q=[];flash=0;shake=0;
   b.setTransform(DPR,0,0,DPR,0,0); b.globalCompositeOperation='source-over'; b.globalAlpha=1; b.fillStyle=INK; b.fillRect(0,0,W,H);
   fx.offsetWidth; fx.style.opacity=1;
+  setTimeout(function(){ gateOff(true); },400);   /* the show now covers the screen, so the takeover card can go */
   /* the words are drawn in the app's display font, so wait until the phone has it (it is already used on Home) */
-  function go(){ try{ buildDots(); }catch(e){} t0=last=performance.now(); plan(); raf=requestAnimationFrame(frame); }
+  function go(){ try{ buildDots(); t0=last=performance.now(); plan(); raf=requestAnimationFrame(frame); }catch(e){ bail(); } }
   if(DPTS)go(); else if(document.fonts&&document.fonts.load)document.fonts.load('400 100px Righteous').then(go,go); else go(); };
 /* The show ends by itself. A tap does nothing: it cannot be skipped. Afterwards Home is drawn again, and because
    the phone is now marked "has seen it", the button is the normal "Route map". */
 function finish(){ if(!running)return; running=false; cancelAnimationFrame(raf); wrap.style.transform=''; fx.style.opacity=0; TILES=[];
+  gateOff(true);
   GEL.forEach(function(e){ e.style.opacity=0; });
   setTimeout(function(){ if(!running)fx.style.display='none'; },320);
   try{ rHome(); }catch(e){} }
 
+/* the safety net: if anything in the show breaks, stop it and uncover the app (the phone is already marked "has seen it") */
+function bail(){ running=false; try{ cancelAnimationFrame(raf); }catch(e){} try{ fx.style.opacity=0; fx.style.display='none'; }catch(e){} gateOff(true); try{ rHome(); }catch(e){} }
+function frame(now){ try{ draw(now); }catch(e){ bail(); } }
 /* ---- one picture of the show, about 60 times a second ---- */
-function frame(now){ if(!running)return;
+function draw(now){ if(!running)return;
   var t=(now-t0)/1000, dt=Math.min(.05,(now-last)/1000), i, p; last=now;
   while(Q.length&&Q[0].t<=t){ Q.shift().fn(); if(!running)return; }
 
