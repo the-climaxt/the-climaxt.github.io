@@ -2785,10 +2785,239 @@ function rmMark(){ var m=$('rmap'), w=$('rmwrap'); if(!m||!w)return; var idx=tri
 function rmTap(e){ var t=e.target, g=(t&&t.closest)?t.closest('.tap'):null; if(!g)return; var id=g.getAttribute('data-id');
   if(g.getAttribute('data-kind')==='town'){ if(!(D.scene||{})[id])return; SCENE_TOWN=id; sw('scene'); window.scrollTo(0,0); }
   else { if(!(D.resorts||{})[id])return; sw('snow'); setTimeout(function(){ scrollHill(id); },150); } }
+/* ===================== 69-DAY CELEBRATION (Nov 27 2026) =====================
+   A one-day gag. On the day the Home countdown reads 69 (Nov 28 2026), the "Route map" button under the
+   countdown is replaced by a "Nice." button. Press it and a show of about 23 seconds plays over the whole app:
+   fireworks, a rude firework, explosions, four GIFs, then "69" and "NICE." written in sparks. It cannot be
+   skipped. Then Home comes back with the normal "Route map" button.
+   - One show per phone: the phone remembers it (localStorage 'n69seen'). After that the button is "Route map".
+   - A tap on the big 69 plays the show again, as often as they like, while the countdown reads 69.
+   - On every other day none of this shows: n69On() is false and Home is drawn exactly as before.
+   - The GIFs are NOT in the app. Each one is a picture that loads straight from giphy.com, so it needs signal.
+     With no signal the four frames stay black and the rest of the show still plays.
+   - Nothing here reads or writes the trip data. Tanner: "It only needs to work tomorrow" … "no tap ends it early".
+   TO REMOVE IT: delete this whole block, and in rHome() (just below), in the "Countdown" line, change two pieces back:
+     '+n69Big()+'                      becomes   <div class="big" style="margin:6px 0 2px">'+daysUntilStart()+'</div>
+     (n69Fresh()?n69Btn():rmBtn())     becomes   rmBtn()
+   The approved mockup (v2) and the change note are in 04-app-build\69-day-show-2026-11-27\. */
+var n69On, n69Fresh, n69Btn, n69Big, n69Start;
+(function(){
+var N69_DAYS=69;   /* the countdown number that turns the gag on */
+
+/* ---- the four pieces Home asks for ---- */
+/* is today the day? (before the trip, and the countdown reads 69) */
+n69On=function(){ try{ return !!D&&tripDayIdx()===-1&&daysUntilStart()===N69_DAYS; }catch(e){ return false; } };
+/* has this phone not seen the show yet? Then Home shows "Nice." in place of "Route map". */
+n69Fresh=function(){ if(!n69On())return false; try{ return localStorage.getItem('n69seen')!=='1'; }catch(e){ return true; } };
+n69Btn=function(){ return '<button class="btn rmbtn" onclick="n69Start()">Nice.</button>'; };
+/* the big countdown number. On the day it can be tapped (that replays the show); on other days it is the plain number. */
+n69Big=function(){ var n=daysUntilStart();
+  if(!n69On())return '<div class="big" style="margin:6px 0 2px">'+n+'</div>';
+  warm(); return '<div class="big" style="margin:6px 0 2px;display:inline-block;cursor:pointer" onclick="n69Start()">'+n+'</div>'; };
+
+/* ---- colours: the four core brand colours plus cream, on solid ink ---- */
+var CREAM='#FBF6EC', PINK='#FF4D9D', YEL='#FFC53D', TEAL='#1FC9B7', PUR='#8A4DEB', INK='#241E2C';
+var CORE=[PINK,YEL,TEAL,PUR];
+
+/* ---- the four real GIFs. id = the code at the end of the GIF's giphy.com address · asp = width divided by height.
+   To swap one: open the GIF on giphy.com, copy the code at the end of its address, and measure its shape. ---- */
+var GIFS=[{id:'3o6EhQcCZmb1dMg3ug',what:'Top Gun high five',asp:2.4},
+          {id:'pHb82xtBPfqEg',what:'Predator handshake',asp:1.85},
+          {id:'HlKS0Qbs2XNvO',what:'Stone Cold beer smash',asp:1.33},
+          {id:'12m6YBQBVVPMK4',what:'Terminator thumbs up',asp:1.66}];
+function gifUrl(g){ return 'https://media.giphy.com/media/'+g.id+'/giphy.gif'; }
+/* fetch the GIFs as soon as Home is drawn on the day, so they are already on the phone when the show needs them */
+var warmed=false;
+function warm(){ if(warmed)return; warmed=true; try{ GIFS.forEach(function(g){ var im=new Image(); im.src=gifUrl(g); }); }catch(e){} }
+
+/* ---- the stage: one solid ink layer over the whole app, built the first time the show runs.
+   Inside it: a back drawing layer (sparks, which leave short trails), the GIF frames, and a front drawing
+   layer (words, flashes). ---- */
+var fx=null, wrap, cb, cf, b, f, gbox, GEL=[];
+var W=0,H=0,DPR=1, running=false, t0=0, last=0, raf=0;
+var P=[], RK=[], EM=[], RINGS=[], STARS=[], TILES=[], WORDS=[], Q=[], flash=0, shake=0;
+function build(){ if(fx)return;
+  var st=document.createElement('style'); st.id='n69css';
+  st.textContent='#n69fx{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9999;display:none;opacity:0;transition:opacity .3s;background:#241E2C;overflow:hidden;touch-action:none}'
+    +'#n69fx .w,#n69fx .g{position:absolute;left:0;top:0;right:0;bottom:0}#n69fx canvas{position:absolute;left:0;top:0;pointer-events:none}'
+    +'#n69fx .gif{position:absolute;left:0;top:0;border:3px solid #FBF6EC;border-radius:14px;overflow:hidden;background:#000;opacity:0;pointer-events:none;transform-origin:50% 50%}'
+    +'#n69fx .gif img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;display:block}';
+  document.head.appendChild(st);
+  fx=document.createElement('div'); fx.id='n69fx'; fx.innerHTML='<div class="w"><canvas></canvas><div class="g"></div><canvas></canvas></div>';
+  document.body.appendChild(fx);
+  wrap=fx.firstChild; cb=wrap.children[0]; gbox=wrap.children[1]; cf=wrap.children[2]; b=cb.getContext('2d'); f=cf.getContext('2d');
+  GIFS.forEach(function(g){ var d=document.createElement('div'); d.className='gif'; d.innerHTML='<img src="'+gifUrl(g)+'" alt="">'; gbox.appendChild(d); GEL.push(d); });
+}
+function size(){ var r=fx.getBoundingClientRect(); W=r.width; H=r.height; DPR=Math.min(window.devicePixelRatio||1,2);
+  [cb,cf].forEach(function(c){ c.width=Math.round(W*DPR); c.height=Math.round(H*DPR); c.style.width=W+'px'; c.style.height=H+'px'; }); }
+
+/* ---- small helpers ---- */
+function rnd(a,c){ return a+Math.random()*(c-a); }
+function pick(a){ return a[(Math.random()*a.length)|0]; }
+function at(t,fn){ Q.push({t:t,fn:fn}); }                                          /* "at second t, do this" */
+function vib(p){ try{ if(navigator.vibrate)navigator.vibrate(p); }catch(e){} }     /* phone buzz — Android only */
+function eOut(p){ return 1-Math.pow(1-p,3); }
+function eBack(p){ var c=1.9; return 1+(c+1)*Math.pow(p-1,3)+c*Math.pow(p-1,2); }
+function rr(c,x,y,w,h,r){ c.beginPath(); if(c.roundRect){ c.roundRect(x,y,w,h,r); return; }
+  c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function clock(){ return (performance.now()-t0)/1000; }
+function sortQ(){ Q.sort(function(a,c){ return a.t-c.t; }); }
+
+/* ---- turn any drawing (a shape, or a word) into a list of dots.
+   We draw it off-screen in white, then keep one dot every few pixels. edge=true keeps only the outline. ---- */
+function dots(w,h,step,edge,draw){ var c=document.createElement('canvas'); c.width=w; c.height=h; var x=c.getContext('2d'); x.fillStyle='#fff'; draw(x,w,h);
+  var d=x.getImageData(0,0,w,h).data, out=[];
+  function on(px,py){ return px>=0&&py>=0&&px<w&&py<h&&d[(py*w+px)*4+3]>128; }
+  for(var py=0;py<h;py+=step)for(var px=0;px<w;px+=step){ if(!on(px,py))continue;
+    if(edge&&on(px-step,py)&&on(px+step,py)&&on(px,py-step)&&on(px,py+step))continue;
+    out.push([px-w/2,py-h/2]); }
+  return out; }
+/* the rude one: two circles and a round-topped shaft, 220 x 320. Then the words 69 and NICE. in the app's display font. */
+var DW=220, DH=320, DPTS=null, T69=null, TNICE=null;
+function buildDots(){ if(DPTS)return;
+  DPTS=dots(DW,DH,3,true,function(x,w,h){ x.beginPath(); x.arc(w/2-42,h-52,46,0,7); x.fill(); x.beginPath(); x.arc(w/2+42,h-52,46,0,7); x.fill(); rr(x,w/2-31,8,62,h-70,31); x.fill(); });
+  T69=dots(440,280,6,false,function(x,w,h){ x.font='400 270px Righteous'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('69',w/2,h/2+14); });
+  TNICE=dots(560,170,5,false,function(x,w,h){ x.font='400 150px Righteous'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('NICE.',w/2,h/2+8); });
+}
+
+/* ---- the things the show is made of ---- */
+function spark(x,y,vx,vy,life,c,s,g){ P.push({k:0,x:x,y:y,vx:vx,vy:vy,life:life,max:life,c:c,s:s||2.4,g:g==null?170:g}); }
+function burst(x,y,cols,n,pow,life){ for(var i=0;i<n;i++){ var a=rnd(0,6.283), v=pow*Math.pow(Math.random(),.45);
+  spark(x,y,Math.cos(a)*v,Math.sin(a)*v,rnd(.7,1.3)*(life||1.2),pick(cols),rnd(1.8,3.2)); } }
+/* a rocket climbs from the bottom, then does whatever it was told to do at the top */
+function rocket(x,y,c,dur,done){ RK.push({x0:x+rnd(-40,40),y0:H+12,x1:x,y1:y,t:0,dur:dur,c:c,done:done}); }
+function fire(x,y,c){ rocket(x,y,c,rnd(.5,.75),function(px,py){ burst(px,py,[c,c,CREAM],80,rnd(210,300)); vib(12); }); }
+/* a shape made of dots: fly out from one point, hold the shape, then fall */
+function shape(cx,cy,pts,k,rot,morph,hold,cols){ var cs=Math.cos(rot), sn=Math.sin(rot);
+  for(var i=0;i<pts.length;i++){ var px=pts[i][0]*k, py=pts[i][1]*k;
+    P.push({k:1,ox:cx,oy:cy,x:cx,y:cy,tx:cx+px*cs-py*sn,ty:cy+px*sn+py*cs,t:0,morph:morph*rnd(.75,1),hold:hold,c:pick(cols),s:rnd(2,3),tw:rnd(0,6.283)}); } }
+/* a fountain: a steady spray of sparks from a point, in one direction */
+function fountain(x,y,ax,ay,dur){ EM.push({x:x,y:y,ax:ax,ay:ay,t:0,dur:dur}); }
+/* the rude firework, complete: rocket up, shape, fountain from the tip, one more burst on top */
+function rude(cx,cy,hgt,rot,hold){ var k=hgt/DH;
+  rocket(cx,cy,PINK,.8,function(x,y){ shape(x,y,DPTS,k,rot,.7,hold,[PINK,PINK,PINK,CREAM]); vib(50);
+    var ax=Math.sin(rot), ay=-Math.cos(rot), tx=x+ax*hgt*.49, ty=y+ay*hgt*.49, T=clock();
+    at(T+hold-.9,function(){ fountain(tx,ty,ax,ay,.9); vib([20,40,20,40,20]); });
+    at(T+hold+.05,function(){ burst(tx+ax*hgt*.42,ty+ay*hgt*.42,[CREAM,YEL,CREAM],110,300); vib(40); }); sortQ(); }); }
+/* an explosion. Only a BIG one flashes the whole screen, and big ones are never closer than a second apart
+   (fast repeated full-screen flashes can be a problem for some people). */
+function boom(x,y,big){ if(big)flash=.6; shake=big?16:9; RINGS.push({x:x,y:y,r:8,vr:big?950:700,life:.45,max:.45});
+  STARS.push({x:x,y:y,r:big?92:62,life:.34,max:.34,rot:rnd(0,1)});
+  burst(x,y,[YEL,CREAM,PINK],big?150:95,big?620:470,.8);
+  WORDS.push({txt:big?'BOOM':pick(['BAM','POW','BOOM']),x:x,y:y,t:0,dur:.7,size:big?44:30,c:INK,sh:null,rot:rnd(-.25,.25)}); vib(big?[60,30,90]:[45]); }
+function word(txt,x,y,size,dur,c,sh){ WORDS.push({txt:txt,x:x,y:y,t:0,dur:dur,size:size,c:c,sh:sh,rot:rnd(-.08,.08)}); }
+/* pop one GIF onto the screen: which one, where (centre x,y), how wide, how tilted, for how long */
+function gtile(i,x,y,w,rot,dur){ var el=GEL[i], h=w/GIFS[i].asp; el.style.width=w+'px'; el.style.height=h+'px';
+  TILES.push({el:el,x:x,y:y,w:w,h:h,rot:rot,t:0,dur:dur}); burst(x,y,[YEL,CREAM,PINK],45,330,.6); shake=Math.max(shake,5); vib(18); }
+function star(c,x,y,r,rot,fill){ c.save(); c.translate(x,y); c.rotate(rot); c.beginPath();
+  for(var i=0;i<28;i++){ var a=i/28*6.283, q=(i%2)?r*.58:r; c.lineTo(Math.cos(a)*q,Math.sin(a)*q); } c.closePath();
+  c.fillStyle=fill; c.fill(); c.lineWidth=3; c.strokeStyle=INK; c.stroke(); c.restore(); }
+
+/* ---- the running order (seconds from the button press). W and H are the screen's width and height. ---- */
+function plan(){ var cx=W/2;
+  /* 1 · warm-up fireworks */
+  [.3,.65,1.0,1.35,1.7,2.0].forEach(function(t){ at(t,function(){ fire(rnd(W*.14,W*.86),rnd(H*.14,H*.45),pick(CORE)); }); });
+  /* 2 · the big rude one, centre */
+  at(2.4,function(){ rude(cx,H*.47,Math.min(H*.46,W*1.0),0,3.3); });
+  at(4.4,function(){ word('Nice.',cx,H*.84,46,1.9,CREAM,PINK); });
+  /* 3 · explosions */
+  at(6.9,function(){ boom(W*.28,H*.3); });
+  at(7.2,function(){ boom(W*.74,H*.52); });
+  at(7.5,function(){ boom(W*.42,H*.72,true); });
+  /* 4 · two more, crossed */
+  at(7.9,function(){ rude(W*.3,H*.42,Math.min(H*.3,W*.62),-.5,2.2); });
+  at(8.15,function(){ rude(W*.7,H*.42,Math.min(H*.3,W*.62),.5,2.2); });
+  [8.7,9.2,9.7].forEach(function(t){ at(t,function(){ fire(rnd(W*.2,W*.8),rnd(H*.6,H*.8),pick([YEL,TEAL,PUR])); }); });
+  at(11.0,function(){ boom(cx,H*.42,true); });
+  /* 5 · the real GIFs: high five, handshake, beer smash, thumbs up — they pile up and stay about 4 seconds */
+  at(11.3,function(){ gtile(0,W*.5, H*.14,Math.min(W*.86,360),0,5.3); });
+  at(11.9,function(){ gtile(1,W*.42,H*.36,Math.min(W*.74,310),-.05,4.7); });
+  at(12.5,function(){ gtile(2,W*.62,H*.60,Math.min(W*.6,250),.07,4.1); });
+  at(13.1,function(){ gtile(3,W*.44,H*.84,Math.min(W*.7,290),-.05,3.5); });
+  [11.8,12.6,13.4,14.2,15.0,15.8].forEach(function(t,i){ at(t,function(){ fire(i%2?rnd(W*.05,W*.2):rnd(W*.8,W*.95),rnd(H*.1,H*.9),pick(CORE)); }); });
+  /* 6 · finale: a barrage, then 69 and NICE. written in sparks, then everything blows up */
+  for(var i=0;i<16;i++){ (function(i){ at(16.9+i*.14,function(){ fire(rnd(W*.08,W*.92),rnd(H*.1,H*.75),CORE[i%4]); }); })(i); }
+  at(17.7,function(){ shape(cx,H*.34,T69,Math.min(W*.86/440,1.25),0,.8,3.4,[PINK,PINK,YEL,CREAM]); boom(cx,H*.34,true); });
+  at(19.0,function(){ shape(cx,H*.62,TNICE,Math.min(W*.86/560,1.0),0,.7,2.2,[TEAL,TEAL,CREAM]); vib(40); });
+  [19.5,19.9,20.3,20.7,21.1].forEach(function(t,i){ at(t,function(){ fire(rnd(W*.1,W*.9),rnd(H*.72,H*.9),CORE[i%4]); }); });
+  at(21.3,function(){ boom(W*.25,H*.8); });
+  at(21.5,function(){ boom(W*.75,H*.18); });
+  at(21.7,function(){ boom(W*.7,H*.78); });
+  at(21.9,function(){ boom(W*.3,H*.2); });
+  at(22.1,function(){ boom(cx,H*.5,true); });
+  /* 7 · back to Home */
+  at(23.5,function(){ finish(); });
+  sortQ();
+}
+
+/* ---- start and finish ---- */
+/* The "Nice." button and the big 69 both call this. It marks the phone as "has seen it", covers the app and runs the plan. */
+n69Start=function(){ if(running||!n69On())return; running=true;
+  try{ localStorage.setItem('n69seen','1'); }catch(e){}
+  build(); fx.style.display='block'; size();
+  P=[];RK=[];EM=[];RINGS=[];STARS=[];TILES=[];WORDS=[];Q=[];flash=0;shake=0;
+  b.setTransform(DPR,0,0,DPR,0,0); b.globalCompositeOperation='source-over'; b.globalAlpha=1; b.fillStyle=INK; b.fillRect(0,0,W,H);
+  fx.offsetWidth; fx.style.opacity=1;
+  /* the words are drawn in the app's display font, so wait until the phone has it (it is already used on Home) */
+  function go(){ try{ buildDots(); }catch(e){} t0=last=performance.now(); plan(); raf=requestAnimationFrame(frame); }
+  if(DPTS)go(); else if(document.fonts&&document.fonts.load)document.fonts.load('400 100px Righteous').then(go,go); else go(); };
+/* The show ends by itself. A tap does nothing: it cannot be skipped. Afterwards Home is drawn again, and because
+   the phone is now marked "has seen it", the button is the normal "Route map". */
+function finish(){ if(!running)return; running=false; cancelAnimationFrame(raf); wrap.style.transform=''; fx.style.opacity=0; TILES=[];
+  GEL.forEach(function(e){ e.style.opacity=0; });
+  setTimeout(function(){ if(!running)fx.style.display='none'; },320);
+  try{ rHome(); }catch(e){} }
+
+/* ---- one picture of the show, about 60 times a second ---- */
+function frame(now){ if(!running)return;
+  var t=(now-t0)/1000, dt=Math.min(.05,(now-last)/1000), i, p; last=now;
+  while(Q.length&&Q[0].t<=t){ Q.shift().fn(); if(!running)return; }
+
+  /* fountains make sparks */
+  for(i=EM.length-1;i>=0;i--){ var e=EM[i]; e.t+=dt; for(var n=0;n<5;n++){ var v=rnd(260,430), sp=rnd(-.22,.22), cs=Math.cos(sp), sn=Math.sin(sp);
+      spark(e.x,e.y,(e.ax*cs-e.ay*sn)*v,(e.ax*sn+e.ay*cs)*v,rnd(.6,1.1),pick([CREAM,CREAM,YEL]),rnd(1.8,2.8),420); }
+    if(e.t>=e.dur)EM.splice(i,1); }
+
+  /* back layer: dim what was there (this is what makes the trails), then add light */
+  b.setTransform(DPR,0,0,DPR,0,0); b.globalCompositeOperation='source-over'; b.globalAlpha=1; b.fillStyle='rgba(36,30,44,.26)'; b.fillRect(0,0,W,H);
+  b.globalCompositeOperation='lighter';
+  for(i=RK.length-1;i>=0;i--){ var r=RK[i]; r.t+=dt; var q=Math.min(1,r.t/r.dur), ee=1-(1-q)*(1-q), x=r.x0+(r.x1-r.x0)*ee, y=r.y0+(r.y1-r.y0)*ee;
+    b.globalAlpha=1; b.fillStyle=CREAM; b.fillRect(x-1.5,y-1.5,3,3); spark(x,y,rnd(-18,18),rnd(20,70),.3,r.c,1.8,60);
+    if(q>=1){ RK.splice(i,1); r.done(r.x1,r.y1); } }
+  for(i=P.length-1;i>=0;i--){ p=P[i];
+    if(p.k===1){ p.t+=dt;
+      if(p.t<p.morph){ var m=eOut(p.t/p.morph); p.x=p.ox+(p.tx-p.ox)*m; p.y=p.oy+(p.ty-p.oy)*m; b.globalAlpha=1; }
+      else if(p.t<p.morph+p.hold){ p.x=p.tx+Math.sin(t*7+p.tw)*.7; p.y=p.ty+Math.cos(t*6+p.tw)*.7; b.globalAlpha=.55+.45*Math.sin(t*11+p.tw*3); }
+      else { p.k=0; p.vx=rnd(-30,30); p.vy=rnd(-20,50); p.life=p.max=rnd(.8,1.5); p.g=130; }
+    } else { p.life-=dt; if(p.life<=0){ P[i]=P[P.length-1]; P.pop(); continue; }
+      p.vx*=(1-1.6*dt); p.vy=p.vy*(1-1.6*dt)+p.g*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; b.globalAlpha=Math.min(1,p.life/p.max*1.6); }
+    b.fillStyle=p.c; b.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s); }
+
+  /* front layer: wiped clean every frame */
+  f.setTransform(DPR,0,0,DPR,0,0); f.clearRect(0,0,W,H);
+  for(i=RINGS.length-1;i>=0;i--){ var g=RINGS[i]; g.life-=dt; g.r+=g.vr*dt; if(g.life<=0){ RINGS.splice(i,1); continue; }
+    f.globalAlpha=g.life/g.max; f.strokeStyle=CREAM; f.lineWidth=5; f.beginPath(); f.arc(g.x,g.y,g.r,0,6.283); f.stroke(); }
+  f.globalAlpha=1;
+  for(i=STARS.length-1;i>=0;i--){ var s=STARS[i]; s.life-=dt; if(s.life<=0){ STARS.splice(i,1); continue; }
+    var sp2=1-s.life/s.max; star(f,s.x,s.y,s.r*(.5+.6*eOut(sp2)),s.rot,YEL); }
+  /* the GIF frames are moved by the page itself, not painted on a drawing layer */
+  for(i=TILES.length-1;i>=0;i--){ var T=TILES[i]; T.t+=dt;
+    if(T.t>=T.dur){ T.el.style.opacity=0; TILES.splice(i,1); continue; }
+    var sc=T.t<.22?eBack(T.t/.22):(T.dur-T.t<.18?(T.dur-T.t)/.18:1);
+    T.el.style.opacity=1; T.el.style.transform='translate('+(T.x-T.w/2).toFixed(1)+'px,'+(T.y-T.h/2).toFixed(1)+'px) rotate('+T.rot+'rad) scale('+sc.toFixed(3)+')'; }
+  for(i=WORDS.length-1;i>=0;i--){ var w=WORDS[i]; w.t+=dt; if(w.t>=w.dur){ WORDS.splice(i,1); continue; }
+    var ws=w.t<.16?eBack(w.t/.16):1; f.save(); f.translate(w.x,w.y); f.rotate(w.rot); f.scale(ws,ws); f.globalAlpha=Math.min(1,(w.dur-w.t)/.25);
+    f.font='400 '+w.size+'px Righteous'; f.textAlign='center'; f.textBaseline='middle';
+    if(w.sh){ f.fillStyle=w.sh; f.fillText(w.txt,w.size*.07,w.size*.07); } f.fillStyle=w.c; f.fillText(w.txt,0,0); f.restore(); }
+  if(flash>.01){ f.globalAlpha=flash; f.fillStyle=CREAM; f.fillRect(0,0,W,H); f.globalAlpha=1; flash-=flash*9*dt; }
+  if(shake>.4){ wrap.style.transform='translate('+rnd(-shake,shake).toFixed(1)+'px,'+rnd(-shake,shake).toFixed(1)+'px)'; shake-=shake*7*dt; } else if(wrap.style.transform){ wrap.style.transform=''; }
+  raf=requestAnimationFrame(frame);
+}
+})();
 function rHome(){
   var idx=tripDayIdx(), h=testBanner();
   h+='<div class="hh"><h1>'+esc(D.meta.title)+' '+esc(D.meta.year)+'</h1><div class="sub">'+tagLine()+'</div></div>';
-  if(idx===-1){ h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Countdown</div><div class="big" style="margin:6px 0 2px">'+daysUntilStart()+'</div><div class="sm" style="opacity:.85">days until Banff · first chair '+fmtShort(D.meta.firstChair||D.meta.start)+'</div>'+rmBtn()+rmWrap()+'<div class="stripe"></div></div>'; }
+  if(idx===-1){ h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Countdown</div>'+n69Big()+'<div class="sm" style="opacity:.85">days until Banff · first chair '+fmtShort(D.meta.firstChair||D.meta.start)+'</div>'+(n69Fresh()?n69Btn():rmBtn())+rmWrap()+'<div class="stripe"></div></div>'; }
   else if(idx>=0){ var td=D.days[idx], r=resortOfDay(td); h+='<div class="banner"><div class="xs" style="opacity:.7;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Today · '+td.wd+' '+fmtShort(td.dt)+'</div><div class="hero-ti" style="margin:6px 0 3px">'+esc(td.title)+'</div>'+(choiceLine(td)?'<div class="sm" style="opacity:.9">'+esc(choiceLine(td))+'</div>':'')+(passChip(idx)?'<div style="margin-top:5px">'+passChip(idx)+'</div>':'')+'<button class="btn" onclick="dsToday()" style="margin-top:9px;background:#FBF6EC;color:#241E2C;border-color:#FBF6EC;font-size:12px;padding:6px 11px">'+ic('map',12)+' Today\u2019s day sheet</button> '+rmBtn()+skiSwitchHtml(td,true)+rmWrap()+'<div class="stripe"></div></div>'; }
   else { h+='<div class="banner"><div class="hero-ti">That’s a wrap 🎿</div><div class="sm" style="opacity:.85;margin-top:4px">Hope it was deep. Drive safe home.</div><div class="stripe"></div></div>'; }
   if(idx===-2){   /* i16 (Sep 24 2026): after Feb 21 Home is a wrap-up — no powder alert, no deadlines, no countdowns */
